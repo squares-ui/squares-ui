@@ -1,0 +1,14 @@
+<?php
+
+// JavaScript needs to load all graphs  available. However we can't use a wildcard with includes <script src="graph_*.js">
+// This script finds all files locally, and outputs in a way for JS to understand in a JSON object in a ".html" file
+// Ideally I would use JSON here, but the "get_graphs.json" needs to be executed as PHP with HTTP headers set, which means modifying APACHE which might not be allowed
+// so this ugly code is the most stable...
+
+$files = array_values(array_filter(scandir("../graphs/"), function($file) {
+    return !is_dir($file);
+}));
+
+echo json_encode($files);
+
+?>

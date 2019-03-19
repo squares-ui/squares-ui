@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+	<!--   http://www.smartjava.org/content/render-open-data-3d-world-globe-threejs    -->
+	<script src="https://code.jquery.com/jquery-3.0.0.min.js"></script> 
+	<script src="https://threejs.org/build/three.js"></script>
+	<script src="/sake/www/Three/dat.gui.js"></script>
+	<script src="/sake/www/Three/OrbitControls.js"></script>
+
+	<style>
+		body{ margin: 0; overflow:hidden ; }
+	</style>
+
+	<script type="text/javascript">
+
+	$(function (){
+
+		var grid_size = 200;
+		var grid_cuts = 20;
+
+
+// 67.219.240.4 - - [02/Apr/2018:21:30:46 +0100] "GET /files/malwareeicarcsharp/malware_eicar_csharp_1522696690.exe HTTP/1.1" 200 5120 "http://7blessings.co.uk/malware.php" "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0" "usernam
+		var data = Array ();
+		data.push(["35.70.13.145", "02/Apr/2018:17:52:37 +0100", "php", "200", "472"]);
+		data.push(["35.70.130.145", "02/Apr/2018:17:52:37 +0100", "exe", "301", "472"]);
+		data.push(["35.71.13.145", "01/Apr/2018:17:52:37 +0100", "jpg", "404", "472"]);
+		data.push(["35.71.13.145", "02/Apr/2018:17:52:37 +0100", "jpg", "404", "472"]);
+		data.push(["35.71.13.145", "03/Apr/2018:17:52:37 +0100", "jpg", "404", "472"]);
+		data.push(["105.10.1.45", "04/Apr/2018:17:57:01 +0100", "pdf", "500", "475532"]);
+		data.push(["5.240.131.1", "02/Apr/2018:17:59:25 +0100", "php", "200", "42"]);
+
+		var dataLength = data.length;
+		var ipFirstHalf = Array();
+		var ipSecondHalf = Array();
+		var allIPs = Array();
+		var ipParts = Array();
+		var timeParts = Array();
+		var thisEpoch = 0;
+		var monthString = "JanFebMarAprMayJunJulAugSepOctNovDec";
+		var timeFirst = 0, timeLast = 0;
+		var http_colours = ["", "yellow", "green", "black", "orange", "red"];
+
+
+		for (var i = 0; i < dataLength; i++) {
+			ipParts = data[i][0].split("\.");
+
+			if(ipFirstHalf.indexOf(ipParts[0]+"."+ipParts[1]) === -1) {
+				ipFirstHalf.push(ipParts[0]+"."+ipParts[1]);
+			}
+			if(ipSecondHalf.indexOf(ipParts[2]+"."+ipParts[3]) === -1) {
+				ipSecondHalf.push(ipParts[2]+"."+ipParts[3]);
+			}
+			timeParts = data[i][1].match(/(\d{2})\/(\S{3})\/(\d{4}):(\d{2}):(\d{2}):(\d{2}) \+(\d{4})/);
+			thisEpoch = Date.UTC(+timeParts[3], monthString.indexOf(timeParts[2]) / 3 , +timeParts[1], +timeParts[4], +timeParts[5]);
+			
+			if( thisEpoch < timeFirst || timeFirst == 0 ){
+				timeFirst = thisEpoch;
+			}
+			if( thisEpoch > timeLast || timeLast == 0){
+				timeLast = thisEpoch;
+			}
+
+			if(allIPs.indexOf(data[i][0]) === -1){
+				allIPs.push(data[i][0]);
+			}
+		}
+
+		
+		var scene = new THREE.Scene();
+		scene.background = new THREE.Color( 0xcccccc );
+
+		var renderer = new THREE.WebGLRenderer({antialias: true});
+		renderer.setClearColor(new THREE.Color(0xEEEEEE, 1.0));
+		renderer.setSize(window.innerWidth, window.innerHeight);
+
+		var container = document.getElementById( 'globe' );
+		container.appendChild( renderer.domElement );
+		//$("#globe").append(renderer.domElement);
+
+		var ambientLight = new THREE.AmbientLight( 0xffffff );
+		scene.add(ambientLight);
+		
+		var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+		camera.position.set( grid_size*2, grid_size * 0.8, grid_size*2 );
+
+
+		controls = new THREE.OrbitControls( camera, renderer.domElement );
+		controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+		controls.dampingFactor = 0.25;
+		controls.panningMode = THREE.HorizontalPanning; // default is THREE.ScreenSpacePanning
+		controls.minDistance = grid_size*2;
+		controls.maxDistance = grid_size*2;
+		controls.maxPolarAngle = Math.PI / 2;
+		controls.autoRotate = true;
+		controls.autoRotateSpeed = -0.1;
+		controls.userRotate = true;
+		controls.userRotateSpeed = 0.5;
+		controls.target.set(grid_size/2,grid_size/2,grid_size/2);
+
+
+		//grid xz
+		 var gridXZ = new THREE.GridHelper(grid_size, grid_cuts);
+		 gridXZ.position.set((grid_size*0.5),0,(grid_size*0.5));
+		 scene.add(gridXZ);
+		 
+		 //grid xy
+		 var gridXY = new THREE.GridHelper(grid_size, grid_cuts);
+		 gridXY.rotation.x = Math.PI/2;
+		 gridXY.position.set((grid_size*0.5), (grid_size*0.5), 0);
+		 gridXY.setColors( new THREE.Color(0xff0000), new THREE.Color(0xffffff) );
+		 scene.add(gridXY);
+		 
+		 //grid yz
+		 var gridYZ = new THREE.GridHelper(grid_size, grid_cuts);
+		 gridYZ.position.set( 0, (grid_size*0.5), (grid_size*0.5) );
+		 gridYZ.rotation.z = Math.PI/2;
+		 gridYZ.setColors( new THREE.Color(0xffffff), new THREE.Color(0x00ff00) );
+		 scene.add(gridYZ);
+
+
+
+		var x, y, z;
+
+		var lineMaterial = new THREE.LineBasicMaterial({
+			color: 0x0000ff
+		});
+		for (var i = 0; i < allIPs.length; i++){
+			var lineGeometry = new THREE.Geometry();
+			ipParts = allIPs[i].split("\.");
+			lineGeometry.vertices.push(
+				new THREE.Vector3( 0,         (ipFirstHalf.indexOf(ipParts[0]+"."+ipParts[1]) / ipFirstHalf.length) * grid_size,  (ipSecondHalf.indexOf(ipParts[2]+"."+ipParts[3]) / ipSecondHalf.length) * grid_size ),
+				new THREE.Vector3( grid_size, (ipFirstHalf.indexOf(ipParts[0]+"."+ipParts[1]) / ipFirstHalf.length) * grid_size,  (ipSecondHalf.indexOf(ipParts[2]+"."+ipParts[3]) / ipSecondHalf.length) * grid_size )
+			);
+			var line = new THREE.Line( lineGeometry, lineMaterial );
+			scene.add(line);	
+		}
+
+		var loader = new THREE.FontLoader();
+		loader.load( '/sake/www/fonts/helvetiker_regular.typeface.json', function ( font ) {
+
+
+
+			for (var i = 0; i < dataLength; i++) {
+		
+			 	var textMaterial = new THREE.MeshPhongMaterial( 
+					{ color: http_colours[data[i][3].charAt(0)], specular: 0xffffff }
+			  	);
+
+				timeParts = data[i][1].match(/(\d{2})\/(\S{3})\/(\d{4}):(\d{2}):(\d{2}):(\d{2}) \+(\d{4})/);
+				thisEpoch = Date.UTC(+timeParts[3], monthString.indexOf(timeParts[2]) / 3 , +timeParts[1], +timeParts[4], +timeParts[5]);
+				x = (thisEpoch - timeFirst) / (timeLast - timeFirst) * grid_size;
+			
+				ipParts = data[i][0].split("\.");
+				
+				y = (ipFirstHalf.indexOf(ipParts[0]+"."+ipParts[1]) / ipFirstHalf.length) * grid_size;
+
+				z = (ipSecondHalf.indexOf(ipParts[2]+"."+ipParts[3]) / ipSecondHalf.length) * grid_size;
+
+
+				//var sphere = new THREE.Mesh(sphereGeometry, material);
+				var textG = new THREE.TextGeometry( data[i][2], {
+					font: font,
+					size: 12,
+					height: 1,
+					curveSegments: 1,
+					bevelThickness: 1,
+					bevelSize: 1,
+					bevelEnabled: true
+				})
+
+				var mesh = new THREE.Mesh( textG, textMaterial );
+
+				mesh.position.x = x;
+				mesh.position.y = y;
+				mesh.position.z = z;
+				mesh.rotation.y = Math.PI / 2;
+				scene.add( mesh );
+
+
+			}
+
+
+			animate();
+
+		})
+
+
+
+		function animate() {
+			requestAnimationFrame( animate );
+			controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
+			render();
+		}
+
+		function render(){
+		//	camera.lookAt(scene.position);
+			renderer.render(scene, camera);
+		}
+
+	 
+});
+
+
+
+
+
+	</script>
+
+</head>
+<body>
+
+	<div id="globe"></div>
+
+</body>
+</html>
+

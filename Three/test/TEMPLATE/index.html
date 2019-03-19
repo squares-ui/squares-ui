@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+	<!--   http://www.smartjava.org/content/render-open-data-3d-world-globe-threejs    -->
+	<script src="https://code.jquery.com/jquery-3.0.0.min.js"></script> 
+	<script src="https://threejs.org/build/three.js"></script>
+	<script src="/sake/www/Three/dat.gui.js"></script>
+	<script src="/sake/www/Three/OrbitControls.js"></script>
+	<script src="/sake/www/lib/threex.rendererstats.js"></script>
+	<script src="/sake/www/lib/stats.js"></script>
+	<link href="/sake/www/styles/style3.css" rel="stylesheet" type="text/css">
+
+	<style>
+		body{ margin: 0; overflow:hidden ; }
+	</style>
+
+	<script type="text/javascript">
+
+	var rendererStats	= new THREEx.RendererStats()
+
+	var stats0 = new Stats();
+	var stats1 = new Stats();
+	var stats2 = new Stats();
+
+	var threeRenderer;
+	var threeScenes = new Object();
+
+	var masterAmbientLight = new THREE.AmbientLight( 0xff0000 );
+	var masterCamera = new THREE.PerspectiveCamera(45, 1, 1, 1000);
+
+	function updateSize_Three() {
+		var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
+		threeRenderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT,  false );
+	}
+
+	$(function (){
+
+
+		var grid_size = 200;
+		var grid_cuts = 20;
+		var id = 1;
+	
+		threeRenderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+		container = document.getElementById( 'SAKEcanvasdiv' );
+		container.appendChild( threeRenderer.domElement );
+
+// 67.219.240.4 - - [02/Apr/2018:21:30:46 +0100] "GET /files/malwareeicarcsharp/malware_eicar_csharp_1522696690.exe HTTP/1.1" 200 5120 "http://7blessings.co.uk/malware.php" "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0" "usernam
+		var data = Array ();
+		data.push(["35.70.13.145", "02/Apr/2018:17:52:37 +0100", "php", "200", "472"]);
+		data.push(["35.70.130.145", "02/Apr/2018:17:52:37 +0100", "exe", "301", "472"]);
+		data.push(["35.71.13.145", "01/Apr/2018:17:52:37 +0100", "jpg", "404", "472"]);
+		data.push(["35.71.13.145", "02/Apr/2018:17:52:37 +0100", "jpg", "404", "472"]);
+		data.push(["35.71.13.145", "03/Apr/2018:17:52:37 +0100", "jpg", "404", "472"]);
+		data.push(["105.10.1.45", "04/Apr/2018:17:57:01 +0100", "pdf", "500", "475532"]);
+		data.push(["5.240.131.1", "02/Apr/2018:17:59:25 +0100", "php", "200", "42"]);
+
+		var dataLength = data.length;
+		var allIPs = Array();
+		var ipParts = Array();
+		var timeParts = Array();
+		var thisEpoch = 0;
+		var monthString = "JanFebMarAprMayJunJulAugSepOctNovDec";
+		var timeFirst = 0, timeLast = 0;
+		var http_colours = ["", "yellow", "green", "black", "orange", "red"];
+
+
+		for (var i = 0; i < dataLength; i++) {
+		}
+
+		
+		var scene = new THREE.Scene();
+		scene.userData.id = id;
+
+		var camera = masterCamera;
+		camera.position.x = 60;
+		camera.position.y = 60;
+		camera.position.z = 60;
+		scene.userData.camera = camera;
+
+		var controls = new THREE.OrbitControls( camera);
+		controls.enableDamping = true;
+		controls.dampingFactor = 0.25;
+		controls.panningMode = THREE.HorizontalPanning;
+		controls.minDistance = 50;
+		controls.maxDistance = 100;
+		controls.maxPolarAngle = Math.PI / 2;
+		controls.autoRotate = true;
+		controls.autoRotateSpeed = 0.06;
+		controls.userRotate = true;
+		controls.userRotateSpeed = 0.01;
+		scene.userData.controls = controls;
+
+		var myLight = masterAmbientLight;
+		scene.add(myLight);
+
+
+		var element = document.getElementById("square_"+id);
+		scene.userData.elementt = element;
+
+		//grid xz
+		 var gridXZ = new THREE.GridHelper(grid_size, grid_cuts);
+		 gridXZ.position.set((grid_size*0.5),0,(grid_size*0.5));
+		 scene.add(gridXZ);
+		 
+		 //grid xy
+		 var gridXY = new THREE.GridHelper(grid_size, grid_cuts);
+		 gridXY.rotation.x = Math.PI/2;
+		 gridXY.position.set((grid_size*0.5), (grid_size*0.5), 0);
+		 gridXY.setColors( new THREE.Color(0xff0000), new THREE.Color(0xffffff) );
+		 scene.add(gridXY);
+		 
+		 //grid yz
+		 var gridYZ = new THREE.GridHelper(grid_size, grid_cuts);
+		 gridYZ.position.set( 0, (grid_size*0.5), (grid_size*0.5) );
+		 gridYZ.rotation.z = Math.PI/2;
+		 gridYZ.setColors( new THREE.Color(0xffffff), new THREE.Color(0x00ff00) );
+		 scene.add(gridYZ);
+
+
+
+		threeScenes["square_"+id] = scene;
+
+		var x, y, z;
+
+
+		for (var i = 0; i < dataLength; i++) {
+	
+
+			var scene = threeScenes["square_"+id];
+//			scene.add(sphere);
+			threeScenes["square_"+id] = scene;
+		}
+
+		animate();
+
+
+
+		function animate() {
+			requestAnimationFrame( animate );
+			controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
+			render();
+		}
+
+		function render(){
+		//	camera.lookAt(scene.position);
+			stats0.begin();
+			stats1.begin();
+			stats2.begin();
+
+			for (var prop in threeScenes) {
+
+				if(!threeScenes.hasOwnProperty(prop)) continue;
+				
+				var scene = threeScenes[prop];
+				var camera = threeScenes[prop].userData.camera;
+				var controls = threeScenes[prop].userData.controls;
+				var element = threeScenes[prop].userData.elementt;
+
+				var rect = element.getBoundingClientRect();
+				var zoom = 1; // - squaregroup.attr("transform").split(" ")[1].split('(')[1].split(')')[0];
+
+				if ( rect.bottom < 0 || rect.top  > threeRenderer.domElement.clientHeight ||
+					rect.right  < 0 || rect.left > threeRenderer.domElement.clientWidth ) {
+				//	return;  // it's off screen
+				}
+
+				var width  = Math.floor((rect.right - rect.left) * zoom);
+				var height = Math.floor((rect.bottom - rect.top) * zoom);
+				var left   = Math.floor(rect.left * zoom);
+				var top    = Math.floor(rect.top * zoom);	
+			
+				controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
+
+
+				threeRenderer.setViewport( left, top, width, height );
+				threeRenderer.setScissor( left, top, width, height );
+
+			
+				threeRenderer.render(threeScenes[prop], camera);
+
+
+
+			};
+	
+			threeRenderer.render(scene, camera);
+			stats0.end();
+			stats1.end();
+			stats2.end();
+		}
+
+	rendererStats.domElement.style.position	= 'absolute'
+	rendererStats.domElement.style.left	= '0px'	
+	rendererStats.domElement.style.bottom	= '0px'
+	document.body.appendChild( rendererStats.domElement )
+	
+	stats0.showPanel( 0 );
+	stats0.domElement.style.cssText = 'position:absolute;top:0px;left:0px;';
+	document.body.appendChild( stats0.dom );
+	stats1.showPanel( 1 );
+	stats1.domElement.style.cssText = 'position:absolute;top:0px;left:80px;';
+	document.body.appendChild( stats1.dom );
+	stats2.showPanel( 2 );
+	stats2.domElement.style.cssText = 'position:absolute;top:0px;left:160px;';
+	document.body.appendChild( stats2.dom );
+	 
+	updateSize_Three();
+});
+
+
+
+
+
+	</script>
+
+</head>
+<body>
+
+	<div id="SAKEcanvasdiv"></div>
+	<div id="square_1" style="position: absolute; width:1200px; height:800px; top: 100px; left: 100px;"></div>
+
+</body>
+</html>
+

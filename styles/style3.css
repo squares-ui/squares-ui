@@ -1,0 +1,520 @@
+.fleft{float:left;border-style:none;border-width:1px;}
+.fright{float:right;}
+.ffull{float:left;}
+.clr{clear:both;}
+
+body{
+	margin:0px;
+	color:black;
+	font-family: Impact;
+	background-color:black;
+	height:100vh;
+	background: #121b2a;
+}
+div{
+	font-family: courier;
+
+}
+
+#SAKEcanvas{
+	position: absolute;
+	left: 0px;
+/*	width: 100%;
+	height: 100%;  */
+	pointer-events: none
+}
+
+#container{
+	position: absolute;
+	z-index: 10;
+}
+
+#bigwrapper{
+	position:absolute;
+
+	top: 0px;
+	width: 100%;
+	height:100%;
+
+	/* https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Grid_Layout/Auto-placement_in_CSS_Grid_Layout  */
+	display: grid;
+	grid-template-rows: auto 70px;
+	grid-template-columns: auto 33%;
+}
+
+	.sake_segment{
+		border-top: 1px solid #aaf8e6;
+		border-bottom: 1px solid #aaf8e6;
+		margin:5px;
+	}
+	
+	#sakecontainer{
+		grid-area: 1 / 1 / 2 / 3;
+	}
+
+
+		#sake{
+		/* SVG */
+			position:absolute;
+			/* background-color:#121b2a; */
+			width:99%;
+		}
+
+			#squaregroup{
+
+			}
+				#linegroup{
+
+				}
+
+				.square_main{
+					/*    */
+				/*	height:100%;*/
+					border-radius: 20px;
+					-webkit-box-shadow: 5px 7px 18px 4px rgba(0,0,0,0.15), inset 0 0 2px #444;
+					-moz-box-shadow: 5px 7px 18px 4px rgba(0,0,0,0.15), inset 0 0 2px #444;
+					box-shadow: 5px 7px 18px 4px rgba(0,0,0,0.15), inset 0 0 2px #444;
+				}
+
+					.square_foreignObject{
+						/* to render HTML inside a SVG  */
+						width:1000px;
+						height:1000px;
+						overflow:scroll;
+					}
+
+						.square_container{
+							height:100%;
+	
+							/* this lays out the square body and square menu */
+							display: grid;
+							grid-template-columns: 50px auto;
+							grid-template-rows: auto 20px;
+
+						}
+/*							.square_menu_container{
+								grid-area: 2 / 1 / 3 / 2;
+								
+								display: grid;
+								grid-template-rows:  auto 20px;
+							}  */
+							.square_menu{
+								width: 100%;
+							}
+							.menu_invisible{
+								/*visibility:hidden;*/
+								visibility:visible;
+							}
+							.square_menu_text{
+								color: #9abec1;
+								font-size:20px;
+							}
+							.square_menu_icons{
+								text-align:center;
+								color: black;
+								font-size:20px;
+								grid-area: 1 / 1 / 3 / 2;
+								
+								/* grid for square menu icon spacing */
+								display: grid;
+								grid-template-rows: repeat( auto-fit, minmax(30px, 1fr) );
+							}
+								.square_menu_icon{
+									padding-left: 5px;
+									padding-right: 5px;
+									margin: 5px;
+									line-height: 50px;
+									justify-self: center;
+								}
+
+								.square_generic_text{
+									color: #9abec1;
+									font-size:24px;
+								}
+								.square_menu_icon_clone{
+									content:url("../icons/103_w.png");
+								}
+								.square_menu_icon_info{
+									content:url("../icons/121_w.png");
+								}
+								.square_menu_icon_edit{
+									content:url("../icons/128_w.png");
+								}
+								.square_menu_icon_reload{
+									content:url("../icons/200_w.png");
+								}
+								.square_menu_icon_move{
+									content:url("../icons/205_w.png");
+								}
+								.square_menu_icon_pivot{
+									content:url("../icons/040_w.png");
+								}
+								.square_menu_icon_template{
+									content:url("../icons/139_w.png");
+								}
+								.square_menu_icon_scale{
+									content:url("../icons/088_w.png");
+								}
+								.square_menu_icon_delete{
+									content:url("../icons/041_w.png");
+								}
+								.square_menu_icon_tobottom{
+									content:url("../icons/140_w.png");
+								}
+	
+							.square_menu_WeWs{
+								grid-area: 2 / 2 / 3 / 3;
+								text-align:center;
+								color: black;
+								font-size:20px;
+
+								/* grid for elements of WeWs row */
+								display: grid;
+								grid-template-columns: auto 80%;
+							}
+
+								.square_menu_WeWs_id{
+									grid-area: 1 / 2 / 1 / 3;
+								}
+								.square_menu_WeWs_times{
+									grid-area: 1 / 1 / 1 / 2;
+								}
+
+							.square_body{
+								grid-area: 1 / 2 / 2 / 3;
+								text-align: center;
+								background: #121b2afd;
+								height:100%;
+								width:100%;
+
+							}
+							.square_content{
+
+							}
+							.square_xhtml{
+							}
+
+
+
+	#sakemenu{
+		margin:5px;
+		padding:10px;
+		grid-area: 2 / 1 / 3 / 2;
+
+		display: grid;
+		grid-template-columns: repeat( auto-fit, minmax(50px, 1fr) );
+		
+	}
+		.sakemenuslot{
+			height:100%;
+			justify-self: center;
+		}
+		.sakemenu_wipereset{
+			content:url("../icons/136_w.png");
+		}
+		.sakemenu_addconnector{
+			content:url("../icons/093_w.png");
+		}
+		.sakemenu_update{
+			content:url("../icons/052_w.png");
+		}
+		.sakemenu_log{
+			content:url("../icons/061_w.png");
+		}
+		.sakemenu_save{
+			content:url("../icons/075_w.png");
+		}
+		.sakemenu_flush{
+			content:url("../icons/138_w.png");
+		}
+		.sakemenu_countelements{
+			content:url("../icons/122_w.png");
+		}
+
+	#screenLog{
+		grid-area: 2 / 2 / 3 / 3;
+		overflow-y: scroll;		
+	}
+
+
+
+
+#transparent_screen{
+	display:none;
+	position:absolute;
+	left:0;
+	top:0;
+	background: rgba(255,255,255,.8);
+	width:100%;
+	height:100%;
+	z-index: 19;
+}
+
+/* twist = overlay to twist the definition of a square */
+.twist_container{
+	top:200px;
+	position:absolute;
+	display:table;
+	left: 25%;
+	display:none;
+}
+.twist{
+	padding:10px;
+	width:25%;
+	margin:auto;
+	text-align:left;
+}
+.twist-body{
+}
+.twist_menubar{
+	padding: 5px;
+	height:24;
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0.01, #3aaee9), color-stop(0.05, #2382b3), color-stop(1, #136b9c))
+
+}
+
+.twist-title{
+	margin-bottom:20px;
+	font-size: 20px;
+}
+.twist-sub-title{
+	margin-bottom:10px;
+	margin-top:10px;
+	text-decoration: underline;
+}
+
+.top_spacing{
+	padding-top:400px;
+}
+
+.hoverform{
+
+}
+.arrowhead1{
+
+}
+.arrowhead2{
+
+}
+.path_all{
+  	stroke-width:10;
+	stroke-dasharray:9;
+}
+.bezier_line{
+	stroke: black;
+	stroke-width: 5
+}
+.bezier_dot{
+	fill: purple;	
+
+}
+.line_half1{
+
+}
+.line_half2{
+
+}
+.line_colour_one{
+	stroke:	#C4A000;
+}
+.line_colour_two{
+	stroke:	#4E9A06;
+}
+.line_colour_three{
+	stroke:	#CE5C00;
+}
+.line_colour_four{
+	stroke:	#204A87;
+}
+.line_colour_five{
+	stroke:	#5C3566;
+}
+
+.square_shine{
+}
+.square_padded{
+	padding:20px;
+}
+
+
+
+.square_cluster_section{
+	padding-top:40px;
+	padding-bottom:10px;
+	display: grid;
+	grid-template-columns: 20% auto 20%;
+}
+
+.square_cluster_text{
+	text-align:left;
+	font-size: 40px;
+	max-width:600px;
+	overflow-wrap: break-word;
+}
+.square_cluster_image{
+	padding-left:40px;
+	height: 90px;
+}
+
+.square_sysmessage{
+	margin:auto;
+}
+
+#hoverInfo{
+	position:absolute;
+	z-index: 100;
+	display:block;
+	padding:8px;
+	color: white;
+	background: #121b2a;
+	border: 1px solid red;
+
+
+}
+
+
+/*  Used for "loading" "no data" etc  */
+.square_dft_message{
+	font-size: 90px;
+}
+.square_dft_message img{
+	height:120px;
+	
+}
+.square_aboutMe{
+	padding-top:50px;
+	
+}
+.square_aboutMe_header{
+	text-align:left;
+	float:left;
+	width:400px;
+	color: #9abec1;
+	font-size:32px;
+	padding-bottom:20px;
+	padding-left:20px;
+	padding-right:20px;
+}
+.square_aboutMe_body{
+	text-align:left;
+	color: #9abec1;
+	font-size:32px;
+}
+
+
+.limitedalertify{
+	width:600px; 
+	word-wrap: break-word;
+}
+
+.box-shadow{
+	0px 0px 22px 8px blue;
+}
+
+.canvas{
+	display:none
+}
+
+.box_binding{
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+
+.fontsize{
+	color: #9abec1;
+	font-size:30px;
+}
+
+select {
+	background: #121b2a;
+}
+
+select option {
+	background: #121b2a;
+}
+textarea {
+	background: #121b2a;
+	width: 90%;
+	height: 150px;
+	font-size:30px;
+}
+/* CSS specific to squares/graphs.  Move to separate file? */
+
+.bluebar {
+  fill: steelblue;
+}
+.redbar {
+  fill: #b446b4;
+}
+
+
+.graph_info_title{
+ /*color: #385054;*/
+ font-weight:bold;
+ 
+}
+.graph_info_body{
+ padding-bottom:9px;
+  font-weight:normal;
+}
+
+.arc text {
+  text-anchor: middle;
+}
+
+.steelblue{
+	color:#84d3e2;
+}
+
+.svg .label {
+  fill: #84d3e2;
+  font: 14px sans-serif;
+  text-anchor: end;
+}
+.graph_updater_centertext{
+	font-size:48px;
+	color: #aaf8e6;
+	height:24%;
+}
+
+.y_overflow{
+	/* https://bugs.chromium.org/p/chromium/issues/detail?id=568614 */
+/*		overflow:scroll; */
+
+}
+
+.link {
+  fill: none;
+  stroke: #555;
+  stroke-opacity: 0.4;
+  stroke-width: 1.5px;
+}
+.small_words{
+  font-size: 12px;
+
+}
+path {
+  fill:none;
+  stroke: #aaf8e6;
+  stroke-width:10;
+}
+path.arc{
+  fill: #121b2a;
+}
+
+.fill_col_1{
+	colour:#6e9aa4;
+	fill:#6e9aa4
+}
+.fill_col_2{
+	color: #aaf8e6;
+	fill: #aaf8e6;
+}
+
+.outline_col_2{
+	fill: none;
+	stroke: #aaf8e6;
+	stroke-width:5;
+}
+

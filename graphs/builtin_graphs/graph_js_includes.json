@@ -1,0 +1,9 @@
+{
+	"graphs":[
+		"./builtin_graphs/builtin_connector.js",
+		"./builtin_graphs/edit_square.js",
+		"./builtin_graphs/update_countdown.js",
+		"./builtin_graphs/describe_square.js",
+		"./builtin_graphs/templates.js"
+	]
+}

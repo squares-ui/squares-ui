@@ -1,0 +1,56 @@
+https://jsfiddle.net/hmwnx966/41/
+
+<div  class="glass">
+  <div class="">
+   <div class="padded">
+     Here
+   </div>
+</div>
+</div>
+
+
+
+
+.glass{
+  position: relative;
+  width: 250px;
+  height: 350px;
+  top: calc(50% - 175px);
+  left: calc(50% - 125px);
+  border: 10px;
+  overflow: hidden; 
+  border-radius: 25px;
+  -webkit-box-shadow: 5px 7px 18px 4px rgba(0,0,0,0.75), inset 0 0 50px #444;
+  -moz-box-shadow: 5px 7px 18px 4px rgba(0,0,0,0.75), inset 0 0 50px #444;
+  box-shadow: 5px 7px 18px 4px rgba(0,0,0,0.75), inset 0 0 50px #444;
+  background:#ffffff22;
+
+}
+
+.shine{
+   background: linear-gradient(top, rgba(255,255,255,0.7) 0%,rgba(255,255,255,0.2) 100%); /* W3C */
+    height: 90px;
+    width: 100%;
+    box-shadow: inset 0px 2px 1px rgba(255, 255, 255, 0.7);
+    border-top-right-radius: 30px;
+    border-top-left-radius: 30px;
+    border-bottom-right-radius: 100px 40px;
+    border-bottom-left-radius: 100px 40px;
+}
+
+.padded{
+  padding:20px;
+}
+
+
+
+body{
+ background-repeat: no-repeat;
+ background-attachment: fixed;
+ background-size: cover;
+ background-position: top;
+ background-image:url(http://bit.ly/2gPLxZ4);
+ width: 100%;
+ height: 100%;
+
+}

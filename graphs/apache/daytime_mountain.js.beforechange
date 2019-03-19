@@ -1,0 +1,217 @@
+graphs_functions_json.add_graphs_json({
+	"apache":{
+		"DayTimeHits":{
+			"populate":"populate_apache_daytime_mountain",
+			"rawtoprocessed":"process_apache_daytime_mountain",
+			"param": "", 
+			"graph":"graph_apache_daytime_mountain",
+			"about": "Links of methods and files"
+		}
+	}
+});
+
+
+
+
+
+function populate_apache_daytime_mountain(id){
+	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	var to = calcGraphTime(id, 'We', 0);
+	var from = (to - retrieveSquareParam(id, "Ws")); 
+	
+	var Ds = btoa(calcDs(id, []));
+	var fields = btoa("date,time,srcip,url,size");
+	apache_connector(id, from, to, Ds, fields);
+	
+}
+
+
+
+function process_apache_daytime_mountain(id){
+	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+
+	var data = retrieveSquareParam(id, 'rawdata_'+'');
+
+	var data2 = Object ();
+	data2.urls = Object ();
+
+	data = data.split("\n");
+	var headers = data.shift();
+
+
+	for (var i = 0; i < data.length ; i++){	
+
+		if(data[i].split("\t")[0] != "" && data[i].split("\t")[0] != null){
+
+			// For looping
+			var thisRow = data[i].split(",");
+			// for ease
+			var [date, time, srcip, url, size] = thisRow;
+
+			if(size =="-"){
+				size = 0;
+			}
+
+			if(typeof data2.urls[thisRow[3]]  === 'undefined' ){
+				data2.urls[url] = Object ();
+
+				data2.urls[url].ips = Object ();
+
+				data2.urls[url].totalSize = 0;
+			}
+			// log theIP as a key (not a counter)
+			data2.urls[url].ips[srcip] = 0;
+
+			data2.urls[url].totalSize = parseInt(data2.urls[url].totalSize) + parseInt(size);
+
+		}
+	}	
+
+
+	// find the highest amount of IPs for a URL, and the highest totalBytes
+	data2.highestBytes = 0;
+	data2.mostIps = 0;
+	
+	qq(JSON.stringify(data2));
+	for (var key in data2.urls){
+		if (!data2.urls.hasOwnProperty(key)) continue;
+
+		if(Object.keys(data2.urls[key].ips).length > data2.mostIps){
+			data2.mostIps = Object.keys(data2.urls[key].ips).length;
+		}
+		if(data2.urls[key].totalSize > data2.highestBytes){
+			data2.highestBytes = data2.urls[key].totalSize;
+		}
+		
+
+	}
+
+	saveProcessedData(id, '', data2);
+
+}
+
+
+function graph_apache_daytime_mountain(id){
+	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	
+	var squareContainer = sake.selectAll('#square_container_'+id)
+	var square = squareContainer
+		.append("xhtml:div") 
+		//.append("svg")
+		//.append("canvas")
+			.attr("id", function(d){ return "square_"+d.id })
+			.classed("box_binding", true)
+			.classed("square_body", true)
+			.classed("square_xhtml", true)
+			.classed("y_overflow", true)
+		.on("mousedown", function() { d3.event.stopPropagation(); })
+	var height = document.getElementById("square_"+id).clientHeight;
+	var width  = document.getElementById("square_"+id).clientWidth;
+
+	// srcip,date,time,extension,http_response,size
+	var data = retrieveSquareParam(id, 'processeddata');
+	
+	var scene = new THREE.Scene();
+	scene.userData.id = id;
+	scene.userData.doMousePos = true;
+
+	//var gridXZ = masterGridXZ.clone();  //clone not implemented for grids??
+	var gridXZ =  new THREE.GridHelper(grid_size, grid_cuts, gridCenterLine, gridLines);
+	gridXZ.position.set((grid_size*0.5), 0, (grid_size*0.5));
+//	scene.add(gridXZ);
+
+	var element = document.getElementById("square_"+id);
+	scene.userData.elementt = element;
+
+	var camera = masterCamera.clone();
+	camera.position.x = grid_size*1.5;
+	camera.position.y = grid_size*1.5;
+	camera.position.z = grid_size*1.5;
+	scene.userData.camera = camera;
+
+	var myLight = masterAmbientLight.clone();
+	scene.add(myLight);
+
+	var controls = new THREE.OrbitControls( camera);
+	controls.enableDamping = true;
+	controls.dampingFactor = 0.25;
+	controls.panningMode = THREE.HorizontalPanning;
+	controls.minDistance = grid_size*1.9;
+	controls.maxDistance = grid_size*4;
+	controls.maxPolarAngle = Math.PI / 2;
+	controls.autoRotate = true;
+	controls.autoRotateSpeed = 0.06;
+	controls.userRotate = true;
+	controls.userRotateSpeed = 0.01;
+	controls.target.x = 100;
+	controls.target.y = 100;
+	controls.target.z = 100;
+	scene.userData.controls = controls;
+
+
+	var raycaster = new THREE.Raycaster();
+	scene.userData.raycaster = raycaster;
+
+	// *****
+	var boxGeometry = new THREE.BoxGeometry(2, 2, 2);
+
+	var materialGr = new THREE.MeshBasicMaterial( { color: "green"} );
+	var materialOr = new THREE.MeshBasicMaterial( { color: "orange"} );
+	var materialBl = new THREE.MeshBasicMaterial( { color: "blue"} );
+
+	var markerGr = new THREE.Mesh(boxGeometry, materialGr);
+	var markerOr = new THREE.Mesh(boxGeometry, materialOr);
+	var markerBl = new THREE.Mesh(boxGeometry, materialBl);
+
+	var rfc1918 = new RegExp("^(?:10|127|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\..*");
+
+
+	for (var i = 0; i < data.length; i++){
+		//qq(data[i]);	
+
+		var vertex1 = new THREE.Vector3();
+		vertex1.x = (myB / myP) / bytesperPacket * grid_size;
+		vertex1.y = 0;
+		vertex1.z = (Math.log(myS) / Math.log(maxSessions)) * grid_size;
+		geometry.vertices.push( vertex1 );
+		
+		var vertex2 = new THREE.Vector3();
+		vertex2.x = (myB / myP) / bytesperPacket * grid_size;
+		vertex2.y = (Math.log(myB) / Math.log(maxBytes)) * grid_size;
+		vertex2.z = (Math.log(myS) / Math.log(maxSessions)) * grid_size;
+		geometry.vertices.push( vertex2 );
+
+		var marker = new THREE.Mesh(markerBl, thisMaterial);
+		marker.position.x = (myB / myP) / bytesperPacket * grid_size;
+		marker.position.y = (Math.log(myB) / Math.log(maxBytes)) * grid_size;
+		marker.position.z = (Math.log(myS) / Math.log(maxSessions)) * grid_size;
+		marker.sakeName = data[i]["columns"][0]+" {bytes:"+countBytes(myB)+", sessions:"+myS+", packets:"+myP+"} {avg bytes per packet:"+(myB / myP)+"}";
+
+		let thisIP = data[i]["columns"][0];
+		let clickObject = btoa('ipv4_responder="'+thisIP+'"');
+		sphere.sakeAction = function(){ childFromClick(id, {"y": 1000, "Ds": clickObject} , {} ) };
+
+
+		scene.add(marker);
+
+
+
+	}
+
+	material = new THREE.LineBasicMaterial( { color: 0x456569, linewidth: 200 } );
+	var myLines = new THREE.LineSegments( geometry, material );
+	myLines.updateMatrix();
+	
+	scene.add(myLines);
+
+	//scene.add(myLines);
+	threeScenes["square_"+id] = scene;
+
+
+
+}	
+
+ 
+
+
+

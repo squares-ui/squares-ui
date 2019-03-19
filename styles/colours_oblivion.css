@@ -1,0 +1,98 @@
+/* colours used around in the same pallette */
+/* this based on Oblicion https://ilikeinterfaces.com/2015/04/21/ui-review-oblivion/  */
+/*  https://github.com/jbrooksuk/Oblivion/blob/master/src/palette.yml  */
+
+butter1:     "FCE94F"
+butter2:     "EDD400"
+butter3:     "C4A000"
+chameleon1:  "8AE234"
+chameleon2:  "73D216"
+chameleon3:  "4E9A06"
+orange1:     "FCAF3E"
+orange2:     "F57900"
+orange3:     "CE5C00"
+skyblue1:    "729FCF"
+skyblue2:    "3465A4"
+skyblue3:    "204A87"
+plum1:       "AD7FA8"
+plum2:       "75507B"
+plum3:       "5C3566"
+chocolate1:  "E9B96E"
+chocolate2:  "C17D11"
+chocolate3:  "8F5902"
+scarletred1: "EF2929"
+scarletred2: "CC0000"
+scarletred3: "A40000"
+aluminium1:  "EEEEEC"
+aluminium2:  "D3D7CF"
+aluminium3:  "BABDB6"
+aluminium4:  "888A85"
+aluminium5:  "555753"
+aluminium6:  "2E3436"
+
+.theme_darkest{
+	fill:#165b56;	
+	color:#165b56;
+	background-color:#165b56;
+}
+
+.theme_lightest{
+	fill:e6eec9;	
+	color:#e6eec9;
+	background-color:#e6eec9;
+}
+.theme_fruity{
+	fill:#e6a179;	
+	color:#e6a179;
+	background-color:#e6a179;
+}
+.theme_fruity_link{
+	stroke: #e6a179;
+}
+
+.theme_alarm{
+	fill:#a6323e;	
+	color:#a6323e;
+	background-color:#a6323e;
+}
+
+.theme_col_1_unsat{
+	fill:#aaf8e6;	
+	color:#aaf8e6;
+	background-color:#aaf8e6;
+}
+.theme_col_1_sat{
+	fill:#1bb8a9;	
+	color:#1bb8a9;
+	background-color:#1bb8a9;
+}
+
+.theme_col_2_unsat{
+	fill:#9abec1;	
+	color:#9abec1;
+	background-color:#9abec1;
+}
+.theme_col_2_sat{
+	fill:#136d68;	
+	color:#136d68;
+	background-color:#136d68;
+}
+
+.theme_col_3_unsat{
+	fill:#6e9aa4;	
+	color:#6e9aa4;
+	background-color:#6e9aa4;
+}
+.theme_col_3_sat{
+	fill:#165b56;	
+	color:#165b56;
+	background-color:#165b56;
+}
+.theme_col_3_unsat_empty{
+	ill: none;
+	stroke:  #165b56;
+	stroke-width: 2;
+}
+
+
+

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+
+	<title>SAKE: Squared Analytical Klickable Interface</title>
+
+	<script type="text/javascript">
+		// Add \<script src="./graphs/*****.js"\>\</script\> Below
+		var import_graphs = new Array();
+	</script>
+	
+	<script src="./config.js"></script>
+
+	<script src="https://code.jquery.com/jquery-3.0.0.min.js"></script> 
+	<script src="./lib/d3.v4.min.js" charset="utf-8"></script>
+
+
+	<script src="./lib/jstools.js"></script>
+	<script src="./lib/moment.js"></script>
+	<script src="./lib/moment-timezone-with-data-2010-2020.js"></script>
+	<script src="./lib/md5.js"></script>
+	<script src="./lib/jquery.cookie.js"></script>
+<!--        <script src="./lib/cors.js"></script>  -->
+
+	<script src="./lib/d3.parsets.js"></script>
+	<script src="./lib/highlight.min.js"></script>
+	<script src="./lib/d3.layout.cloud.js"></script>
+
+	<script src="./alertify.js-0.3.11/lib/alertify.min.js"></script>
+	<script src="./lib/sankey.js"></script>  <!-- from Mike Bostock -->
+	
+	<script src="./lib/lockr.js"></script>
+
+	<script src="./lib/tsvJSON.js"></script>
+
+
+	<script src="https://threejs.org/build/three.js"></script>
+	<script src="./Three/dat.gui.js"></script>
+	<script src="./Three/OrbitControls.js"></script>
+	<script src="./lib/threex.rendererstats.js"></script>
+	<script src="./lib/stats.js"></script>
+
+	<link href="./styles/style4.css" rel="stylesheet" type="text/css">
+	<link href="./styles/colours_oblivion.css" rel="stylesheet" type="text/css">
+
+	<link rel="stylesheet" href="./alertify.js-0.3.11/themes/alertify.core.css" />
+	<link rel="stylesheet" href="./alertify.js-0.3.11/themes/alertify.default.css" id="toggleCSS" />	
+	
+
+	<script src="./index.js"></script>
+	<script src="./myThree.js"></script>
+
+</head>
+<body>
+
+
+<div id="bigwrapper">
+
+	<div id="sakecontainer" class="sake_segment">
+		<svg version="1.1" xmlns="http://www.w3.org/2000/svg" id="sake" stroke-opacity="0.3"> </svg> 
+		<!-- canvas inserted here -->
+	</div> 
+	
+
+
+	<div id="sakemenu" class="sake_segment fleft">
+		<img class='sakemenuslot fleft sakemenu_wipereset'  onclick='wipereset()' alt='Reset'/>
+		<img class='sakemenuslot fleft sakemenu_addconnector' onclick='addGraphConnector()' alt='showConnectors'/>
+		<img class='sakemenuslot fleft sakemenu_update' onclick='updaterefresh(); alertify.log("URL Refreshed")' alt='Refresh'  />
+		<img class='sakemenuslot fleft sakemenu_log'   onclick='qq(url); alertify.log("URL Logged to Console")' alt='Log' />
+		<img class='sakemenuslot fleft sakemenu_save' onclick='bookmarks();' alt='Save' />
+		<img class='sakemenuslot fleft sakemenu_flush' onclick='Lockr.flush()' alt='Flush Data' />
+		<img class='sakemenuslot fleft sakemenu_countelements' onclick='alertify.log(
+		    "Squares: "+url.sake.squares.length + "<br>" +
+		    "G: "+document.getElementsByTagName("g").length + "<br>" +
+		    "Text: "+document.getElementsByTagName("text").length + "<br>" +
+		    "Path: "+document.getElementsByTagName("path").length + "<br>" +
+		    "DIV: "+document.getElementsByTagName("div").length + "<br>" +
+		    "SVG: "+document.getElementsByTagName("svg").length + "<br>"
+			)' alt='Count Elements' />
+	</div>
+
+
+
+	<div id="screenLog" class="sake_segment fleft square_menu_text">
+		No Logs
+	</div>
+
+</div>
+
+<div id='hoverInfo'></div>
+
+</body>
+</html>
+
+
+

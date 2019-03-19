@@ -1,0 +1,14 @@
+performance checks
+https://pagebuildersandwich.com/increased-plugins-performance-200/
+https://gist.github.com/paulirish/5d52fb081b3570c81e3a
+
+https://codepen.io/kekkorider/pen/BRrgbY
+
+https://www.google.co.uk/search?q=Web+workers&oq=Web+workers&aqs=chrome..69i57&sourceid=chrome&ie=UTF-8
+
+https://www.html5rocks.com/en/tutorials/workers/basics/
+
+
+https://www.nczonline.net/blog/2009/01/13/speed-up-your-javascript-part-1/
+https://www.nczonline.net/blog/2009/08/11/timed-array-processing-in-javascript/
+https://www.nczonline.net/blog/tag/performance/

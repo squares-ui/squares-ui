@@ -1,0 +1,17 @@
+{
+	"graphs":[
+		"./apache/apache_connector.js",
+		"./apache/ssl_piecharts.js",
+		"./apache/flags_grid.js",
+		"./apache/ip_heirarchy_tree.js",
+		"./apache/ip_url_grid.js",
+		"./apache/url_partition.js",
+		"./apache/usage_sunburst.js",
+		"./apache/url_branch.js",
+		"./apache/hits_url.js",
+		"./apache/loc_globe_three.js",
+		"./apache/activity_cube.js",
+		"./apache/methodfilesize_tube.js",
+		"./apache/daytime_mountain.js"
+	]
+}

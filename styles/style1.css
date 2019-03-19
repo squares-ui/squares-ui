@@ -1,0 +1,364 @@
+.fleft{float:left;border-style:none;border-width:1px;}
+.fright{float:right;}
+.ffull{float:left;}
+.clr{clear:both;}
+
+body{
+	margin:0px;
+	height:100vh;
+}
+
+div{
+        font-family: courier;
+}
+
+#bigwrapper{
+        height:100%;
+}
+
+
+#transparent_screen{
+	display:none;
+	position:absolute;
+	left:0;
+	top:0;
+	background: rgba(255,255,255,.8);
+	width:100%;
+	height:100%;
+	z-index: 19;
+}
+
+/* twist = overlay to twist the definition of a square */
+.twist_container{
+	top:200px;
+	position:absolute;
+	z-index: 20;
+	display:table;
+	left: 25%;
+	display:none;
+}
+.twist{
+	padding:10px;
+	width:25%;
+	margin:auto;
+	text-align:left;
+}
+.twist-body{
+}
+.twist_menubar{
+	padding: 5px;
+	height:24;
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0.01, #3aaee9), color-stop(0.05, #2382b3), color-stop(1, #136b9c))
+
+}
+
+.twist-title{
+	margin-bottom:20px;
+	font-size: 20px;
+}
+.twist-sub-title{
+	margin-bottom:10px;
+	margin-top:10px;
+	text-decoration: underline;
+}
+
+.table_formatted{
+    border:none;
+    border-collapse: collapse;
+}
+.table_formatted td:first-child {
+    border-left: none;
+}
+.table_formatted td {
+    border-left: 1px solid #000;
+    border-right: 1px solid #000;
+    padding:5px;
+}
+.table_formatted td:last-child {
+    border-right: none;
+}
+.table_formatted td.limit
+{
+    max-width: 250px;
+    word-wrap: break-word;
+}
+
+.hoverform{
+
+}
+
+#sakemenu{
+	z-index: 10;
+	top:10px;
+	left:0px;
+	position:fixed;
+}
+
+.sakemenuslot{
+	padding-left:40px;
+	padding-right:40px;
+	border-right:2px solid;
+}
+.sakemenuimage{
+	height:36px;
+}
+
+.sakemenu_wipereset{
+        content:url("../icons/136_w.png");
+}
+.sakemenu_addconnector{
+        content:url("../icons/093_w.png");
+}
+.sakemenu_update{
+        content:url("../icons/052_w.png");
+}
+.sakemenu_log{
+        content:url("../icons/061_w.png");
+}
+.sakemenu_save{
+        content:url("../icons/075_w.png");
+}
+.sakemenu_flush{
+        content:url("../icons/138_w.png");
+}
+.sakemenu_countelements{
+        content:url("../icons/122_w.png");
+}
+
+
+#sakecontainer{
+}
+
+#sake{
+/* SVG */
+	z-index: 1;
+	width:100%;
+}
+
+.arrowhead1{
+
+}
+.arrowhead2{
+
+}
+
+#squaregroup{
+
+}
+
+#linegroup{
+
+}
+
+.line_all{
+  	stroke-width:10;
+	stroke-dasharray:9;
+}
+.line_half1{
+
+}
+.line_half2{
+
+}
+.line_colour_orange{
+	stroke:	#555;
+}
+.line_colour_blue{
+	stroke:	#3366ff;
+}
+.line_colour_grey{
+	stroke:	#ff3333;
+}
+.line_colour_red{
+	stroke:	#ffb732;
+}
+.square_main{
+	height:100%;
+}
+.square_foreignObject{
+	/* to render HTML inside a SVG  */
+	width:1000px;
+	height:1000px;
+	overflow:scroll;
+}
+.square_xhtml{
+}
+
+.square_body{
+	background-color:white;
+	border:  2px solid steelblue;
+	text-align: center;
+}
+
+.square_menu_container{
+        padding-top:20px;
+}
+
+
+.square_menu{
+	width: 100%;
+	padding: 5px;
+	height:32px;
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0.01, #3aaee9), color-stop(0.05, #2382b3), color-stop(1, #136b9c));
+
+}
+.square_menu_icon{
+	height:100%;
+	padding-right:10px;
+	padding-left:10px;
+	
+}
+.square_menu_text{
+	color: white;
+	font-size:20px;
+}
+.square_menu_icon_clone{
+	content:url("../icons/103_b.png");
+}
+.square_menu_icon_info{
+	content:url("../icons/121_b.png");
+}
+.square_menu_icon_edit{
+	content:url("../icons/128_b.png");
+}
+.square_menu_icon_reload{
+	content:url("../icons/200_b.png");
+}
+.square_menu_icon_pivot{
+	content:url("../icons/040_b.png");
+}
+.square_menu_icon_template{
+	content:url("../icons/139_b.png");
+}
+.square_menu_icon_scale{
+	content:url("../icons/088_b.png");
+}
+.square_menu_icon_delete{
+	content:url("../icons/041_b.png");
+}
+
+
+.square_WeWs{
+	background: #136b9c;
+	text-align:center;
+	color: white;
+	font-size:20px;
+}
+
+.square_content{
+
+}
+
+.square_cluster_section{
+	padding-top:50px;
+	padding-bottom:120px;
+}
+
+.square_cluster_text{
+	
+	text-align:left;
+	font-size: 40px;
+	max-width:600px;
+	overflow-wrap: break-word;
+}
+.square_cluster_image{
+	padding-left:40px;
+	height: 90px;
+}
+
+.square_sysmessage{
+	margin:auto;
+	padding-top:200px;
+}
+
+/*  Used for "loading" "no data" etc  */
+.square_dft_message{
+	font-size: 90px;
+	padding-top:400px;
+}
+.square_dft_message img{
+	height:120px;
+	
+}
+
+.limitedalertify{
+	width:600px; 
+	word-wrap: break-word;
+}
+
+.box-shadow{
+	0px 0px 22px 8px blue;
+}
+
+.canvas{
+	display:none
+}
+
+.box_binding{
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+
+.fontsize{
+	font-size: 25px;
+}
+
+/* CSS specific to squares/graphs.  Move to separate file? */
+
+.bluebar {
+  fill: steelblue;
+}
+.redbar {
+  fill: #b446b4;
+}
+
+
+.graph_info_title{
+ /*color: #385054;*/
+ font-weight:bold;
+ 
+}
+.graph_info_body{
+ padding-bottom:9px;
+  font-weight:normal;
+}
+
+.arc text {
+  font: 10px sans-serif;
+  text-anchor: middle;
+}
+.arc path {
+  stroke: #fff;
+}
+
+.steelblue{
+	color:#84d3e2;
+}
+
+.svg .label {
+  fill: #84d3e2;
+  font: 14px sans-serif;
+  text-anchor: end;
+}
+.graph_updater_centertext{
+	padding-top:200px;
+	font-size:100px;
+}
+
+.y_overflow{
+	/* https://bugs.chromium.org/p/chromium/issues/detail?id=568614 */
+/*		overflow:scroll; */
+
+}
+
+.link {
+  fill: none;
+  stroke: #555;
+  stroke-opacity: 0.4;
+  stroke-width: 1.5px;
+}
+.small_words{
+  font-size: 12px;
+
+}

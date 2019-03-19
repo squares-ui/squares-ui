@@ -1,0 +1,259 @@
+graphs_functions_json.add_graphs_json({
+	"SecurityAnalytics":{
+		"Socket Tube":{
+			"populate":"populate_SA_socket_tube",
+			"rawtoprocessed":"process_SA_socket_tube",
+			"param": "", 
+			"graph":"graph_SA_socket_tube",
+			"about": "Y = Bytes.  X = bytes/packet.  Z = Sessions.  Green = RFC1928."
+		}
+	}
+});
+
+
+
+
+
+function populate_SA_socket_tube(id){
+
+	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	
+	var Ds = calcDs(id, []);
+	var filter = "?";
+	for(var i in Ds){
+		filter+="&filter[]="+btoa(  Ds[i]   );
+	}
+
+	var to = moment(calcGraphTime(id, 'We', 0), "X").format();
+	var from =  moment( (calcGraphTime(id, 'We', 0) - retrieveSquareParam(id, "Ws")) , "X").format();
+	
+	var Ds = btoa(calcDs(id, []));
+	var fields = ["initiator_port", "initiator_ip", "initiator_mac", "vlan_id", "responder_mac", "responder_ip", "responder_port"];
+
+	var limit = 1000;
+
+	getAttributeTsv_Generic(id, fields, from, to, filter, limit, true, '');
+
+	
+}
+
+
+
+function process_SA_socket_tube(id){
+	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+
+	var data = retrieveSquareParam(id, 'rawdata_'+'');
+
+	data2 = data.split("\n");		
+	
+	data3 = Object();
+	data3.initPortObj = Object();
+	data3.initIpObj = Object();
+	data3.initMacObj = Object();
+	data3.vlanObj = Object();
+	data3.respMacObj = Object();
+	data3.respIpObj = Object();
+	data3.respPortObj = Object();
+
+	data3.lines = Object();
+	data3.lines.portToIp = Object();
+
+	var lineGroups = ["portToIp", "ipToMaC", "macToVlan", "vlanToMac", "macToIp", "ipToPort"];
+	var columnNames = ["init_port", "init_ip", "init_mac", "vlan", "resp_mac", "resp_ip", "resp_port"]
+
+	for (var i = 1; i < data2.length ; i++){	
+
+		// take out unique values for creating spheres
+		if(data2[i].split("\t")[0] != ""){
+			var [slot_id, element_id, init_port, init_ip, init_mac, vlan, resp_mac, resp_ip, resp_port] = data2[i].split("\t");
+			data3.initPortObj[init_port] = 0;
+			data3.initIpObj[init_ip] = 0;
+			data3.initMacObj[init_mac] = 0;
+			data3.vlanObj[vlan] = 0;
+			data3.respMacObj[resp_mac] = 0;
+			data3.respIpObj[resp_ip] = 0;
+			data3.respPortObj[resp_port] = 0;
+		}
+
+		// create data for links between init_port -> init_mac, init_mac -> init
+
+		
+		if(typeof data3.lines.portToIp[init_port] !== 'undefined' && typeof data3.lines.portToIp[init_port][init_ip] !== 'undefined' ){
+			data3.lines.portToIp[init_port][init_ip]++;
+		}else if( typeof data3.lines.portToIp[init_port] === 'undefined'   ){
+			data3.lines.portToIp[init_port] = Object ();
+			data3.lines.portToIp[init_port][init_ip] = 1;
+		}
+
+	}
+
+qq(data3.lines.portToIp);
+
+	data4 = Object();
+
+	data4.spheres = Object();
+	data4.spheres.initPort = Object.keys(data3.initPortObj);	
+	data4.spheres.initIp = Object.keys(data3.initIpObj);	
+	data4.spheres.initMac = Object.keys(data3.initMacObj);	
+	data4.spheres.vlan = Object.keys(data3.vlanObj);	
+	data4.spheres.respMac = Object.keys(data3.respMacObj);	
+	data4.spheres.respIp = Object.keys(data3.respIpObj);	
+	data4.spheres.respPort = Object.keys(data3.respPortObj);	
+
+	data4.lines = data3.lines;
+
+	saveProcessedData(id, '', data4);
+}
+
+
+function graph_SA_socket_tube(id){
+	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	
+	var squareContainer = sake.selectAll('#square_container_'+id)
+	var square = squareContainer
+		.append("xhtml:div") 
+		//.append("svg")
+		//.append("canvas")
+			.attr("id", function(d){ return "square_"+d.id })
+			.classed("box_binding", true)
+			.classed("square_body", true)
+			.classed("square_xhtml", true)
+			.classed("y_overflow", true)
+		.on("mousedown", function() { d3.event.stopPropagation(); })
+	var height = document.getElementById("square_"+id).clientHeight;
+	var width  = document.getElementById("square_"+id).clientWidth;
+
+	// srcip,date,time,extension,http_response,size
+	var data = retrieveSquareParam(id, 'processeddata');
+	
+	var scene = new THREE.Scene();
+	scene.userData.id = id;
+	scene.userData.doMousePos = true;
+
+	//var gridXZ = masterGridXZ.clone();  //clone not implemented for grids??
+	var gridXZ =  new THREE.GridHelper(grid_size, grid_cuts, gridCenterLine, gridLines);
+	gridXZ.position.set((grid_size*0.5), 0, (grid_size*0.5));
+//	scene.add(gridXZ);
+
+	var element = document.getElementById("square_"+id);
+	scene.userData.elementt = element;
+
+	var camera = masterCamera.clone();
+	camera.position.x = grid_size*1.5;
+	camera.position.y = grid_size*1.5;
+	camera.position.z = grid_size*1.5;
+	scene.userData.camera = camera;
+
+	var myLight = masterAmbientLight.clone();
+	scene.add(myLight);
+
+	var controls = new THREE.OrbitControls( camera);
+	controls.enableDamping = true;
+	controls.dampingFactor = 0.25;
+	controls.panningMode = THREE.HorizontalPanning;
+	controls.minDistance = grid_size*1.9;
+	controls.maxDistance = grid_size*4;
+	controls.maxPolarAngle = Math.PI / 2;
+	controls.autoRotate = true;
+	controls.autoRotateSpeed = 0.06;
+	controls.userRotate = true;
+	controls.userRotateSpeed = 0.01;
+	controls.target.x = 100;
+	controls.target.y = 100;
+	controls.target.z = 100;
+	scene.userData.controls = controls;
+
+
+	var raycaster = new THREE.Raycaster();
+	scene.userData.raycaster = raycaster;
+
+	// *****
+	var sphereGeometry = new THREE.SphereGeometry(2, 4, 4);
+	var materialGr = new THREE.MeshBasicMaterial( { color: "green"} );
+	var sphere = new THREE.Mesh(sphereGeometry, materialGr);
+
+	var logMaxGuesstimate = 2000; // revise how we do this.  1,000,000 events too big for chat?  too big for browser?
+
+	closeParts = ["initPort", "initIp", "initMac", "vlan", "respMac", "respIp", "respPort"];
+
+	for (var j = 0; j < closeParts.length; j++){
+		
+		// radius, stick closer to middle, if less items
+		radius = Math.log(data["spheres"][closeParts[j]].length) / Math.log(2000) * grid_size;
+
+		for (var i = 0; i < data["spheres"][closeParts[j]].length ; i++){
+
+			x = (j / closeParts.length) * grid_size;
+			// opposite = radius * sin degrees
+			y = radius * Math.sin( i / data["spheres"][closeParts[j]].length * 360) + (grid_size/2); 
+			// adjacent = radius * cos degrees
+			z = radius * Math.cos( i / data["spheres"][closeParts[j]].length * 360) + (grid_size/2); 
+			
+			var thisSphere = sphere.clone();		
+			thisSphere.position.x = x;
+			thisSphere.position.y = y;
+			thisSphere.position.z = z;
+
+			thisSphere.sakeName = data["spheres"][closeParts[j]][i];
+			scene.add(thisSphere);
+		}
+
+	}
+
+	var geometry = new THREE.Geometry();
+
+
+	
+	for (var j = 0; j < closeParts.length-1; j++){
+		var radius1 = Math.log(data["spheres"][closeParts[j]].length) / Math.log(2000) * grid_size;
+		var radius2 = Math.log(data["spheres"][closeParts[j+1]].length) / Math.log(2000) * grid_size;
+
+		for (var k1 in data.lines.portToIp) {
+			if (!data.lines.portToIp.hasOwnProperty(k1)) continue;
+
+			for (var k2 in data.lines.portToIp[k1]){
+				if (! data.lines.portToIp[k1].hasOwnProperty(k2)) continue;
+				
+				//qq(k1+" "+k2+" = "+data.lines.portToIp[k1][k2]);
+				qq(k1+" > "+k2);
+					
+
+				var vertex1 = new THREE.Vector3();
+				vertex1.x = (j / closeParts.length) * grid_size;
+				vertex1.y = radius1 * Math.sin( data["spheres"][closeParts[j]].indexOf(k1) / data["spheres"][closeParts[j]].length * 360) + (grid_size/2);
+				vertex1.z = radius1 * Math.cos( data["spheres"][closeParts[j]].indexOf(k1) / data["spheres"][closeParts[j]].length * 360) + (grid_size/2);
+				
+				var vertex2 = new THREE.Vector3();
+				vertex2.x = ((j+1) / closeParts.length) * grid_size;
+				vertex2.y = radius2 * Math.sin( data["spheres"][closeParts[j+1]].indexOf(k2) / data["spheres"][closeParts[j+1]].length * 360) + (grid_size/2);
+				vertex2.z = radius2 * Math.cos( data["spheres"][closeParts[j+1]].indexOf(k2) / data["spheres"][closeParts[j+1]].length * 360) + (grid_size/2);
+				
+				geometry.vertices.push( vertex1 );
+				geometry.vertices.push( vertex2 );
+			}
+
+		}
+	}
+
+	material = new THREE.LineBasicMaterial( { color: 0x000044, linewidth: 1 } );
+	var myLines = new THREE.LineSegments( geometry, material );
+	myLines.updateMatrix();
+	scene.add(myLines);
+
+
+
+
+
+
+
+
+	//scene.add(myLines);
+	threeScenes["square_"+id] = scene;
+
+
+}	
+
+ 
+
+
+

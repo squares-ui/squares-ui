@@ -1,0 +1,77 @@
+
+<html>
+
+<head>
+
+	<title>SAKE: Squared Analytical Klickable Interface</title>
+
+	<script type="text/javascript">
+		var import_graphs = new Array();
+	</script>
+	
+	<script src="./config.js"></script>
+
+	<script src="https://code.jquery.com/jquery-3.0.0.min.js"></script> 
+	<script src="./lib/d3.v3.js" charset="utf-8"></script>
+	
+	<script src="./lib/jstools.js"></script>
+	<script src="./lib/moment.js"></script>
+	<script src="./lib/moment-timezone-with-data-2010-2020.js"></script>
+	<script src="./lib/md5.js"></script>
+	<script src="./lib/jquery.cookie.js"></script>
+
+	<script src="./lib/d3.parsets.js"></script>
+	<script src="./lib/highlight.min.js"></script>
+
+	<script src="./alertify.js-0.3.11/lib/alertify.min.js"></script>
+	<script src="./lib/sankey.js"></script>  <!-- from Mike Bostock -->
+	
+	<script src="./lib/lockr.js"></script>
+
+	<script src="./lib/tsvJSON.js"></script>
+
+	<!-- ***** Graphs Lists ***** -->
+	<script src="./graphs/TopX_Generic.js"></script>
+	<script src="./graphs/tsv_Generic.js"></script>
+	<script src="./graphs/infoonly.js"></script>
+	<script src="./graphs/graph_timezones.js"></script>
+	<script src="./graphs/graph_bytepacketsessions.js"></script>
+	<script src="./graphs/perbytepacketsession.js"></script>
+	<script src="./graphs/browsingtree.js"></script>
+	<script src="./graphs/DnsTldDonut/DnsTldDonut.js"></script>
+	<script src="./graphs/bytepacketapplication.js"></script>
+	<script src="./graphs/DangerousFilesApplication.js"></script>
+	<script src="./graphs/AppGroupVSSource/AppGroupVSSource.js"></script>
+	<script src="./graphs/url_struct/url_struct.js"></script>
+    <script src="./graphs/testTSV/testTSV.js"></script>
+
+	<link href="./style.css" rel="stylesheet" type="text/css">
+	
+	<link rel="stylesheet" href="./alertify.js-0.3.11/themes/alertify.core.css" />
+	<link rel="stylesheet" href="./alertify.js-0.3.11/themes/alertify.default.css" id="toggleCSS" />	
+	
+
+    <script src="./index.js"></script>
+
+	<script type="text/javascript">
+	
+var log = "1476	721	0	0.0.0.0		11	00:50:56:69:aa:7f	224.0.0.1	0";
+
+qq(log.split("\t"));
+qq("v"+log.split("\t")[4]);
+
+
+
+	</script>
+
+</script>
+
+</head>
+<body>
+		<select id='clone_template_dropdown_id' name='clone_template_dropdown_id'>
+                        <option value="">Loading...</option>
+                    </select>
+
+</body>
+
+<html>
