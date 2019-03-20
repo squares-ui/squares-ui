@@ -1,8 +1,0 @@
-{
-	"handle": "TrainingCloud",
-	"type": "SecurityAnalytics",
-	"desc": "Training cloud solera networks",
-	"dst": "trainingcloud.soleranetworks.com:8800",
-	"username": "atpse",
-	"apikey": "FlHC6fKHQ3X41q2iMbYF23xyaZkvPDMXCRYUT5cGfhWByZSxf7"
-}
