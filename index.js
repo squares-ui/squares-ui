@@ -925,7 +925,7 @@ function graphLoading(id){
 			.on("mousedown", function() { d3.event.stopPropagation(); })
 	var width = square.attr("width");
 	var loadingImage = square.append("img")
-			.attr("src","./icons/021_b.png")
+			.attr("src","./images/021_b.png")
 			.classed("top_spacing", "true")
 			.on("mousedown", function() { d3.event.stopPropagation(); })
 	;		
@@ -950,7 +950,7 @@ function graphNoData(id){
 			.on("mousedown", function() { d3.event.stopPropagation(); })
 	var width = square.attr("width");
 	var loadingImage = square.append("img")
-			.attr("src","./icons/168_b.png")
+			.attr("src","./images/168_b.png")
 			.classed("top_spacing", "true")
 			.on("mousedown", function() { d3.event.stopPropagation(); })
 
@@ -973,7 +973,7 @@ function graphGraphError(id, msg){
 		.on("mousedown", function() { d3.event.stopPropagation(); });
 	var width = square.attr("width");
 	var loadingImage = square.append("img")
-			.attr("src","./icons/162_b.png")
+			.attr("src","./images/162_b.png")
 			.classed("top_spacing", "true")
 			.on("mousedown", function() { d3.event.stopPropagation(); })
 
