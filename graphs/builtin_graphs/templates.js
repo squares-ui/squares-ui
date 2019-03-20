@@ -58,7 +58,7 @@ function graph_templates(id){
 	clusterDiv.append("img")
 		.classed("square_cluster_image", true)
 		.classed("fleft", true)
-		.attr("src", "./icons/139_b.png")
+		.attr("src", "./images/139_b.png")
 
 	clusterDiv = clusterSection.append("div")
 		.classed("fleft", true)
@@ -85,7 +85,7 @@ function graph_templates(id){
 	clusterDiv.append("img")
 		.classed("square_cluster_image", true)
 		.classed("fleft", true)
-		.attr("src", "./icons/239_b.png")
+		.attr("src", "./images/239_b.png")
 
 	clusterDiv = clusterSection.append("div")
 		.classed("square_cluster_text", true)
@@ -125,7 +125,7 @@ function graph_templates(id){
 	clusterDiv.append("img")
 		.classed("square_cluster_image", true)
 		.classed("fleft", true)
-		.attr("src", "./icons/239_b.png")
+		.attr("src", "./images/239_b.png")
 
 	clusterDiv = clusterSection.append("div")
 		.classed("square_cluster_text", true)
@@ -168,7 +168,7 @@ function graph_templates(id){
 	clusterDiv.append("img")
 		.classed("square_cluster_image", true)
 		.classed("fleft", true)
-		.attr("src", "./icons/")
+		.attr("src", "./images/")
 
 	clusterDiv = clusterSection.append("div")
 		.classed("square_cluster_text", true)

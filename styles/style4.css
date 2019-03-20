@@ -132,34 +132,34 @@ div{
 									font-size:24px;
 								}
 								.square_menu_icon_clone{
-									content:url("../icons/103_b.png");
+									content:url("../images/103_b.png");
 								}
 								.square_menu_icon_info{
-									content:url("../icons/121_b.png");
+									content:url("../images/121_b.png");
 								}
 								.square_menu_icon_edit{
-									content:url("../icons/128_b.png");
+									content:url("../images/128_b.png");
 								}
 								.square_menu_icon_reload{
-									content:url("../icons/200_b.png");
+									content:url("../images/200_b.png");
 								}
 								.square_menu_icon_move{
-									content:url("../icons/205_b.png");
+									content:url("../images/205_b.png");
 								}
 								.square_menu_icon_pivot{
-									content:url("../icons/040_b.png");
+									content:url("../images/040_b.png");
 								}
 								.square_menu_icon_template{
-									content:url("../icons/139_b.png");
+									content:url("../images/139_b.png");
 								}
 								.square_menu_icon_scale{
-									content:url("../icons/088_b.png");
+									content:url("../images/088_b.png");
 								}
 								.square_menu_icon_delete{
-									content:url("../icons/041_b.png");
+									content:url("../images/041_b.png");
 								}
 								.square_menu_icon_tobottom{
-									content:url("../icons/140_b.png");
+									content:url("../images/140_b.png");
 								}
 	
 							.square_menu_WeWs{
@@ -212,25 +212,25 @@ div{
 			justify-self: center;
 		}
 		.sakemenu_wipereset{
-			content:url("../icons/136_b.png");
+			content:url("../images/136_b.png");
 		}
 		.sakemenu_addconnector{
-			content:url("../icons/093_b.png");
+			content:url("../images/093_b.png");
 		}
 		.sakemenu_update{
-			content:url("../icons/052_b.png");
+			content:url("../images/052_b.png");
 		}
 		.sakemenu_log{
-			content:url("../icons/061_b.png");
+			content:url("../images/061_b.png");
 		}
 		.sakemenu_save{
-			content:url("../icons/075_b.png");
+			content:url("../images/075_b.png");
 		}
 		.sakemenu_flush{
-			content:url("../icons/138_b.png");
+			content:url("../images/138_b.png");
 		}
 		.sakemenu_countelements{
-			content:url("../icons/122_b.png");
+			content:url("../images/122_b.png");
 		}
 
 	#screenLog{

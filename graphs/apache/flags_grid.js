@@ -129,7 +129,7 @@ function graph_apache_flag_grid(id){
 	//      .attr("height", function(d) { return d.y1 - d.y0; })
 		.attr('width', 40)
 		.attr('height', 48)
-		.attr("xlink:href", function(d){ return "./icons/flags/"+ d.data.id.split(/\./)[1] +".png"  })
+		.attr("xlink:href", function(d){ return "./images/flags/"+ d.data.id.split(/\./)[1] +".png"  })
 
 	  cell.append("text")
 	      .attr("clip-path", function(d) { return "url(#clip-" + d.data.id + ")"; })

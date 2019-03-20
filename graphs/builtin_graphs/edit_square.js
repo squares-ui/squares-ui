@@ -61,7 +61,7 @@ function graph_editsquare(id){
 		clusterDiv.append("img")
 			.classed("square_cluster_image", true)
 			.classed("fleft", true)
-			.attr("src", "./icons/070_b.png")
+			.attr("src", "./images/070_b.png")
 
 		clusterDiv = clusterSection.append("div")
 			.classed("fleft", true)
@@ -100,7 +100,7 @@ function graph_editsquare(id){
 		clusterDiv.append("img")
 			.classed("square_cluster_image", true)
 			.classed("fleft", true)
-			.attr("src", "./icons/125_b.png")
+			.attr("src", "./images/125_b.png")
 
 		clusterDiv = clusterSection.append("div")
 			.classed("square_cluster_text", true)
@@ -158,7 +158,7 @@ function graph_editsquare(id){
 	clusterDiv.append("img")
 		.classed("square_cluster_image", true)
 		.classed("fleft", true)
-		.attr("src", "./icons/021_b.png")
+		.attr("src", "./images/021_b.png")
 	clusterDiv = clusterSection.append("div")
 		.classed("square_cluster_text", true)
 		.classed("fleft", true);
@@ -239,7 +239,7 @@ function graph_editsquare(id){
 	clusterDiv.append("img")
 		.classed("square_cluster_image", true)
 		.classed("fleft", true)
-		.attr("src", "./icons/061_b.png")
+		.attr("src", "./images/061_b.png")
 
 	clusterDiv = clusterSection.append("div")
 		.classed("square_cluster_text", true)
