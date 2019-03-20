@@ -1,8 +1,0 @@
-{
-	"handle": "Home Network",
-	"type": "SecurityAnalytics",
-	"desc": "Main Home Security Analytics",
-	"dst": "10.0.1.52",
-	"username": "admin",
-	"apikey": "bFcr6ZXH8T89DtT7SJcUpBjBHNmqUpQPHcgaJkNk3gTqWOYh2n"
-}
