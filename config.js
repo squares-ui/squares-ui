@@ -9,11 +9,12 @@
 // odd balls
 var GLB = Object ();
 GLB.screenLogMax = 10;
-GLB.drawLineBezier = false;
+GLB.drawLineBezier = true;
 GLB.zoomLevels=[0.75, 1, 1.2, 1.5, 2];
 // 0 = "EMERGCY", 1 = "Alert"...  "Critical", "Error ", "Warning", "Notice ", "Informa", "Debug  "];
 // lower qqLogging means less logging
-GLB.qqLogging = 6;
+GLB.qqLogging = 7;
+GLB.hidesquaremenus = false;
 
 
 //govern the definitions of a visual square
@@ -24,12 +25,13 @@ GLB.square.dragSensitivity = 1;
 GLB.square.reshowLoadingIcon = true;
 GLB.square.width = 1000;
 GLB.square.height = 1000;
+GLB.square.hoverfade = 5000;
 
 // determine how we treat global vars for ThreeJS handling
 GLB.threejs = Object();
 GLB.threejs.realTimeRender = true; // false renders on setTimeout of interval below.  better for CPU
 GLB.threejs.notRealTimeRenderFrequency = 500; // measured in ms
-
+GLB.threejs.showperformance = false;
 
 // these are for the square that auto udpates children squares
 GLB.tick = Object();

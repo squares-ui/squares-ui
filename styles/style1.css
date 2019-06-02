@@ -286,9 +286,6 @@ div{
 	word-wrap: break-word;
 }
 
-.box-shadow{
-	0px 0px 22px 8px blue;
-}
 
 .canvas{
 	display:none
@@ -360,5 +357,11 @@ div{
 }
 .small_words{
   font-size: 12px;
+
+}
+
+.editSquareJsonForm{
+	border-block-start-style: 1px solid #000;
+	padding:5px;
 
 }

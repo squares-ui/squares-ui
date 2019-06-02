@@ -51,6 +51,13 @@
 	<script src="./index.js"></script>
 	<script src="./myThree.js"></script>
 
+	<script src="./lib/underscore-min.js"></script>
+	<script src="./lib/jsonform.js"></script>
+	
+	<script src="./lib/tsne.js"></script>
+	<script src="./lib/jstat.js"></script>
+
+
 </head>
 <body>
 
@@ -71,17 +78,20 @@
 		<img class='sakemenuslot fleft sakemenu_log'   onclick='qq(url); alertify.log("URL Logged to Console")' alt='Log' />
 		<img class='sakemenuslot fleft sakemenu_save' onclick='bookmarks();' alt='Save' />
 		<img class='sakemenuslot fleft sakemenu_flush' onclick='Lockr.flush()' alt='Flush Data' />
-		<img class='sakemenuslot fleft sakemenu_countelements' onclick='alertify.log(
-		    "Squares: "+url.sake.squares.length + "<br>" +
-		    "G: "+document.getElementsByTagName("g").length + "<br>" +
-		    "Text: "+document.getElementsByTagName("text").length + "<br>" +
-		    "Path: "+document.getElementsByTagName("path").length + "<br>" +
-		    "DIV: "+document.getElementsByTagName("div").length + "<br>" +
-		    "SVG: "+document.getElementsByTagName("svg").length + "<br>"
-			)' alt='Count Elements' />
+
+		<img class='sakemenuslot fleft sakemenu_countelements' onclick='udpateScreenLog(
+			"Squares: "+url.sake.squares.length + " " +
+		    "G: "+document.getElementsByTagName("g").length + " " +
+		    "Text: "+document.getElementsByTagName("text").length + " " +
+		    "Path: "+document.getElementsByTagName("path").length + " " +
+		    "DIV: "+document.getElementsByTagName("div").length + " " +
+		    "SVG: "+document.getElementsByTagName("svg").length + " "
+			
+		)' alt='Count Elements' />
+		
 	</div>
 
-
+	
 
 	<div id="screenLog" class="sake_segment fleft square_menu_text">
 		No Logs

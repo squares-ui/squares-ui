@@ -12,16 +12,14 @@ graphs_functions_json.add_graphs_json({
 });
 
 function populate_editsquare(id){
-
 	// no back end data to fetch, but tell the system we're ready
 	//ww(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+","+name+")");
 	connector_bypass(id);
-
 }
 function process_editsquare(id){
-	
 	saveProcessedData(id, '', "");
 }
+
 
 function graph_editsquare(id){
 
@@ -47,11 +45,22 @@ function graph_editsquare(id){
 	if(retrieveSquareParam(id, "Pr")==0){
 		aConnector = true;
 	}
-	
+
+	// square
+	// 		form
+	// 			clustersecion(s)
+	//				clusterdiv(s)
+
+	// put everything in a form
+	var thisForm = square.append('form')
+		.attr("id", function(d){ return "square_editform_"+d.id })
+		//.on("submit", function(d){ return validate(this) })
+		//.attr("action", "javascript:void(0);")
+
 
 
 	// Connector
-	clusterSection = square.append("div")
+	clusterSection = thisForm.append("div")
 		.classed("square_cluster_section", true)
 
 	clusterDiv = clusterSection.append("div")
@@ -97,6 +106,8 @@ function graph_editsquare(id){
 
 
 	}else{
+		
+		
 		clusterDiv.append("img")
 			.classed("square_cluster_image", true)
 			.classed("fleft", true)
@@ -114,19 +125,24 @@ function graph_editsquare(id){
 				.classed("fontsize", true)
 				.attr("id", function(d){ return "square_graph_dropdown_"+d.id })
 				.attr("name", function(d){ return "square_graph_dropdown_"+d.id })
+				.on('change', function(d){
+					selectValue = d3.select("#square_graph_dropdown_"+d.id).property('value')
+					// inform the graph code to populate any extra parameters it likes
+					$("#square_editformcustom_"+id).empty()
+					window[graphs_functions_json.retrieveGraphParam(connectors_json.handletotype( retrieveSquareParam(d.id, 'CH')), selectValue , "completeForm")](d.id, "#square_editformcustom_"+d.id)
+				})
+
 		var mySelect = $('#square_graph_dropdown_'+id);
+
 		mySelect.append(
-			$('<option></option>').val(null).html("--System Graphs--")
+			$('<option></option>').val("").html("")
 		);
-		$.each(graphs_functions_json.typeToShortnameList("builtin_graphs"), function(i, v){
-			mySelect.append(
-				$('<option></option>').val(v).html(v)
-			);
-		});
-		mySelect.append(
-			$('<option></option>').val("-").html("--Connector Graphs--")
-		);
+
+
+
+		
 		connector_type = connectors_json.handletotype( retrieveSquareParam(id, 'CH') );
+		
 		//qq("connector_type for "+id+" found as:"+connector_type+" toshortnamelist:"+graphs_functions_json.typeToShortnameList(connector_type));
 		$.each(graphs_functions_json.typeToShortnameList(connector_type), function(i, v){
 			mySelect.append(
@@ -134,16 +150,32 @@ function graph_editsquare(id){
 			);
 			
 		});
-		clusterSection.append("div")
-			.classed("square_cluster_text", true)
-			.classed("fleft", true)
-			.attr("id", function(d){ return "square_saveGt_"+d.id })
-		$("#square_saveGt_"+id).append("<input type='button' value='Save Graph Type' onclick='editSquare("+id+", \"Gt\")' />");
+
+		// Update dropdown, did this graph have Gt set?  Or is it blank?
+		if(retrieveSquareParam(id, "Gt", false) == null || retrieveSquareParam(id, "Gt", false) == 0 || retrieveSquareParam(id, "Gt", false) == undefined ){	
+			$("#square_graph_dropdown_"+id).prop("selectedIndex", 0);
+
+		}else{
+			$("#square_graph_dropdown_"+id).val(retrieveSquareParam(id, "Gt", false));
+
+			// if we had a graph type, shoudl we also auto draw the "custom fields" options?
+			selectValue = retrieveSquareParam(id, "Gt", false)
+			if(graphs_functions_json.retrieveGraphParam(connectors_json.handletotype( retrieveSquareParam(id, 'CH')), selectValue , "completeForm")){
+				window[graphs_functions_json.retrieveGraphParam(connectors_json.handletotype( retrieveSquareParam(id, 'CH')), selectValue , "completeForm")](id, "#square_editformcustom_"+id)
+			}
+
+		}
 		
 
 		clusterDiv.append("div")
 			.classed("clr", true)
 
+		clusterDiv.append('div')
+			.classed("editSquareJsonForm", true)
+			.attr("id", function(d){ return "square_editformcustom_"+d.id})
+			
+		
+			
 
 	}
 	clusterSection.append("div")
@@ -151,7 +183,7 @@ function graph_editsquare(id){
 	
 
 	// We Ws
-	clusterSection = square.append("div")
+	clusterSection = thisForm.append("div")
 		.classed("square_cluster_section", true)
 	clusterDiv = clusterSection.append("div")
 		.classed("fleft", true);
@@ -191,8 +223,10 @@ function graph_editsquare(id){
 			.attr("name", function(d){ return "square_Wr_dropdown_"+d.id })
 	var  square_Wr_dropdown = $('#square_Wr_dropdown_'+id);
 
-	square_We_dropdown.append($('<option></option>').val(0).html("none"));
-	square_Wr_dropdown.append($('<option></option>').val(0).html("none"));
+	square_We_dropdown.append($('<option></option>').val("").html("-"));
+	square_Ws_dropdown.append($('<option></option>').val("").html("-"));
+	square_Wr_dropdown.append($('<option></option>').val("").html("-"));
+
 	$.each(timewindows, function(val, obj) {
 		square_We_dropdown.append(
 			// Window end has to be negative to differentiate from absolute times
@@ -205,34 +239,28 @@ function graph_editsquare(id){
 			$('<option></option>').val(obj[0]).html(obj[1])
 		);
 	})
-	
-//	var tmp_Ws = retrieveSquareParam(id, "Ws");
-//	var tmp_We = retrieveSquareParam(id, "We");
-//	var tmp_Wr = retrieveSquareParam(id, "Wr");
-	if(retrieveSquareParam(id, "Ws") == null || retrieveSquareParam(id, "Ws") == 0){	
-		$("#square_Ws_dropdown_"+id).val(0);
+	if(retrieveSquareParam(id, "We", false) == null || retrieveSquareParam(id, "We", false) == 0){	
+		$("#square_We_dropdown_"+id).prop("selectedIndex", 0);
 	}else{
-		$("#square_Ws_dropdown_"+id).val(retrieveSquareParam(id, "Ws"));
+		$("#square_We_dropdown_"+id).val(retrieveSquareParam(id, "We", false));
 	}
-	$("#square_We_dropdown_"+id).val(retrieveSquareParam(id, "We"));
-	if(retrieveSquareParam(id, "Wr") == null || retrieveSquareParam(id, "Wr") == 0){	
-		$("#square_Wr_dropdown_"+id).val(0);
+	if(retrieveSquareParam(id, "Ws", false) == null || retrieveSquareParam(id, "Ws", false) == 0){	
+		$("#square_Ws_dropdown_"+id).prop("selectedIndex", 0);
 	}else{
-		$("#square_Wr_dropdown_"+id).val(retrieveSquareParam(id, "Wr"));
+		$("#square_Ws_dropdown_"+id).val(retrieveSquareParam(id, "Ws", false));
+	}
+	if(retrieveSquareParam(id, "Wr", false) == null || retrieveSquareParam(id, "Wr", false) == 0){	
+		$("#square_Wr_dropdown_"+id).prop("selectedIndex", 0);
+	}else{
+		$("#square_Wr_dropdown_"+id).val(retrieveSquareParam(id, "Wr", false));
 	}
 
-	if(aConnector == false){
-		clusterSection.append("div")
-			.classed("square_cluster_text", true)
-			.classed("fleft", true)
-			.attr("id", function(d){ return "square_saveWe_"+d.id })
-		$("#square_saveWe_"+id).append("<input type='button' value='Save Relative Time' onclick='editSquare("+id+", \"Wi\")' />");
-	}
+
 	clusterSection.append("div")
                 .classed("clr", true)
 
 	// Data Subset
-	clusterSection = square.append("div")
+	clusterSection = thisForm.append("div")
 		.classed("square_cluster_section", true)
 	clusterDiv = clusterSection.append("div")
 		.classed("fleft", true);
@@ -256,39 +284,38 @@ function graph_editsquare(id){
 		.classed("fontsize", true)
 		.attr("id", function(d){ return "square_Ds_textarea_"+d.id })
 		.attr("name", function(d){ return "square_Ds_textarea_"+d.id })
-	if(typeof retrieveSquareParam(id, "Ds") != 'undefined'  && /^[A-Za-z0-9+/=][A-Za-z0-9+/=]*$/.test(retrieveSquareParam(id, "Ds"))){
+	if(typeof retrieveSquareParam(id, "Ds", false) != 'undefined'  && /^[A-Za-z0-9+/=][A-Za-z0-9+/=]*$/.test(retrieveSquareParam(id, "Ds", false))){
 		$("#square_Ds_textarea_"+id).val(atob(retrieveSquareParam(id, "Ds")));
 	}
-	if(aConnector==false){
-		clusterSection.append("div")
-			.classed("square_cluster_text", true)
-			.classed("fleft", true)
-			.attr("id", function(d){ return "square_saveDs_"+d.id })
-		$("#square_saveDs_"+id).append("<input type='button' value='Save Data Subset' onclick='editSquare("+id+", \"Ds\")' />");
-	}
+
+	
+	// Submit button
+	clusterSection = thisForm.append("div")
+		.classed("square_cluster_section", true)
+	clusterDiv = clusterSection.append("div")
+		.classed("fleft", true);
+	clusterDiv.append("img")
+		.classed("square_cluster_image", true)
+		.classed("fleft", true)
+		.attr("src", "")
+
+	clusterDiv = clusterSection.append("div")
+		.classed("fleft", true)
+		.classed("square_cluster_text", true)
+
+	clusterDiv.append("div")
+		.classed("square_cluster_text", true)
+		.append("div")
+			.attr("id", function(d){ return "square_buttonhere_"+d.id })
 
 
 
 	if(aConnector==true){
-		// Submit button
-		clusterSection = square.append("div")
-			.classed("square_cluster_section", true)
-		clusterDiv = clusterSection.append("div")
-			.classed("fleft", true);
-		clusterDiv.append("img")
-			.classed("square_cluster_image", true)
-			.classed("fleft", true)
-			.attr("src", "")
-
-		clusterDiv = clusterSection.append("div")
-			.classed("fleft", true)
-			.classed("square_cluster_text", true)
-
-			clusterDiv.append("div")
-				.classed("square_cluster_text", true)
-				.append("div")
-					.attr("id", function(d){ return "square_buttonhere_"+d.id })
 		$("#square_buttonhere_"+id).append("<input type='button' value='Save Connector' onclick='editNewConnector("+id+")' />");
+	}else{
+		// d3 can't append buttons, so append html style
+		//$("#square_buttonhere_"+id).append("<input type='button' value='Save Graph' onclick='window[graphs_functions_json.retrieveGraphParam(connectors_json.handletotype( retrieveSquareParam("+id+", \"CH\")), selectValue , \"processform\")]("+id+")' />")
+		$("#square_buttonhere_"+id).append("<input type='button' value='Save Graph' onclick='editSquare("+id+")' />")
 	}
 
 }

@@ -80,7 +80,7 @@ div{
 						/* to render HTML inside a SVG  */
 						width:1000px;
 						height:1000px;
-						overflow:scroll;
+						/*overflow:scroll;*/
 					}
 
 						.square_container{
@@ -88,32 +88,38 @@ div{
 	
 							/* this lays out the square body and square menu */
 							display: grid;
-							grid-template-rows: auto 50px 20px;
+							grid-template-rows: auto 50px 50px 20px;
 							grid-template-columns: auto;
 
 						}
-/*							.square_menu_container{
-								grid-area: 2 / 1 / 3 / 2;
-								
-								display: grid;
-								grid-template-rows:  auto 20px;
-							}  */
+
 							.square_menu{
 								width: 100%;
 							}
 							.menu_invisible{
-								/*visibility:hidden;*/
-								visibility:visible;
+								/* visibility:hidden; */
+								/*visibility:visible;*/
 							}
 							.square_menu_text{
 								color: #black;
 								font-size:20px;
 							}
+
+							.square_menu_info{
+								text-align:center;
+								color: black;
+								font-size:30px;
+								grid-area: 2 / 1 / 3 / 2;
+								background-color: white;
+								display:none 
+
+							}
+
 							.square_menu_icons{
 								text-align:center;
 								color: black;
 								font-size:20px;
-								grid-area: 2 / 1 / 3 / 1;
+								grid-area: 2 / 1 / 3 / 2;
 								
 								/* grid for square menu icon spacing */
 								display: grid;
@@ -160,10 +166,10 @@ div{
 								}
 								.square_menu_icon_tobottom{
 									content:url("../images/140_b.png");
-								}
+								} 
 	
 							.square_menu_WeWs{
-								grid-area: 3 / 1 / 4 / 1;
+								grid-area: 3 / 1 / 4 / 2;
 								text-align:center;
 								color: black;
 								font-size:20px;
@@ -181,7 +187,7 @@ div{
 								}
 
 							.square_body{
-								grid-area: 1 / 1 / 2 / 1;
+								grid-area: 1 / 1 / 2 / 2;
 								text-align: center;
 								background: white;
 								height:100%;
@@ -366,11 +372,11 @@ div{
 	position:absolute;
 	z-index: 100;
 	display:block;
-	padding:8px;
+	padding:2px;
 	color: black;
 	background: white;
 	border: 1px solid red;
-
+  font: 6px sans-serif;
 
 }
 
@@ -520,3 +526,13 @@ path.arc{
 	stroke-width:5;
 }
 
+
+.editSquareJsonForm{
+	
+}
+
+
+
+.bar rect {
+  fill: steelblue;
+}

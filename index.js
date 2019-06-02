@@ -48,26 +48,26 @@ var qqLoggingDesc = ["EMERGCY", "Alert  ", "Critical", "Error ", "Warning", "Not
 var workspace = {
 	// stores the size/location of the SVG workspace used by D3
 	// specifically using a closure for async functions
-	x:  0,
-	y: 0,
-	scale: 1,
+	// x:  0,
+	// y: 0,
+	// scale: 1,
 	getx: function() {
-		return this.x;
+		// return this.x;
 	},
 	setx: function(newx) {
-		this.x = newx;
+		// this.x = newx;
 	},
 	gety: function() {
-		return this.y;
+		// return this.y;
 	},
 	sety: function(newy) {
-		this.y = newy;
+		// this.y = newy;
 	},
 	getScale: function() {
-		return this.scale;
+		// return this.scale;
 	},
 	setScale: function(newScale) {
-		this.scale = newScale;
+		// this.scale = newScale;
 	}
 
 };
@@ -100,7 +100,7 @@ var graphs_functions_json = {
 	retrieveGraphParam: function(type, graphshort, value){
 		// IN : type of connector, <short> name of the graph, the type of field you want back
 		// OUT : name of function to call
-		ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"['"+type+"']['"+graphshort+"']['"+value+"']");
+		//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"['"+type+"']['"+graphshort+"']['"+value+"']");
 
 
 		if(graphshort==null || this.local_json["builtin_graphs"] == undefined){
@@ -216,6 +216,15 @@ var connectors_json = {
 		});
 		return toreturn;
 	},
+	handletox: function(handle, x){
+		$.each(this.local_json, function(k, v){
+			if(String(v['handle']) == String(handle)){
+				toreturn  = v[x];
+				return false;
+			}
+		});
+		return toreturn;
+	},
 }
 	
 
@@ -233,6 +242,7 @@ function correcturl(){
 function updateurl(){
 	// update the URL, but don't refresh the page, i.e. nothing hits browser History
 	// if URL does not end #, this wont work....
+	
 	var newurl = window.location.href.replace(/\/#.*$/, "/#"+btoa(JSON.stringify(url)));
 	window.history.pushState("object or string", "Title", newurl);
 	$('#mailto').attr("href", "mailto:?subject=SAKE Link"+"&body="+newurl);
@@ -441,26 +451,31 @@ function duplicateSquare(id, newObject){
 	// .extend clones the object, rather than linking to it
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+JSON.stringify(newObject)+")");
 
+	// clone the original
 	var clone = jQuery.extend({}, url.sake.squares[squarearraysearch(id)]);
 
-	clone.id=(parseInt(highestSquareID())+1);
-	clone.x = 100;
-	clone.y = 100; // remember, x is relative to parent
-	clone.Pr = id;
-	
 	// empty the criteria, so we inherit our details from above
 	delete clone.CH;
 	delete clone.Gt;
 	delete clone.Gp;
 	delete clone.Wi;
 	delete clone.Ds;
+	delete clone.Cs;
 
-	if(url.sake.squares[squarearraysearch(id)].Pr == null || url.sake.squares[squarearraysearch(id)].Pr == 0){
-		clone.Gt="EditSquare";
-	}
+	// set some default
+	clone.id=(parseInt(highestSquareID())+1);
+	clone.x = 100;
+	clone.y = 100; // remember, x is relative to parent
+	clone.Pr = id;
+		
+	//if(url.sake.squares[squarearraysearch(id)].Pr == null || url.sake.squares[squarearraysearch(id)].Pr == 0){
+	//	clone.Gt="EditSquare";
+	//}
+	
+	// merge in the custom fields
 	if(newObject.constructor === Object && Object.keys(newObject).length !== 0 ){
 		// clone, and make the newObject take priority if a clash? is this wise?
-		ww(7, "duplicateSquare() merging with preset passed Object");
+		ww(7, "duplicateSquare() merging with preset ("+JSON.stringify(newObject)+")passed Object");
 		clone = $.extend(true, clone, newObject);  
 
 	}
@@ -486,6 +501,7 @@ function duplicateSquare(id, newObject){
 //******************************************************************	
 
 function deleteLines(){
+	d3.selectAll(".squarekey_all").remove();
 	d3.selectAll(".path_all").remove();
 	d3.selectAll(".bezier_dot").remove();
 	d3.selectAll(".bezier_line").remove();
@@ -504,6 +520,7 @@ function futureHalfWidth(id){
 
 // Delets
 function drawLines(ids, drawBezier){
+	
 	// IN : Array of integers
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
 
@@ -517,7 +534,6 @@ function drawLines(ids, drawBezier){
 	lines.append("path")
 		.attr("id", function(d){ return "path"+d.id})
 		.attr("class",  function(d){ return getLineCol(d.id)})
-		.attr("marker-mid", "url(#arrow2)")
 		.attr("d", function(d){ 
 
 			// http://blogs.sitepointstatic.com/examples/tech/svg-curves/cubic-curve.html
@@ -548,41 +564,102 @@ function drawLines(ids, drawBezier){
 					.append("line")
 					.classed("bezier_line", "true")
 					.attr("x1", myRelX).attr("y1", myRelY).attr("x2", myBendX).attr("y2", myBendY)
-				squaregroup
-					.append("circle")
-					.classed("bezier_dot", "true")
-					.attr("r", 25)
-					.attr("cx", myBendX).attr("cy", myBendY)
+				// squaregroup
+				// 	.append("circle")
+				// 	.classed("bezier_dot", "true")
+				// 	.attr("r", 25)
+				// 	.attr("cx", myBendX).attr("cy", myBendY)
 				
 				squaregroup
 					.append("line")
 					.classed("bezier_line", "true")
 					.attr("x1", prBendX).attr("y1", prBendY).attr("x2", prRelX).attr("y2", prRelY)
-				squaregroup
-					.append("circle")
-					.classed("bezier_dot", "true")
-					.attr("r", 25)
-					.attr("cx", prBendX).attr("cy", prBendY)
+				// squaregroup
+				// 	.append("circle")
+				// 	.classed("bezier_dot", "true")
+				// 	.attr("r", 25)
+				// 	.attr("cx", prBendX).attr("cy", prBendY)
 			}
 
 			return "M"+myRelX+","+myRelY+" C"+myBendX+","+myBendY+" "+prBendX+","+prBendY+" "+prRelX+","+prRelY
 		})
 		.classed("path_all", true)
 
-	lines.append("text")
-		.append("textpath")
-		.attr("xlink:href", function(d){ return "#path"+d.id})
-		.text("&&&&&&&&");
 		
+	var linesfo = lines.append("foreignObject")
+	.classed("squarekey_all", true)	
+	.attr("x", function(d){
+			var myRelX = calcCord(d.id, 'x', 0);
+			if(retrieveSquareParam(d.id, "Pr") == 0){
+				var prRelX = calcCord(d.id, 'x', 0);
+			}else{
+				var prRelX = calcCord(retrieveSquareParam(d.id, "Pr"), 'x', 0);
+			}	
+			return (prRelX + myRelX)/2
+		})
+		.attr("y", function(d){
+			var myRelY = calcCord(d.id, 'y', 0);
+			if(retrieveSquareParam(d.id, "Pr") == 0){
+				var prRelY = calcCord(d.id, 'y', 0);
+			}else{
+				var prRelY = calcCord(retrieveSquareParam(d.id, "Pr"), 'y', 0);
+			}	
+			return (prRelY + myRelY)/2
+		})
+		.attr("width", "120")
+		.attr("height", "40")
+
+		var linesfodiv = linesfo.append("xhtml:div")
+			.attr("id", function(d){ return "square_lineskey_"+d.id })
+			
+			// image for grath type?
+			linesfodiv.append("img")
+				.attr('class', 'picture')
+				.attr('src', function(d) { 
+					if(retrieveSquareParam(d.id, 'Gt')){
+						return "./images/125_b.png"; 
+					}
+				})
+				.on("click", function(d){
+					alert(retrieveSquareParam(d.id, 'Gt'))
+				})
+			// image for time windows?
+			linesfodiv.append("img")
+				.attr('class', 'picture')
+				.attr('src', function(d) { 
+					if(retrieveSquareParam(d.id, 'We')){
+						return "./images/021_b.png"; 
+					}
+				})
+				.on("click", function(d){
+					alert(retrieveSquareParam(d.id, 'We'))
+				})
+			// image for data set?
+			linesfodiv.append("img")
+				.attr('class', 'picture')
+				.attr('src', function(d) { 
+					if(retrieveSquareParam(d.id, 'Ds')){
+						return "./images/061_b.png"; 
+					}
+				})
+				.on("click", function(d){
+					alert(atob(retrieveSquareParam(d.id, 'Ds')))
+				})
+
 
 };
 
 
 function squareMouseOver(d, i){
-	$(".square_menu").removeClass("menu_invisible");
+	// Hide all square menus if you want a cleaner interface?
+	if(GLB.hidesquaremenus == true){
+			$(".square_menu").removeClass("menu_invisible");
+	}
 }
 function squareMouseOut(d, i){
-	$(".square_menu").addClass("menu_invisible");
+	if(GLB.hidesquaremenus == true){
+		$(".square_menu").addClass("menu_invisible");
+	}
 }
 
 
@@ -628,7 +705,8 @@ function drawSquares(idlist) {
 		.classed("square_container", true)
 		.classed("shine", true)
 		
-		
+
+
 		var menubarcontrols = square_container.append("xhtml:div")
 			.classed("square_menu_icons", true)
 			.classed("square_menu", true)
@@ -637,7 +715,7 @@ function drawSquares(idlist) {
 			var clone = menubarcontrols.append("img")
 				.classed("square_menu_icon", true)
 				.classed("square_menu_icon_clone", true)
-				.on("click", function(d){ duplicateSquare(d.id, {"x": "1000"}); })
+				.on("click", function(d){ newId = duplicateSquare(d.id, {"x": "1000"}); editMe(newId); })
 				.on("mousedown", function() { d3.event.stopPropagation(); })
 				;	
 
@@ -662,7 +740,7 @@ function drawSquares(idlist) {
 			var reload = menubarcontrols.append("img")
 				.classed("square_menu_icon", true)
 				.classed("square_menu_icon_reload", true)
-				.on("click", function(d){reloadData([d.id]);})
+				.on("click", function(d){deleteData(d.id), reloadData([d.id]);})
 				.on("mousedown", function() { d3.event.stopPropagation(); })
 				;	
 				
@@ -730,6 +808,12 @@ function drawSquares(idlist) {
 				;	
 			
 
+	// hover over info for any element
+	var squareinfo = square_container.append("xhtml:div")
+		.classed("square_menu_info", true)
+		.classed("square_menu", true)
+		.attr("id", function(d){ return "square_info_"+d.id })
+				
 
 	// Inform user of Window End and Window Size
 	var WeWs = square_container.append("xhtml:div")
@@ -777,6 +861,31 @@ function drawSquares(idlist) {
 	
 
 }
+
+function setHoverInfo(id, data){
+
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+data+")");
+
+	$("#square_info_"+id).html(data)
+	$("#square_info_"+id).css('display', 'block')
+
+	localTimeout = GLB.square.hoverfade;
+	setTimeout(
+		function(localTimeout){
+			$("#square_info_"+id).css('display', 'none')
+			$("#square_info_"+id).html("")
+		}, localTimeout);
+
+}
+function clearHoverInfo(id){
+	
+	setTimeout(
+		function(localTimeout){
+			$("#square_info_"+id).css('display', 'none')
+			$("#square_info_"+id).html("")
+		}, 0);
+}
+
 
 function moveToBottom(id){
 	// IN : integer
@@ -831,7 +940,7 @@ function drawinBoxes(ids){
 	
 		// keep times in epoch, but adjut for this user
 		// no need to apply our timezone offset agaisnt thisWe, as moment already does that for us
-		var thisWe = (calcGraphTime(ids[i], "We", 0) );
+		var thisWe = (calcGraphTime(ids[i]) );
 		var thisWs = retrieveSquareParam(ids[i], "Ws");
 		var thisWr = retrieveSquareParam(ids[i], "Wr");
 		var sInDay = 60*60*24;
@@ -846,7 +955,8 @@ function drawinBoxes(ids){
 		var squareStart = moment.unix(thisWe - thisWs).format(momentFormat);	
 		var squareDiff = countSeconds(thisWs);
 		var squareEnd = moment.unix(thisWe).format(momentFormat);
-		$("#square_WeWs_"+ids[i]).text(squareStart + " ( +"+squareDiff+" ) "+squareEnd+" ("+thisWe+")");
+		//$("#square_WeWs_"+ids[i]).text(squareStart + " ( +"+squareDiff+" ) "+squareEnd+" ("+thisWe+")");
+		$("#square_WeWs_"+ids[i]).text(squareStart + " ( +"+squareDiff+" ) "+squareEnd);
 
 		
 		// draw the actual graph
@@ -1023,7 +1133,7 @@ function graphAboutMe(id){
 	$("#square_aboutme_"+id).append("<div class='clr'></div>");
 
 	$("#square_aboutme_"+id).append("<div class='square_aboutMe_header'>Window End:</div");
-	$("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>"+moment.unix(calcGraphTime(id, "We", 0)).format("MMM ddd Do, HH:mm:ss")+"</div");
+	$("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>"+moment.unix(calcGraphTime(id)).format("MMM ddd Do, HH:mm:ss")+"</div");
 	$("#square_aboutme_"+id).append("<div class='clr'></div>");
 	
 	$("#square_aboutme_"+id).append("<div class='square_aboutMe_header'>Window Size:</div");
@@ -1061,7 +1171,7 @@ function saveProcessedData(id, name, data){
 
 	var myHash = String(CryptoJS.MD5(JSON.stringify(url.sake.squares[squarearraysearch(id)])));
 	Lockr.set('squaredata_'+id+'_hash', myHash);	
-	Lockr.set('squaredata_'+id+'_processeddata', data);	
+	Lockr.set('squaredata_'+id+'_processeddata'+name, data);	
 
 	udpateScreenLog("#"+id+" data processed");
 	callTheGraph(id, true);
@@ -1259,20 +1369,12 @@ function pushTemplate(square, template){
 }
 
 
-function childFromClick(id, childCustomObject, grandchildCustomObject){
+function childFromClick(id, childCustomObject){
 	//IN int of square that initiated.  OBJECT for us to use when creating the 			
 
-	
-
 	childID = duplicateSquare(id, childCustomObject)
-	
-	grandchildID = duplicateSquare(childID, grandchildCustomObject);
-
 	reloadData(findAllChildren(childID));
-
-	//duplicateSquare( duplicateSquare(id, {"Ds": btoa('{"srcip":"'+ipParts[0]+"."+ipParts[1]+"."+ipParts[2]+'"}') }), {})
-
-	return grandchildID;
+	return childID;
 
 } 
 
@@ -1421,7 +1523,8 @@ function deleteChildSquare(id){
 function findParents(id){
 	// IN : int
 	// OUT : array of parents
-	
+	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")"); 
+
 	var currentID = id;
 	var newParent=0;
 	var parents = [];
@@ -1509,54 +1612,35 @@ function setSquareParam(id, key, value, redraw){
 
 
 // Find attribute of a Square. Look up for inheritence if needed
-function retrieveSquareParam(id, key){
+function retrieveSquareParam(id, key, recursive){
 	// IN : Integer, string (what attribute)
 	// OUT : value
-	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+key+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+key+", "+recursive+")");
 
+	if(recursive == null || recursive == undefined){
+		recursive = true;
+	}
+	
 
 	// ww(7, url.sake.squares[squarearraysearch(id)]["ds"])   
 	var squareLoc = squarearraysearch(id);
 	var item = url.sake.squares[squareLoc];
-	
-	// if a simple non inheritable value, just return
-	switch(key){
-		case "Pr":
-		case "Ds":
-			if(typeof item[key] != undefined){
-				return item[key];
-			}else{
-				return null;
-			}
-			break;
-		case "x":
-		case "y":
-			// dataset
-			if(typeof item[key] != undefined){
-				return item[key];
-			}else{
-				return null;
-			}
-			break;
-		case "Sc":
-			// scale
-			if(typeof item[key] != undefined){
-				return item[key];
-			}else{
-				return 1;
-			}
-			break;
-	}	
-	
-	// if I'm a root square, return cumulative
+
+	// The order....
+	// if (non inheritable attribute || recursive==false)
+	// if (I'm a root square)
+	// default to recisrive lookups
+
+
 	if(item.Pr == 0){
 
 		// first square, must inherit from the pathbar, and not from another square
 		if(key=="We"){
-			if(typeof item['Wi'] != 'undefined' && item['Wi'].length>0 && item['Wi']<0){
+			
+			if(typeof item['Wi'] != 'undefined' && item['Wi'].length>0 && item['Wi'][0]<0){
 				// negative value means relative to URL
 				return parseInt(item['Wi'][0]) + parseInt(url.ca.end);
-			}else if(typeof item['Wi'] != 'undefined' && item['Wi'].length>0 && item['Wi']>0){
+			}else if(typeof item['Wi'] != 'undefined' && item['Wi'].length>0 && item['Wi'][0]>0){
 				// positive value means absolute
 				return parseInt(item['Wi'][0]);
 			}else{
@@ -1598,51 +1682,110 @@ function retrieveSquareParam(id, key){
 		}else{
 			// no Gp, Pathbar can't handle it?
 			//ww(o, "Pr = 0, key = "+key+", no data found?");
-			return null;
-		}
-	}	
-			
-			
-
-
-	
-	// This is recursive and will look through all parents until an answer is found.
-//		ww("retrieveSquareParam id:"+id+" key:"+key);
-
-	switch(key){
-		case "We":
-			if(typeof item['Wi'] != 'undefined' && item['Wi'].constructor === Array && classOf(item["Wi"][0]).match(/Number/)){
-				return item["Wi"][0];
-			}else{
-				return retrieveSquareParam(item.Pr, key);
-			}
-			break;
-		case "Ws":
-			if(typeof item['Wi'] != 'undefined' && item['Wi'].constructor === Array && classOf(item["Wi"][1]).match(/Number/)){
-				return item["Wi"][1];
-			}else{
-				return retrieveSquareParam(item.Pr, key);
-			}
-			break;
-		case "Wr":
-			if(typeof item['Wi'] != 'undefined' && item['Wi'].constructor === Array && classOf(item["Wi"][2]).match(/Number/)){
-				return item["Wi"][2];
-			}else{
-				return retrieveSquareParam(item.Pr, key);
-			}
-			break;
-		case "CH":
-		case "Gt":
-		case "Gp":
-		case "Ds":
-		case "Hx":
-			if(classOf(item[key]).match(/(String|Number|Object|Array)/)){
+			if(typeof item[key] != undefined){
+				//qq("returning "+item[key])
 				return item[key];
+
+				
+
+				
 			}else{
-				return retrieveSquareParam(item.Pr, key);
+				return null;
 			}
-			break;
+		}
+
+	}else if(recursive == false || ['Pr', 'Ds', 'x', 'y', 'Sc'].indexOf(key) >= 0){
+
+		switch(key){
+			case "Sc":
+				// scale = 1 as a default
+				if(typeof item[key] != undefined){
+					return item[key];
+				}else{
+					return 1;
+				}
+			
+			case "We":
+				if(typeof item['Wi'] != 'undefined'  && !ISNAN(item["Wi"][0])){
+					return item["Wi"][0];
+				}else{
+					return null
+				}				
+			case "Ws":
+				if(typeof item['Wi'] != 'undefined'  && !ISNAN(item["Wi"][1])){
+					return item["Wi"][1];
+				}else{
+					return null
+				}				
+
+			case "Wr":
+				if(typeof item['Wi'] != 'undefined'  && !ISNAN(item["Wi"][2])){
+					return item["Wi"][2];
+				}else{
+					return null
+				}				
+
+			
+			default:
+				// if not specified, use default return
+				if(typeof item[key] != undefined){
+					//qq("returning "+item[key])
+					return item[key];
+
+					
+
+					
+				}else{
+					return null;
+				}
+		}	
+
+
+	}else{
+
+		switch(key){
+			case "We":
+				if(typeof item['Wi'] != 'undefined'  && !ISNAN(item["Wi"][0])){
+					return item["Wi"][0];
+				}else{
+					return retrieveSquareParam(item.Pr, key, true);
+				}
+				
+			case "Ws":
+				//alert(id+" "+item['Wi']+" "+!ISNAN(item["Wi"]))
+				if(typeof item['Wi'] != 'undefined' && !ISNAN(item["Wi"][1]) ){
+						return item["Wi"][1];
+					}else{
+						return retrieveSquareParam(item.Pr, key, true);
+					}
+				
+			case "Wr":
+				if(typeof item['Wi'] != 'undefined' && !ISNAN(item["Wi"][2]) ){
+					return item["Wi"][2];
+				}else{
+					return retrieveSquareParam(item.Pr, key, true);
+				}
+				
+			case "CH":
+			case "Gt":
+			case "Gp":
+			case "Ds":
+			case "Hx":
+			case "Cs":
+				if(classOf(item[key]).match(/(String|Number|Object|Array)/)){
+					return item[key];
+				}else{
+					return retrieveSquareParam(item.Pr, key,true);
+				}
+				
+		}
+
 	}
+
+	// This is recursive and will look through all parents until an answer is found.
+	// ww("retrieveSquareParam id:"+id+" key:"+key);
+
+
 
 	
 	if(/^(raw|processed)data/.test(key)
@@ -1657,12 +1800,59 @@ function retrieveSquareParam(id, key){
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"(ERROR "+id+", "+key+")");
 
 }
+
+
+
+function calcGraphTime(id){
+	// IN : Integer
+	// OUT : Integer
+
+	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+
+	// array of all parents (original reverses, I want this unreversed) and add my own ID for me to count
+	var parents = findParents(id).reverse()
+	parents.unshift(id)
+	
+
+	totalWe = 0;
+
+	for(var i = 0 ; i < parents.length ; i++){
+		
+		thisWe = retrieveSquareParam(parents[i], "We", false)
+		
+			if(!ISNAN(thisWe) && thisWe < 0){
+				// if negative, it's relative so keep digging
+		
+				totalWe += thisWe
+
+			}else if(!ISNAN(thisWe) && thisWe >= 0){
+				// if positive it's absolute.  So apply it, then break
+		
+				totalWe += thisWe
+				break;
+			
+			}else{
+				// not a number, so ignore
+				//qq("nope")
+			}
+
+
+
+
+	}
+
+	return totalWe;
+
+}
+
+
+
 	
 // calculate times relative to the parent
-function calcGraphTime(id, key, cumulative){
+function calcGraphTime___old(id, key, cumulative){
 	// IN : Integer, String (which time value), Integer of current relative time
 	// OUT : Integer
-	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+key+" "+cumulative+")");
+	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+key+", "+cumulative+")");
 	
 	// We = negative.  Time is relative to the parent (which may also be relative..)
 	// We = null. No change to parent
@@ -1670,7 +1860,7 @@ function calcGraphTime(id, key, cumulative){
 	// Ws = is size of time window, should always be negative to relate to We
 
 	if(key=="Ws"){
-		alert("Should you be doing a lookup for Ws?  from:"+arguments.callee.caller.name);
+		alert("Should you be doing a lookup for Ws? (i.e. only calc for We) from:"+arguments.callee.caller.name);
 	}
 
 	//ww(6, "calcGraphTime("+id+", "+key+", "+cumulative+")");
@@ -1678,22 +1868,22 @@ function calcGraphTime(id, key, cumulative){
 	// for any other square work it out
 
 
-	if(retrieveSquareParam(id, "Pr") == 0){
+	if(retrieveSquareParam(id, "Pr", false) == 0){
 		//ww(7, "found a root node, does it have a time? id:"+id+" return val:"+retrieveSquareParam(id, key));
-		return (retrieveSquareParam(id, key) + cumulative);	
+		return (retrieveSquareParam(id, key, true) + cumulative);	
 
-	}else if(retrieveSquareParam(id, key) > 1){
+	}else if(retrieveSquareParam(id, key, true) > 1){
 		// time frame is absolute
 		//ww(7, "Time Absolute id:"+id+" "+key+"="+retrieveSquareParam(id, key));
-		return (retrieveSquareParam(id, key) + cumulative);
-	}else if(retrieveSquareParam(id, key) == null){
+		return (retrieveSquareParam(id, key, true) + cumulative);
+	}else if(retrieveSquareParam(id, key, true) == null){
 		// time frame is either null (no change) 
 		//ww(7, "delve deeper for keyless square "+id+ "cumulative = "+cumulative);
-		return calcGraphTime(retrieveSquareParam(id, "Pr"), key, cumulative);
+		return calcGraphTime(retrieveSquareParam(id, "Pr", true), key, cumulative);
 	}else{
 		// time frame is negative (i.e. relative)
 		//ww(7, "delve deeper for "+id+ "cumulative = "+cumulative);
-		return calcGraphTime(retrieveSquareParam(id, "Pr"), key, (cumulative + parseInt(retrieveSquareParam(id, key))));
+		return calcGraphTime(retrieveSquareParam(id, "Pr", true), key, (cumulative + parseInt(retrieveSquareParam(id, key))));
 	}
 }
 	
@@ -1715,8 +1905,9 @@ function calcCord(id, xory, cumulative){
 }
 
 function calcDs(id, cumulative){
-	// XXX IN: integer ID of square, Array of either strings, or OBjects (depending what Connector uses for filtering data
-	// OUT array DataSet
+	// IN: integer ID of square, Array of either strings, or OBjects (depending what Connector uses for filtering data
+	// OUT: array DataSet
+	
 	
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+classOf(cumulative)+" "+JSON.stringify(cumulative)+")");
 
@@ -1798,7 +1989,7 @@ function editNewConnector(id){
 	drawLines(everyID(), false);  //line colours have changed
 	drawSquares(updateDataList);
 	drawinBoxes(updateDataList);
-	hideOverlay();
+	//hideOverlay();
 	updateurl();
 
 
@@ -1815,7 +2006,7 @@ function addGraphConnector(){
 			"y":50,
 			"Gt":"EditSquare",
 			"Gp": null,
-			"Wi": [],
+			"Wi": [0,900,0],
 	});
 
 	udpateScreenLog("#"+newID+" Connector has been created");
@@ -1835,63 +2026,87 @@ function editMe(id){
 	clearSquareBody(id);
 	window[graphs_functions_json.retrieveGraphParam("builtin_graphs", "EditSquare", "graph") ](id);
 
-	// dont prepopulate, as people think they can change several at once
-//	var tmpSquare = url.sake.squares[squarearraysearch(id)];i
-	if(retrieveSquareParam(id, "Gt") != null){
-		$("#square_graph_dropdown_"+id).val(retrieveSquareParam(id, "Gt"));
-	}else if(retrieveSquareParam(id, "We") != null){
-		$("#square_We_dropdown_"+id).val(retrieveSquareParam(id, "We"));
-		$("#square_Ws_dropdown_"+id).val(retrieveSquareParam(id, "Ws"));
-		$("#square_Wr_dropdown_"+id).val(retrieveSquareParam(id, "Wr"));
-	}else if(tmpSquare.Ds != null){
-		// can't use retrieve (recurrsive) nor calc as that inherits, so just ask simply
-		$("#square_Ds_dropdown_"+id).val(atob( retrieveSquareParam(id, "Ds") ));
-	}
+	// duplicate.  remove.
+	// $("#square_graph_dropdown_"+id).val(retrieveSquareParam(id, "Gt", false));
+	// $("#square_We_dropdown_"+id).val(retrieveSquareParam(id, "We"));
+	// $("#square_Ws_dropdown_"+id).val(retrieveSquareParam(id, "Ws"));
+	// $("#square_Wr_dropdown_"+id).val(retrieveSquareParam(id, "Wr"));
+	// if(retrieveSquareParam(id, "Ds") != null){
+	// 	$("#square_Ds_dropdown_"+id).val(atob(retrieveSquareParam(id, "Ds") ));
+	// }
 
 }
 
-// Apply changes inputted by user
-function editSquare(id, type){
+// Apply changes inputted by user	
+function editSquare(id){
 	// IN : String (which attribute to modify)
 	// OUT : na (but calls other functions
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+type+")");
+	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	var item = url.sake.squares[squarearraysearch(id)];
 
-	// Nullify all differences from parent
-	delete item.Wi;
-	delete item.Gt;
-	delete item.Ds;
+	//Is square different from parent *OR* is it a auto time refresh square?
 
-	// Then set the parameter that differs from parent. 
-	if(type=="Wa"){
-		alert("asioudiasjd");
-		item.We = $("#absolutefromepoch").val();  
-		item.Ws = $("#absolutetoepoch").val();  
-	}else if(type=="Wi"){
+	if($("#square_Wr_dropdown_"+id+" option:selected").val()){
+
 		item.Wi = [];
+			
 		item.Wi[0] = parseInt($("#square_We_dropdown_"+id+" option:selected").val());  			
 		item.Wi[1] = parseInt($("#square_Ws_dropdown_"+id+" option:selected").val());  
+		
 		if(parseInt($("#square_Wr_dropdown_"+id+" option:selected").val()) != 0){
 			item.Wi[2] = parseInt($("#square_Wr_dropdown_"+id+" option:selected").val());
 			// if Window Refresh is set, we... for this one time only... allow a (non root) square to have two mods from parent
 			item.Gt = "UpdateCountdown";
+		}	
+
+	}else{
+
+		delete item.Wi;
+
+		if($("#square_We_dropdown_"+id+" option:selected").val() || $("#square_Ws_dropdown_"+id+" option:selected").val() || $("#square_Wr_dropdown_"+id+" option:selected").val()){
+			item.Wi = [];
+			
+			item.Wi[0] = parseInt($("#square_We_dropdown_"+id+" option:selected").val());  			
+			item.Wi[1] = parseInt($("#square_Ws_dropdown_"+id+" option:selected").val());  
+			
+			if(parseInt($("#square_Wr_dropdown_"+id+" option:selected").val()) != 0){
+				item.Wi[2] = parseInt($("#square_Wr_dropdown_"+id+" option:selected").val());
+				// if Window Refresh is set, we... for this one time only... allow a (non root) square to have two mods from parent
+				item.Gt = "UpdateCountdown";
+			}	
+	
 		}
-	}else if(type=="Gt"){
-		item.Gt = null;
+	
+		delete item.Gt;
 		if($('#square_graph_dropdown_'+id).val() != ""){
 			item.Gt = $("#square_graph_dropdown_"+id+" option:selected").val();
 		}
-
-	}else if(type=="Ds"){
+	
+		delete item.Ds;
 		// check that it wasn't just 'deleted')
 		if($('#square_Ds_textarea_'+id).val() != ""){
 			item.Ds = btoa($('#square_Ds_textarea_'+id).val());
 		}
-	}
-	// zero the options for next time
-	$("input:radio").removeAttr("checked");
 	
+		//look for any fields specific to that graph type
+		delete item.Cs;
+		$('#square_editform_'+id+' *').filter(':input').each(function(){
+			//qq(this.name + " = " + this.value)
+	
+			if(/^custom/.test(this.name)){
+					if (!item.hasOwnProperty("Cs")) {
+						item.Cs = {}
+					}
+				item.Cs[this.name] = this.value
+			}
+		});	
+		
+	}
+
+	
+
+
 	// if we've edited the square, every square beneath us needs redrawing with inherited atributes
 	updateDataList = new Array();
 	updateDataList = findAllChildren(id);
@@ -1905,28 +2120,28 @@ function editSquare(id, type){
 	drawLines(everyID(), false);  //line colours have changed
 	drawSquares(updateDataList);
 	drawinBoxes(updateDataList);
-	hideOverlay();
+	//hideOverlay();
 	updateurl();
 
 }
 	
 
 
-// Hide the "Edit Square" Overlay
-function hideOverlay(){
+// // Hide the "Edit Square" Overlay
+// function hideOverlay(){
 
-	// hide the overlay
-	$('#editsquareform').css('display', 'none');
-	$('#templatediv').css('display', 'none');
-	$('#overlay_connector').css('display', 'none');
-	// clean the inputs
-	$('#form_time input[type=radio]').attr("checked", false);
-	$('#form_graph input[type=radio]').attr("checked", false);
-	$('#textareapb').attr("readonly", false);
-	$('#modify_time').attr("disabled", true);
-	$('#modify_graph').attr("disabled", false);
-	$('#modify_pb').attr("disabled", true);	
-}
+// 	// hide the overlay
+// 	$('#editsquareform').css('display', 'none');
+// 	$('#templatediv').css('display', 'none');
+// 	$('#overlay_connector').css('display', 'none');
+// 	// clean the inputs
+// 	$('#form_time input[type=radio]').attr("checked", false);
+// 	$('#form_graph input[type=radio]').attr("checked", false);
+// 	$('#textareapb').attr("readonly", false);
+// 	$('#modify_time').attr("disabled", true);
+// 	$('#modify_graph').attr("disabled", false);
+// 	$('#modify_pb').attr("disabled", true);	
+// }
 
 // Build a list of every square ID
 function everyID(){
@@ -1936,7 +2151,7 @@ function everyID(){
 	for (var id in url.sake.squares){
 		idlist.push(url.sake.squares[id].id);
 	}	
-	ww(7, "everyID = "+JSON.stringify(idlist));
+	// ww(7, "everyID = "+JSON.stringify(idlist));
 	return idlist
 }
 
@@ -1989,7 +2204,7 @@ function downloadAsImage() {
 function pivotToSA(id){
 	// IN : Integer
 
-	var path = btoa('{"sc":{},"pb":'+JSON.stringify(retrieveSquareParam(id, 'pb'))+',"ca":{"start":'+(calcGraphTime(id, 'We', 0) - retrieveSquareParam(id, 'Ws'))+',"end":'+calcGraphTime(id, 'We', 0)+'},"ac":"Summary"}');
+	var path = btoa('{"sc":{},"pb":'+JSON.stringify(retrieveSquareParam(id, 'pb'))+',"ca":{"start":'+(calcGraphTime(id) - retrieveSquareParam(id, 'Ws'))+',"end":'+calcGraphTime(id)+'},"ac":"Summary"}');
 	window.open('https://'+sa_ip+'/deepsee/#'+path, '_blank');
 }
 
@@ -2030,14 +2245,7 @@ function bookmarks(){
 	
 	var adjustedurl = jQuery.extend(true, {}, url);
 	for (var j in adjustedurl.sake.squares){
-alert("asopasidpoasidopasdipoiad");
-//		if (adjustedurl.sake.squares[j].We == null){
-//			adjustedurl.sake.squares[j].We = calcGraphTime(adjustedurl.sake.squares[j].id, 'We', 0);
-//		};
-//		// Window end is always relative, shoulnd't need de-referencing	
-//		if (adjustedurl.sake.squares[j].Ws == null){
-//			adjustedurl.sake.squares[j].Ws = calcGraphTime(adjustedurl.sake.squares[j].id, 'Ws', 0);
-//		};
+
 	}
 	
 	string += "<br><br><span class='graph_info_title'>Dereferenced URL</span><br>Adjusted so that Squares are locked to absolute timeframes.   Ideal for Investigations/Tickets/Case management.<br><br>";
@@ -2149,7 +2357,6 @@ function initialLoad(){
 }
 
 function resize_workspace(){
-
 	$("#sake").css("width", "99%");
 	$("#sake").css("height", document.getElementById('sakecontainer').clientHeight-10);
 }
@@ -2187,7 +2394,7 @@ $( document ).ready(function() {
 	container = document.getElementById( 'sakecontainer' );
 	container.appendChild( threeRenderer.domElement );
 
-	// has to go here?
+	// set realx/realy for threeJS raycasting
 	$("#sake").mousemove(function( event ) {
 		mouse.realx = ( event.clientX  ) ;
 		mouse.realy = ( event.clientY );
@@ -2240,82 +2447,6 @@ $( document ).ready(function() {
 		}
 	});
 
-
-
-	////////////////////////////////////////
-	// Populate Edit Overlay
-	////////////////////////////////////////
-	
-	// Add each 'time window' to the Edit screen
-	var mySelectSize = $('#html_window_size');
-	var mySelectRelative = $('#html_window_end');
-
-	var timewindows = new Array();
-	timewindows.push([-1 * 0, "0 secs"]); 
-	timewindows.push([-1 * 10, "10 secs"]); 
-	timewindows.push([-1 * 30, "30 secs"]); 
-	timewindows.push([-1 * (GLB.square.blocksize/60), ""+1*(GLB.square.blocksize/60)+' Mins']); 
-	timewindows.push([-2 * (GLB.square.blocksize/60), ""+2*(GLB.square.blocksize/60)+' Mins']); 
-	timewindows.push([-3 * (GLB.square.blocksize/60), ""+3*(GLB.square.blocksize/60)+' Mins']); 
-	timewindows.push([-1 * 60 * 60, '1 Hours']); 
-	timewindows.push([-12 * 60 * 60, '12 Hours']); 
-	timewindows.push([-1 * 60 * 60 * 24, '1 Day']); 
-	timewindows.push([-1 * 60 * 60 * 24 * 7, '1 Week']); 
-	timewindows.push([-1 * 60 * 60 * 24 * 7 * 4, '1 Month']); 
-	$.each(timewindows, function(val, obj) {
-		mySelectSize.append(
-			$('<option></option>').val(obj[0]).html(obj[1])
-		);
-		mySelectRelative.append(
-			$('<option></option>').val(obj[0]).html(obj[1])
-		);
-	});	
-
-	
-	////////////////////////////////////////
-	// Behaviour of Edit Overlay
-	////////////////////////////////////////
-	
-	// Always ahve the correct Radio button ticked for the change happengin
-	$("#html_window_size").click(function() {
-		$("input[name='modify_radio'][value='relative']").prop('checked', true);
-		$("#html_window_end").val($("#html_window_size").val());
-	});
-	$("#html_window_end").click(function() {
-		$("input[name='modify_radio'][value='relative']").prop('checked', true);
-	});
-	$("#absolutefromiso, #absolutefromepoch, #absolutetoiso, #absolutetoepoch" ).click(function() {
-		$("input[name='modify_radio'][value='absolute']").prop('checked', true);
-	});
-	$("#absolutefromiso, #absolutefromepoch, #absolutetoiso, #absolutetoepoch" ).click(function() {
-		$("input[name='modify_radio'][value='absolute']").prop('checked', true);
-	});
-	$("#systemgraphshere" ).click(function() {
-		$("input[name='modify_radio'][value='type']").prop('checked', true);
-		$("#connectorgraphshere").val([]);
-	});	
-	$("#connectorgraphshere" ).click(function() {
-		$("input[name='modify_radio'][value='type']").prop('checked', true);
-		$("#systemgraphshere").val([]);
-	});	
-	$("#textareapb" ).click(function() {
-		$("input[name='modify_radio'][value='pathbar']").prop('checked', true);
-	});	
-	
-	// convert epoch<->ISO
-	$("#absolutefromiso").on("keyup paste", function() {
-		$("#absolutefromepoch").val(moment($("#absolutefromiso").val(), moment.ISO_8601).unix());
-	});
-	$("#absolutefromepoch").on("keyup paste", function() {
-		$("#absolutefromiso").val(moment($("#absolutefromepoch").val(), "X").format());
-	});
-	$("#absolutetoiso").on("keyup paste", function() {
-		$("#absolutetoepoch").val(moment($("#absolutetoiso").val(), moment.ISO_8601).unix());
-	});
-	$("#absolutetoepoch").on("keyup paste", function() {
-		$("#absolutetoiso").val(moment($("#absolutetoepoch").val(), "X").format());
-	});
-
 	
 	// AJAX The master_templates from disk
 	$.get( "./templates.json", function( data ) {
@@ -2346,67 +2477,41 @@ $( document ).ready(function() {
 	// d3 stuff
 	//
 	
-
 	var zoom = d3.zoom()
 		.scaleExtent([.03, 2])
-		.on("zoom", zoomed);
-			
-	function zoomed(){	
-			ww(6,"zooooomed");
-		// move and scale the "squaregroup" for zoom effect. Floor it to shorten URL
-			squaregroup.attr("transform",  d3.event.transform)
-			//squaregroup.attr("transform",  d3.zoomTransform(squaregroup.node()));
+		.on("zoom", zoomed)
+		.on("end", zoomEnd)
+		
 
-			// update global transform and zoom 
-			workspace.setx(d3.event.transform.x);
-			workspace.sety(d3.event.transform.y);
-			workspace.setScale(d3.event.transform.k);
+	function zoomed(){	
+			//ww(6,"zooooomed");
+			// move and scale the "squaregroup" for zoom effect. Floor it to shorten URL
+			squaregroup.attr("transform",  d3.event.transform)
+		
+			//squaregroup.attr("transform",  d3.zoomTransform(squaregroup.node()));
 
 			// save this zoom/transform base64 into the URL for pageload/bookmarks etc
 			url.sake.Zt = btoa(squaregroup.attr("transform"));
-			updateurl();
-			
+		
+	}
+	function zoomEnd(){
+		updateurl();
 	}
 
 	sake = d3.select("#sake")
 		.call(zoom);
-
-
-
-	var x_scale = d3.scaleLinear();
-	var y_scale = d3.scaleLinear();
-	var x_axis = d3.axisBottom(x_scale).ticks(0);
-	var y_axis = d3.axisLeft(x_scale).ticks(0);
-	sake.append("g")
-	        .attr("transform", "translate(0,0)")
-	        .call(x_axis); 
-	sake.append("g")
-	        .attr("transform", "translate(0,0)")
-	        .call(y_axis); 
-
 
 	// used to contain the squares and transform them as one
 	squaregroup = sake.append("g")
 		.attr("id", "squaregroup")
 
 	if(url.sake.Zt!=null){
-		var newTransform = atob(url.sake.Zt);
-		var newTranslate = newTransform.split(/[\(\) ,]/);
-		var mtransform = d3.zoomIdentity
-			.translate(parseInt(newTranslate[1]), parseInt(newTranslate[2]))	
-			.scale(parseInt(newTranslate[5]))
-	//	squaregroup.call(zoom.transform, mtransform);
+		var newTransform = atob(url.sake.Zt).split(/[\(\) ,]/);;
 
-		workspace.setx(newTranslate[1]);
-		workspace.sety(newTranslate[2]);
-		workspace.setScale(newTranslate[4.1]);
-	}else{
-		var mtransform = d3.zoomIdentity
-			.translate(0,0)	
-			.scale(1)
-	//	squaregroup.call(zoom.transform, mtransform);
-		
+		zoom.transform(squaregroup, d3.zoomIdentity.translate(newTransform[1], newTransform[2]).scale(newTransform[5]))
+		zoom.transform(sake, d3.zoomIdentity.translate(newTransform[1], newTransform[2]).scale(newTransform[5]))
 	}
+
 
 	// used to store all the lines connecting squares		
 	linesgroup = d3.select("#squaregroup")
@@ -2421,55 +2526,26 @@ $( document ).ready(function() {
 	resize_workspace();
 
 	
-	// arrow head stuff
-	var defs = sake.append("defs")
-
-	defs.append("marker")
-		.attr("id","arrow")
-		.attr("viewBox","0 -5 10 10")
-		.attr("refX",13)
-		.attr("refY",0)
-		.attr("orient","auto")
-		.attr("markerWidth",4)
-		.attr("markerHeight",4)
-		.attr("xoverflow", "visible")
-	.append("svg:path")
-	        .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
-	        //.style('stroke','none')
-		.attr("class","arrowHead")
-		.attr("fill", "steelblue")
-
-	defs.append("marker")
-	.attr('id', 'arrow2')
-	    .attr('viewBox', '0 0 10 10')
-	    .attr('refX', 1)
-	    .attr('refY', 5)
-	    .attr('markerWidth', 6)
-	    .attr('markerHeight', 6)
-	    .attr('orient', 'auto')
-	.append('path')
-	    .attr("d", 'M 0 0 L 10 5 L 0 10 z')
-	
-
-
 	compileGraphs();
 	compileConnectors();
 
-	rendererStats.domElement.style.position	= 'absolute'
-	rendererStats.domElement.style.left	= '0px'	
-	rendererStats.domElement.style.bottom	= '0px'
-	document.body.appendChild( rendererStats.domElement )
-	
-	stats0.showPanel( 0 );
-	stats0.domElement.style.cssText = 'position:absolute;top:0px;left:0px;';
-	document.body.appendChild( stats0.dom );
-	stats1.showPanel( 1 );
-	stats1.domElement.style.cssText = 'position:absolute;top:0px;left:80px;';
-	document.body.appendChild( stats1.dom );
-	stats2.showPanel( 2 );
-	stats2.domElement.style.cssText = 'position:absolute;top:0px;left:160px;';
-	document.body.appendChild( stats2.dom );
-	
+	if(GLB.threejs.showperformance == true){
+		rendererStats.domElement.style.position	= 'absolute'
+		rendererStats.domElement.style.left	= '0px'	
+		rendererStats.domElement.style.bottom	= '0px'
+		document.body.appendChild( rendererStats.domElement )
+		
+		stats0.showPanel( 0 );
+		stats0.domElement.style.cssText = 'position:absolute;top:0px;left:0px;';
+		document.body.appendChild( stats0.dom );
+		stats1.showPanel( 1 );
+		stats1.domElement.style.cssText = 'position:absolute;top:0px;left:80px;';
+		document.body.appendChild( stats1.dom );
+		stats2.showPanel( 2 );
+		stats2.domElement.style.cssText = 'position:absolute;top:0px;left:160px;';
+		document.body.appendChild( stats2.dom );
+	}
+
 	if(GLB.threejs.realTimeRender == true){
 		// set off real time rendering
 		animate_Three();
@@ -2479,7 +2555,7 @@ $( document ).ready(function() {
 	}
 
 
-	
+
 
 
 });

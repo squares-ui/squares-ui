@@ -31,7 +31,7 @@
 	<script src="./lib/tsvJSON.js"></script>
 
 	<!-- ***** Graphs Lists ***** -->
-	<script src="./graphs/TopX_Generic.js"></script>
+	<!-- <script src="./graphs/TopX_Generic.js"></script>
 	<script src="./graphs/tsv_Generic.js"></script>
 	<script src="./graphs/infoonly.js"></script>
 	<script src="./graphs/graph_timezones.js"></script>
@@ -43,34 +43,71 @@
 	<script src="./graphs/DangerousFilesApplication.js"></script>
 	<script src="./graphs/AppGroupVSSource/AppGroupVSSource.js"></script>
 	<script src="./graphs/url_struct/url_struct.js"></script>
-    <script src="./graphs/testTSV/testTSV.js"></script>
+    <script src="./graphs/testTSV/testTSV.js"></script> -->
 
-	<link href="./style.css" rel="stylesheet" type="text/css">
+	<link href="./styles/style1.css" rel="stylesheet" type="text/css">
 	
 	<link rel="stylesheet" href="./alertify.js-0.3.11/themes/alertify.core.css" />
 	<link rel="stylesheet" href="./alertify.js-0.3.11/themes/alertify.default.css" id="toggleCSS" />	
 	
 
-    <script src="./index.js"></script>
+	<script src="./lib/underscore-min.js"></script>
+	<script src="./lib/jsonform.js"></script>
 
-	<script type="text/javascript">
-	
-var log = "1476	721	0	0.0.0.0		11	00:50:56:69:aa:7f	224.0.0.1	0";
+    <script type="text/javascript">
+		console.log("asd")
+		$( document ).ready(function() {
+			console.log("asd2")
 
-qq(log.split("\t"));
-qq("v"+log.split("\t")[4]);
+			$('form').jsonForm(
+				
+				{
+  "schema": {
+    "text": {
+      "type": "string",
+      "title": "Text"
+    }
+  },
+  "form": [
+    {
+      "key": "text",
+      "ready": function (evt) {
+		alert("sd")
+      },"onload": function (evt) {
+		alert("sd")
+	  }
+	  
+    },
+    {
+      "type": "button",
+      "title": "Click me",
+      "onClick": function (evt) {
+        evt.preventDefault();
+        alert('Thank you!');        
+      },"onload": function (evt) {
+		alert("sd")
+	  },"onLoad": function (evt) {
+		alert("sd")
+	  },"onReady": function (evt) {
+		alert("sd")
+	  },"onready": function (evt) {
+		alert("sd")
+	  }
+    }
+  ]
+}
 
 
-
-	</script>
-
-</script>
+			);
+		})
+	  </script>
 
 </head>
 <body>
-		<select id='clone_template_dropdown_id' name='clone_template_dropdown_id'>
-                        <option value="">Loading...</option>
-                    </select>
+
+	<form></form>
+
+
 
 </body>
 

@@ -349,3 +349,11 @@ div{
   font-size: 12px;
 
 }
+
+
+.editSquareJsonForm{
+	border-left: 1px solid #000;
+	border-right: 1px solid #000;
+	padding:5px;
+
+}
