@@ -1,0 +1,10 @@
+{
+	"graphs":[
+		"./elastic/elastic_connector.js",
+		"./elastic/elastic_piechart.js",
+		"./elastic/elastic_cloud.js",
+		"./elastic/elastic_treemap_dimensions.js",
+		"./elastic/elastic_tsnejs.js",
+		"./elastic/elastic_normaldistribution.js"
+	]
+}
