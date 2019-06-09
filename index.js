@@ -691,7 +691,8 @@ function drawSquares(idlist) {
 		.classed("square_foreignObject", true)
 		.attr("id", function(d){ return "foreignObject_"+d.id })
 	        .on("mouseover", squareMouseOver)
-	        .on("mouseout", squareMouseOut)
+			.on("mouseout", squareMouseOut)
+			.attr("transform", "scale(0.8)")
 		.style("height", function(d){
 			return (document.getElementById("foreignObject_"+d.id).clientHeight * retrieveSquareParam(d.id, "Sc") );
 		})
@@ -787,6 +788,7 @@ function drawSquares(idlist) {
 				.on("click", function(d){ moveToBottom(d.id); })
 				.on("mousedown", function() { d3.event.stopPropagation(); })
 				;				
+				
 
 			// Delete
 			var deleteSquare = menubarcontrols.append("img")
@@ -883,7 +885,7 @@ function clearHoverInfo(id){
 		function(localTimeout){
 			$("#square_info_"+id).css('display', 'none')
 			$("#square_info_"+id).html("")
-		}, 0);
+		}, 10);
 }
 
 
@@ -2160,25 +2162,25 @@ function downloadAsImage1() {
 
 	ww(7, "Downloading Image...");
 
-	// https://blog.taucharts.com/svg-to-png/
-	var html = document.querySelector("#sake").parentNode.innerHTML;
-	var imgsrc = 'data:image/svg+xml;base64,' + btoa(html);
+	// // https://blog.taucharts.com/svg-to-png/
+	// var html = document.querySelector("#sake").parentNode.innerHTML;
+	// var imgsrc = 'data:image/svg+xml;base64,' + btoa(html);
 
-	var canvas = document.querySelector("canvas"),
-		context = canvas.getContext("2d");
+	// var canvas = document.querySelector("canvas"),
+	// 	context = canvas.getContext("2d");
 
-	var image = new Image;
-	image.src = imgsrc;
-	image.onload = function () {
-		context.drawImage(image, 0, 0);
-		var canvasdata = canvas.toDataURL("image/png");
-		var a = document.createElement("a");
-		a.textContent = "save";
-		a.download = "export_" + Date.now() + ".png";
-		a.href = canvasdata;
-		document.body.appendChild(a);
-		canvas.parentNode.removeChild(canvas);
-	};
+	// var image = new Image;
+	// image.src = imgsrc;
+	// image.onload = function () {
+	// 	context.drawImage(image, 0, 0);
+	// 	var canvasdata = canvas.toDataURL("image/png");
+	// 	var a = document.createElement("a");
+	// 	a.textContent = "save";
+	// 	a.download = "export_" + Date.now() + ".png";
+	// 	a.href = canvasdata;
+	// 	document.body.appendChild(a);
+	// 	canvas.parentNode.removeChild(canvas);
+	// };
 	
 }
 
@@ -2389,10 +2391,27 @@ $( document ).ready(function() {
 	correcturl();
 
 	threeRenderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
-	threeRenderer.domElement.id = 'SAKEcanvas';
+	// XXX goes crazy if OS fonts are 125%... needs reviewing!!!
+	//threeRenderer.setPixelRatio(window.devicePixelRatio);
 
+	//container = document.getElementById("sakecontainer")
+	//threeRenderer.setSize( container.clientWidth, container.clientHeight );
+
+	threeRenderer.domElement.id = 'SAKEcanvas';
 	container = document.getElementById( 'sakecontainer' );
 	container.appendChild( threeRenderer.domElement );
+
+
+	// threeRenderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+	// // allow for screens of retina, or large OS font
+	// const yourPixelRatio = window.devicePixelRatio
+	// threeRenderer.setPixelRatio( 1/yourPixelRatio );
+	// threeRenderer.domElement.id = 'SAKEcanvas';
+	// container = document.getElementById( 'sakecontainer' );
+	// container.appendChild( threeRenderer.domElement );
+
+
+
 
 	// set realx/realy for threeJS raycasting
 	$("#sake").mousemove(function( event ) {
@@ -2478,7 +2497,7 @@ $( document ).ready(function() {
 	//
 	
 	var zoom = d3.zoom()
-		.scaleExtent([.03, 2])
+		.scaleExtent([.03, 10])
 		.on("zoom", zoomed)
 		.on("end", zoomEnd)
 		

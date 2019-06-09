@@ -156,7 +156,7 @@ function elastic_graph_normdist(id){
 	var sd_array = Random_normal_Dist(data.average, data.standarddeviation);
     //min_d = d3.min(sd_array, function (d) { return d.q; });
     //max_d = d3.max(sd_array, function (d) { return d.q; });
-	min_d = data.lowest * 0.8
+	min_d = data.lowest * 0.79
 	max_d = data.highest * 1.1
 	max_p = d3.max(sd_array, function (d) { return d.p; });
 

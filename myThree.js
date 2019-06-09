@@ -28,6 +28,7 @@ var masterGridYZ = new THREE.GridHelper(grid_size, grid_cuts, gridCenterLine, gr
 masterGridYZ.position.set(0, (grid_size*0.5), (grid_size*0.5));
 masterGridYZ.rotation.z = Math.PI/2;
 
+const yourPixelRatio = window.devicePixelRatio
 
 
 function setTimeoutThree(interval){
@@ -37,13 +38,16 @@ function setTimeoutThree(interval){
 
 function animate_Three() {
 	
+    setTimeout( function() {
 
+		requestAnimationFrame( animate_Three );
+		//if(!document.hidden){
+			render_Three();	
+		//}
+    }, GLB.threejs.fps_TimeOut );
 
-	requestAnimationFrame( animate_Three );
-	//if(!document.hidden){
-		render_Three();	
-	//}
 }
+
 
 function render_Three(){
 	//https://threejs.org/examples/webgl_multiple_elements.html
@@ -58,8 +62,8 @@ function render_Three(){
 	updateSize_Three();
 
 	threeRenderer.setClearColor( 0x000000, 0 );
-	threeRenderer.setScissorTest( false );
-	threeRenderer.clear();
+	// threeRenderer.setScissorTest( false );
+	// threeRenderer.clear();
 
 	threeRenderer.setClearColor( 0x000000,0 );
 	threeRenderer.setScissorTest( true );
@@ -70,11 +74,17 @@ function render_Three(){
 		
 		// check if it's offscreen. If so skip it
 		var element = threeScenes[prop].userData.elementt;
-		let rect = element.getBoundingClientRect();
-		if ( rect.bottom < 0 || rect.top  > threeRenderer.domElement.clientHeight ||
-			rect.right  < 0 || rect.left > threeRenderer.domElement.clientWidth ) {
-			ww(7, "square_"+square_id+" not in render scope, RETURN");
-			continue;  // it's off screen
+		let rect_square = element.getBoundingClientRect();
+		let render_space = document.getElementById("sakecontainer").getBoundingClientRect();
+		//let screen = document.documentElement.getBoundingClientRect();
+		
+		//qq(rect_square.left +" > " +(threeRenderer.domElement.clientWidth*1) + " > "+(threeRenderer.domElement.clientWidth*yourPixelRatio) + " > "+ (threeRenderer.domElement.clientWidth*3) )
+		
+
+		if ( rect_square.bottom < 0 || rect_square.top  > threeRenderer.domElement.clientHeight ||
+			rect_square.right  < 0 || rect_square.left > (threeRenderer.domElement.clientWidth*1) ) {
+			ww(7, "square_"+square_id+" not in render scope");
+			//continue;  // it's off screen
 		}
 
 
@@ -84,37 +94,51 @@ function render_Three(){
 		var controls = threeScenes[prop].userData.controls;
 		var raycaster = threeScenes[prop].userData.raycaster;
 		var square_id = threeScenes[prop].userData.id;
+		
+
+		//var scale=atob(url.sake.Zt).split(" ")[1].replace(/[a-z\(\)]/g, "")
+
+		//correct
+		var width  = Math.floor(rect_square.right - rect_square.left);
+		var height = Math.floor(rect_square.bottom - rect_square.top);
+		var left   = Math.floor(rect_square.left - render_space.x  + render_space.x);
+		var bottom = Math.floor(threeRenderer.domElement.clientHeight - rect_square.bottom + render_space.y);
+
+		
+
+		//qq("scale:"+scale+", document.height:"+document.documentElement.clientHeight+" rect_bottom:"+rect_square.bottom+" sum:"+top)
+		// qq("--------------------------")
+		// qq(screen)
+		// qq(render_space)
+		// qq(rect_square)
+		// qq(scale)
+		// qq("----")
+		
 
 
-		var width  = Math.floor(rect.right - rect.left);
-		var height = Math.floor(rect.bottom - rect.top);
-		var left   = Math.floor(rect.left);
-		var top    = Math.floor(rect.top);	
-
-		if(mouse.realx > rect.left && mouse.realx < rect.right && mouse.realy > rect.top && mouse.realy < rect.bottom){
+		// keep spinning the visual, or hold it still and raycast mouse position?
+		if(mouse.realx > rect_square.left && mouse.realx < rect_square.right && mouse.realy > rect_square.top && mouse.realy < rect_square.bottom){
 			// mouse is in this div/square
 			// qq("mouse is in "+scene.userData.id);
-			mouse.x = ((((mouse.realx - rect.left) / width ) * 2 ) - 1);
-			mouse.y = ((((mouse.realy - rect.top) / height ) * 2 ) - 1) * -1;
+			mouse.x = ((((mouse.realx - rect_square.left) / width ) * 2 ) - 1);
+			mouse.y = ((((mouse.realy - rect_square.top) / height ) * 2 ) - 1) * -1;
 
 			raycaster.setFromCamera( mouse, camera );
 			var intersects = raycaster.intersectObjects( scene.children );
 
 
-			ww(7, "INTERSECT for square_"+square_id+" has "+intersects.length+" matches");
+			//ww(7, "INTERSECT for square_"+square_id+" has "+intersects.length+" matches");
 			if ( intersects.length > 0 ) {
 
 				for(var i = 0 ; i < intersects.length ; i++ ){
 					if(intersects[i].object.sakeName != null && intersects[i].object.sakeName != ""){
-						$("#hoverInfo").text(intersects[i].object.sakeName);
-						$("#hoverInfo").css("visibility", "visible");
-						$("#hoverInfo").css({top:  mouse.realy, left: (mouse.realx+50) });
-
+						theData = intersects[i].object.sakeName
+						setHoverInfo(square_id, theData)
 					}
 				}
 				
 			}else{
-				$("#hoverInfo").css("visibility", "hidden");
+				//$("#hoverInfo").css("visibility", "hidden");
 			}
 
 		}else{
@@ -122,9 +146,10 @@ function render_Three(){
 			controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = truei
 		}
 
-
-		threeRenderer.setViewport( left, top, width, height );
-		threeRenderer.setScissor( left, top, width, height );
+		threeRenderer.setViewport(left, bottom, width, height );
+		threeRenderer.setScissor( left, bottom, width, height );
+		
+		
 	
 		threeRenderer.render(threeScenes[prop], camera);
 		

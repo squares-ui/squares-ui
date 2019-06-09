@@ -31,7 +31,8 @@ GLB.square.hoverfade = 5000;
 GLB.threejs = Object();
 GLB.threejs.realTimeRender = true; // false renders on setTimeout of interval below.  better for CPU
 GLB.threejs.notRealTimeRenderFrequency = 500; // measured in ms
-GLB.threejs.showperformance = false;
+GLB.threejs.showperformance = true;
+GLB.threejs.fps_TimeOut = 1000/60;  // bigger number is long delay = lower fps for low power machines.  1000=1fps,  16=60fps
 
 // these are for the square that auto udpates children squares
 GLB.tick = Object();
