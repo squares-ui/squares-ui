@@ -1175,6 +1175,12 @@ function saveProcessedData(id, name, data){
 	Lockr.set('squaredata_'+id+'_hash', myHash);	
 	Lockr.set('squaredata_'+id+'_processeddata'+name, data);	
 
+	if(GLB.clearRawData == true){
+		ww(1, " Clearing raw data for "+id);
+		Lockr.rm('squaredata_'+id+"_rawdata");
+		Lockr.rm('squaredata_'+id+"_rawdata_");
+	}
+
 	udpateScreenLog("#"+id+" data processed");
 	callTheGraph(id, true);
 }

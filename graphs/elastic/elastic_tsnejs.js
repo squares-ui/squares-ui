@@ -90,19 +90,50 @@ function elastic_rawtoprocessed_tsnejs(id){
 	const thirdBy = retrieveSquareParam(id,"Cs")['custom_third']
 
 
-	data2 = _.map(data, function(i){
-		return [i._source[firstBy], i._source[secondBy], i._source[thirdBy] ]
+
+    // t-sne relies on scalar not nominal.  So for nominal I will count as % the rarity of user columns to find "odd" and place together?
+    
+    //// for each field from user, work out total count and % of rest
+	dataCount = {}
+	dataCount.first = {}
+	dataCount.second = {}
+	dataCount.third = {}
+	_.each(data, function(row){
+		if(dataCount.first[row._source[firstBy]] == undefined){
+			dataCount.first[row._source[firstBy]] = 0;
+		}
+		dataCount.first[row._source[firstBy]]++
+
+		if(dataCount.second[row._source[secondBy]] == undefined){
+			dataCount.second[row._source[secondBy]] = 0;
+		}
+		dataCount.second[row._source[secondBy]]++
+
+		if(dataCount.third[row._source[thirdBy]] == undefined){
+			dataCount.third[row._source[thirdBy]] = 0;
+		}
+		dataCount.third[row._source[thirdBy]]++
+
 	})
 
-	var filtereddata = _.filter(data2, function(i) {
-		// remove "null" for rows that did not parse into Elastic right
-		return i[0] != null;
+	
+    // for (const [keyx, valuex] of Object.entries(dataCount)) {
+    //     for (const [keyy, valuey] of Object.entries(valuex)) {
+    //         for (const [keyz, valuez] of Object.entries(valuey)) {	
+				
+
+
+	// 		}
+	// 	}
+	// }
+
+	data3 = _.map(data, function(row){
+		return [dataCount.first[row._source[firstBy]] / data.length, dataCount.second[row._source[secondBy]] / data.length, dataCount.third[row._source[thirdBy]] / data.length ]
+
 	})
-
-
 
 	// nested_data = array, needs to be wrapped
-	saveProcessedData(id, '', filtereddata);
+	saveProcessedData(id, '', data3);
 
 }
 
@@ -127,18 +158,27 @@ function elastic_graph_tsnejs(id){
 	var width  = document.getElementById("square_"+id).clientWidth;
 	
 	var data = retrieveSquareParam(id, 'processeddata');
+	qq(data)
+	
+	//data = [[1.0, 0.1, 0.2], [0.1, 1.0, 0.3], [0.2, 0.1, 1.0]];
+	//qq(data)
+
+	data = [[139.69171,35.6895,"Tokyo",38001.018,392],[77.21667,28.66667,"Delhi",25703.168,356],[77.21667,28.66667,"Delhi",25703.168,356]]
 	
 	const firstBy = retrieveSquareParam(id,"Cs")['custom_first']
 	const secondBy = retrieveSquareParam(id,"Cs")['custom_second']
 
 
 
-	var opt = {epsilon: 10};
-	var tsne = new tsnejs.tSNE(opt);
+	var tsne = new tsnejs.tSNE({
+		dim: 2,
+		perplexity: 30,
+});
 
 	tsne.initDataDist(data)
 
-	for(var k = 0; k < 50; k++) {
+	for(var k = 0; k < 1; k++) {
+		qq("stepping")
 		tsne.step(); // every time you call this, solution gets better
 	}	
 

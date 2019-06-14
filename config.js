@@ -15,7 +15,7 @@ GLB.zoomLevels=[0.75, 1, 1.2, 1.5, 2];
 // lower qqLogging means less logging
 GLB.qqLogging = 7;
 GLB.hidesquaremenus = false;
-
+GLB.clearRawData = false;  // when a square has processed it's data, clear the raw data.  Good for testing, but fills local storage very quickly !! 
 
 //govern the definitions of a visual square
 GLB.square = Object ();
