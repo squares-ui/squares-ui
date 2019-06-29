@@ -2100,7 +2100,7 @@ function editSquare(id){
 		//look for any fields specific to that graph type
 		delete item.Cs;
 		$('#square_editform_'+id+' *').filter(':input').each(function(){
-			//qq(this.name + " = " + this.value)
+			qq(this.name + " = " + this.value)
 	
 			if(/^custom/.test(this.name)){
 					if (!item.hasOwnProperty("Cs")) {

@@ -5,9 +5,12 @@
 		"./elastic/elastic_cloud.js",
 		"./elastic/elastic_treemap_dimensions.js",
 		"./elastic/elastic_tsnejs.js",
-		"./elastic/elastic_normaldistribution.js",
+		"./elastic/elastic_barchart_scalar.js",
 		"./elastic/elastic_3d_ordinal.js",
 		"./elastic/elastic_sankey.js",
-		"./elastic/elastic_3d_grouped_normal.js"
+		"./elastic/elastic_3d_grouped_normal.js",
+		"./elastic/elastic_countby.js",
+		"./elastic/elastic_rawoutput.js"
+
 	]
 }
