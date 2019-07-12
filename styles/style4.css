@@ -197,6 +197,7 @@ div{
 								width:100%;
 								border: 2px solid;
 								border-color:grey;
+								
 
 							}
 							.square_content{
@@ -493,8 +494,8 @@ textarea {
 
 .y_overflow{
 	/* https://bugs.chromium.org/p/chromium/issues/detail?id=568614 */
-/*		overflow:scroll; */
-
+		overflow:scroll; 
+max-width: 1000px;
 }
 
 .link {

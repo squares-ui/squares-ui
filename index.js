@@ -616,7 +616,7 @@ function drawLines(ids, drawBezier){
 			linesfodiv.append("img")
 				.attr('class', 'picture')
 				.attr('src', function(d) { 
-					if(retrieveSquareParam(d.id, 'Gt')){
+					if(retrieveSquareParam(d.id, 'Gt', false)){
 						return "./images/125_b.png"; 
 					}
 				})
@@ -627,7 +627,7 @@ function drawLines(ids, drawBezier){
 			linesfodiv.append("img")
 				.attr('class', 'picture')
 				.attr('src', function(d) { 
-					if(retrieveSquareParam(d.id, 'We')){
+					if(retrieveSquareParam(d.id, 'We', false)){
 						return "./images/021_b.png"; 
 					}
 				})
@@ -638,7 +638,7 @@ function drawLines(ids, drawBezier){
 			linesfodiv.append("img")
 				.attr('class', 'picture')
 				.attr('src', function(d) { 
-					if(retrieveSquareParam(d.id, 'Ds')){
+					if(retrieveSquareParam(d.id, 'Ds', false)){
 						return "./images/061_b.png"; 
 					}
 				})

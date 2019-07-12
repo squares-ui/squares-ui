@@ -85,7 +85,7 @@ function graph_updatecountdown(id){
 
 	field.append("path")
 		.attr("class", "arc-body")
-		.classed("theme_col_3_unsat", true)
+		.style("fill", GLB.colorMain)
 
 	clearTimeout(tickObject[id]);
 	function tick(oldPercentage) {
@@ -123,7 +123,6 @@ function graph_updatecountdown(id){
 
 	  field.select(".arc-body")
 	      .attrTween("d", arcTween(arcBody))
-	//      .style("fill", function(d) { return color(d.value); });
 
 	  field.select(".arc-center")
 	      .attrTween("d", arcTween(arcCenter));

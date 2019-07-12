@@ -164,7 +164,7 @@ function elastic_graph_cloud(id){
 			.enter().append("text")
 				.style("font-size", function(d) { return d.size + "px"; })
 				.style("font-family", "Impact")
-				.style("fill", function(d, i) { return fill(i); })
+				.style("fill", function(d, i) { return GLB.color(i) })
 				.attr("text-anchor", "middle")
 				.attr("transform", function(d) {
 					return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";

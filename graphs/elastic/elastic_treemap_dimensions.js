@@ -143,7 +143,8 @@ function elastic_graph_treemapdimensions(id){
 		.style("top", (d) => d.y0 + "px")
 		.style("width", (d) => Math.max(0, d.x1 - d.x0 - 1) + "px")
 		.style("height", (d) => Math.max(0, d.y1 - d.y0  - 1) + "px")
-		.style("background", (d) => color(d.parent.data.key))
+		.style("background", function(d){ return GLB.color(d.parent.data.key)})
+		
 		.style("position", "absolute")
 		.style("overflow", "hidden")
 		.style("word-wrap", "break-word")

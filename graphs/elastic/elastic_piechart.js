@@ -143,7 +143,7 @@ function elastic_graph_piechart(id){
 		
 	arcs.append('path')
 			.attr('d', arc)	
-			.style("fill", 'white')
+			.style("fill", function(d){ return GLB.color(d.data.name) })
 			.style('stroke', 'black')
 			.on("click", function(d){
 				clickObject = btoa('[{"match":{"'+d.data.type+'":"'+d.data.name+'"}}]');
