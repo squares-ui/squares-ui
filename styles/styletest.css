@@ -1,0 +1,17 @@
+
+body{
+	margin:0px;
+	color:black;
+	font-family: Impact;
+	background-color:black;
+	height:100vh;
+	background: white;
+}
+
+
+.square_foreignObject{
+	/* to render HTML inside a SVG  */
+	width:500px;
+	height:500px;
+	/*overflow:scroll;*/
+}

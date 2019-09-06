@@ -1,70 +1,102 @@
 # About
 
-A customisable dashboard to visualise backend data sources helping analysts 'spot' problems and oddities.
-Visualisations of all types from a basic pie charts to a 3d spinning globes.
+An alternative approach to visualising data and dashboards.
+Many interfaces have 1 search syntax, 1 time frame, and then a few graphs.
+SAKE however has many graphs that are children of each other and inherit attributes, but each can each have their time frame, their own data filter, their own graph style.
+
+# How to Install
+
+Download code to your www folder
+
+`cd /var/www/html/`
+`git clone https://github.com/libgit2/libgit2`
+
+Configure your own connector
+
+`cp connectors/blank.json connectors/MyElasticConnector.json`
+`vim connectors/MyElasticConnector.json`
+
+here is an example config file
+
+~~~~
+{
+        "handle": "Elastic_7b",
+        "type": "elastic",
+        "desc": "Elastic_7b",
+        "dst": "192.168.1.21:9200",
+        "index": "logstash-2019*",
+        "username": "none",
+        "apikey": "",
+        "dft_limit":10000
+}
+~~~~
+
+Launch the page in your browser
 
 
-# Use Cases
 
-As a wallboard solution SAKE provides big visualisations for entire teams to 'spot the issue'
-As a local drill down agent users can search down using context related data to find something interesting, then share that with other users.
+
+# The Use Cases
+
+SAKE can be put on a big screen, updating in real time
+
+SAKE can be used on the local desktop, to pivot and investigate.
+
 
 # Concept
 
-Almost every graph I've ever seen has 3 components:
-- time frame (e.g. last 15 minutes)
-- search query (ip=1.2.3.4)
-- graph type (e.g. pie chart)
+Each layout has 1+ master squares that each define a target instance (e.g. Elastic @ 192.168.0.1)
 
-In SAKE each 'parent' square has these 3 coniditons set, and then we can add 'children' squares.
+Each master square has child squares, which inturn have child squares of their own.
 
-Each child square starts blank and inherits everything from it's parent.  We can then add 1 'change' to *either* the time, the search or the graph type. 
+Any attribute that a child square does NOT have set, is inherited from it's parent square.  A blank square is identical to it's parent (same timeframe, same data filter, same graph type)
 
-So if child1 has a different time frame (e.g. last 60 minutes) it would still inherit the search query (ip=1.2.3.4) and the graph type (pie chart).
+Any attribute that a child square does have prevents inheritence.  A child square might inherit the 'graph type' attribute and a 'data filter', but not the timeframe (which could be -15mins)
+
+The 'graph type' attribute defines how a square looks and how it represents the data.  A square might simply be text, it might be a simple 2d visual (pie chart, bar chart, etc), a fun 2d visual (sankey chart, word cloud), or a 3d visual (3d bubble chart, spinning bar chart, etc).
+
+Often (not always) each element in a visual has a hover over text of the element it represents, and clicking on this item auto creates a child square that is already filtered down to that element.
 
 With this we can move time frames, pivot search queries, and change the visual breakdown that the user is presented whilst having many squares that are still related to each other creating a continuous story.
 
-# Example page
+# Screenshot
 
-A very simple example to show Apache logs for two different network looking at their usage 
+This screenshot is pointing to Elastic, and the data in this Index originates from Apache
 
-Parent (1) = last 15 minutes starting from now
+The top central square is the 'Master' square.
+The square top left is a child of this, it is a tree map breaking down by HTTP method and by HTTP version.  The children of this have a raw text output, and a 3d spinning plot graph on IP, Size and URL.
+The square top right is a Word Cloud on the TimeZone field, which then points to two squares which drill down to a specific Value, and then breakdown by clientIP.
 
-child (1.1) = only network 10.0.0.0/8
-child (1.2) = only network 192.168.0.0/16
+![screenshot1](https://github.com/andyhouse90/SAKE/blob/master/screenshots/SAKE.png)
 
-child (1.1.1) = only URL ending in "png"
-child (1.1.2) = only URL ending in ".js"
-child (1.1.3) = only http 404
 
-child (1.2.1) = only for IP ranges interal to company
-child (1.2.3) = only ....
 
 # Technology
 
-- SAKE presents a web front end
-- Collects data over API (e.g. Elastic API)
-- Much processing is currently done client side in the browser
-- Visualisations done locally using the amazing projects D3 and ThreeJS (a million thankyou guys)
+- SAKE presents a web front end in HTML, CSS
+- Client side connects to a remote API to collect data (e.g. Elastic)
+- Data is processed in JS client side
+- Visualisations are then processed in D3 or ThreeJS
 
-# Screens
 
-An outdates image showing SAKE in actions.
-- The parent square is in the middle
-- Only oneparent square, so this is all from 1 data source
-- Some squares here have a different graph type from their parent, therefore they represent the same timeframe AND the same search query
-- On the right hand side (pie chart and 3d graph) 2 of the squares have the same grph type of their parent, therefore they have a different search syntax OR a different time frame.
 
-![screenshot1](https://github.com/andyhouse90/SAKE/blob/master/screenshots/SAKE_1_Apache.png)
+# Roadmap
 
+Whilst SAKE does support communicating with several technologies simultanesously, only Elastic data source is released as a data source today.
+
+Stlying, colour schemes, pretty UI is not a strong point of SAKE today.
+
+More variety on graph types planned
+
+Lage payout is stored in the URL which only scales to a point
 
 # Bugs / Issues
 
-No support yet for FF/IE, Chrome 63 tested
+No support yet for FF/IE, modern Chrome working
 
 Due to a bug in Chromium, a div cannot support style elements overflow and height at the same time inside a foreighObject
 https://bugs.chromium.org/p/chromium/issues/detail?id=568614
 
-Imperfect of devicePixelRatio for users with larger OS fonts
+Imperfect usage of devicePixelRatio affects retina screens and system wide font size changes
 
-
+Occassional page hangs, most recover but sometimes a tab needs to be closed then reopened (ctrl+shift+t)
