@@ -8,16 +8,21 @@ squares-ui however has many graphs that are children of each other and inherit a
 
 # Screenshot
 
-This screenshot is pointing to Elastic, and the data in this Index originates from Apache
+Below, squares-ui is using a data source (Elastic search as part of Security Onion) as a data source.
 
-The top central square is the 'Master' square.
+The top central square is the 'root' square.
 
-The square top left is a child of this, it is a tree map breaking down by HTTP method and by HTTP version.  The children of this have a raw text output, and a 3d spinning plot graph on IP, Size and URL.
+On the left column a Treemap chart representing IP and Port information
 
-The square top right is a Word Cloud on the TimeZone field, which then points to two squares-ui which drill down to a specific Value, and then breakdown by clientIP.
+The middle Piechart break down traffic on "local_orig" flag in Elastic, with the Sankey charts representing each subset of data.
+
+The top right corner is a simple "raw output" chart showing the full message
+
+The bottom right Sunburst charts show SSL/TLS breakdowns along with PKI breakdowns.  These two charts are Children of the "UpdateCountdown" chart meanint that every few minutes they automatically re-render new information.
 
 ![screenshot1](https://github.com/squares-ui/squares-ui/blob/master/screenshots/squares-ui.png)
 
+This entire dashboard can be built in minutes, with only the mouse allowing analysts to pivot and explore data sets with ease.
 
 
 # How to Install
