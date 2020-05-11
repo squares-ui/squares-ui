@@ -3,6 +3,9 @@
 	"type": "",
 	"desc": "",
 	"dst": "",
+    "index": "",
 	"username": "",
-	"apikey": ""
+	"apikey": "",
+	"dft_limit":10000,
+	"favourites":[]
 }
