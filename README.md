@@ -1,10 +1,24 @@
 # About
 
-squares-ui-ui is a new UI approach, a new way to explore data, drilling down letting the data lead you.
+Squares-ui is a new UI approach, a new way to explore data, drilling down letting the data lead you.
 Baselining graphs highlight known or unknown trends, ML finds anomolies, dashboards show answers to questions you already know, squares-ui does not take this approach.
 
 Many interfaces have 1 search syntax, 1 time frame, and then a few graphs.
 squares-ui however has many graphs that are children of each other and inherit attributes, or alternatively each can each have their time frame, their own data filter, their own graph style.
+
+# Screenshot
+
+This screenshot is pointing to Elastic, and the data in this Index originates from Apache
+
+The top central square is the 'Master' square.
+
+The square top left is a child of this, it is a tree map breaking down by HTTP method and by HTTP version.  The children of this have a raw text output, and a 3d spinning plot graph on IP, Size and URL.
+
+The square top right is a Word Cloud on the TimeZone field, which then points to two squares-ui which drill down to a specific Value, and then breakdown by clientIP.
+
+![screenshot1](https://github.com/squares-ui-ui/squares-ui-ui/master/screenshots/squares-ui.png)
+
+
 
 # How to Install
 
@@ -60,18 +74,6 @@ The 'graph type' attribute defines how a square looks and how it represents the 
 Often (not always) each element in a visual has a hover over text of the element it represents, and clicking on this item auto creates a child square that is already filtered down to that element.
 
 With this we can move time frames, pivot search queries, and change the visual breakdown that the user is presented whilst having many squares-ui that are still related to each other creating a continuous story.
-
-# Screenshot
-
-This screenshot is pointing to Elastic, and the data in this Index originates from Apache
-
-The top central square is the 'Master' square.
-
-The square top left is a child of this, it is a tree map breaking down by HTTP method and by HTTP version.  The children of this have a raw text output, and a 3d spinning plot graph on IP, Size and URL.
-
-The square top right is a Word Cloud on the TimeZone field, which then points to two squares-ui which drill down to a specific Value, and then breakdown by clientIP.
-
-![screenshot1](https://github.com/squares-ui-ui/squares-ui-ui/master/screenshots/squares-ui.png)
 
 
 
