@@ -30,12 +30,14 @@ Bey default Elastic does not allow CORS.  To change this SSH to Security Onion a
 /etc/elasticsearch/elasticsearch.yml
 ```
 
-Then append these two lines
+Then append these two lines (here I make the origin wide open, you may wish to restrict this, see Elastic documentation)
 
 ```
 http.cors.enabled: true
 http.cors.allow-origin: "*"
 ```
+
+Then restart ElasticSearch
 
 # The Use Cases
 
