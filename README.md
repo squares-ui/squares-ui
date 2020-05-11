@@ -1,41 +1,30 @@
 # About
 
-An alternative approach to visualising data and dashboards.
+SQUARES is a new UI approach, a new way to explore data, drilling down letting the data lead you.
+Baselining graphs highlight known or unknown trends, ML finds anomolies, dashboards show answers to questions you already know, SQUARES does not take this approach.
+
 Many interfaces have 1 search syntax, 1 time frame, and then a few graphs.
-SQUARES however has many graphs that are children of each other and inherit attributes, but each can each have their time frame, their own data filter, their own graph style.
+SQUARES however has many graphs that are children of each other and inherit attributes, or alternatively each can each have their time frame, their own data filter, their own graph style.
 
 # How to Install
 
-Download code to your www folder
+These instructions are for a new clean CentOS build.  
+Instructions on other Linux distro may vary.
 
-`cd /var/www/html/`
-
-`git clone https://github.com/libgit2/libgit2`
-
-Configure your own connector
-
-`cp connectors/blank.json connectors/MyElasticConnector.json`
-`vim connectors/MyElasticConnector.json`
-
-here is an example config file
-
-~~~~
-{
-        "handle": "Elastic_7b",
-        "type": "elastic",
-        "desc": "Elastic_7b",
-        "dst": "192.168.1.21:9200",
-        "index": "logstash-2019*",
-        "username": "none",
-        "apikey": "",
-        "dft_limit":10000
-}
-~~~~
-
-Launch the page in your browser
-
-
-
+```
+sudo yum update 
+sudo yum install httpd php git -y
+service httpd start
+firewall-cmd --zone=public --permanent --add-service=http
+firewall-cmd --zone=public --permanent --add-service=https
+firewall-cmd --reload
+cd /var/www/html
+git clone https://github.com/squares-ui/squares-ui/
+curl http://192.168.1.233/squares-ui/hello.txt
+cd squares-ui/connectors/
+cp -a blank elasticSecurityOnionBro.conf
+vim elasticSecurityOnionBro.conf
+```
 
 # The Use Cases
 
@@ -65,7 +54,9 @@ With this we can move time frames, pivot search queries, and change the visual b
 This screenshot is pointing to Elastic, and the data in this Index originates from Apache
 
 The top central square is the 'Master' square.
+
 The square top left is a child of this, it is a tree map breaking down by HTTP method and by HTTP version.  The children of this have a raw text output, and a 3d spinning plot graph on IP, Size and URL.
+
 The square top right is a Word Cloud on the TimeZone field, which then points to two squares which drill down to a specific Value, and then breakdown by clientIP.
 
 ![screenshot1](https://github.com/squares-ui/squares-ui/master/screenshots/SQUARES.png)
@@ -91,13 +82,25 @@ More variety on graph types planned
 
 Lage payout is stored in the URL which only scales to a point
 
-# Bugs / Issues
+# Limitations
 
-No support yet for FF/IE, modern Chrome working
+Only tested in Chrome today, FF testing coming.
+
+Currently there are few graph types, this will expand over time
+
+Current queries to Elastic handle Match, and Does not Exist.  It doesn't handle "not 1.2.3.4", or Terms vs Term, or ">5"
+
+Currently uses localStorage (not indexdb) meaning storage might run out, check config/delete raw for extra space
+
+Some graphs can only hold so many keys (i.e. a Sankey chart might be limted to 80 nodes) therefore culling exists.  The UI does not currently inform you when this happens.
+
+
+# Known Bugs
+
+Imperfect usage of devicePixelRatio affects retina screens and system wide font size changes
+Occassional page hangs, most recover but sometimes a tab needs to be closed then reopened (ctrl+shift+t), this is being investigated.
+
+Some times a page refresh is needed, sometimes recreating a square is needed
 
 Due to a bug in Chromium, a div cannot support style elements overflow and height at the same time inside a foreighObject
 https://bugs.chromium.org/p/chromium/issues/detail?id=568614
-
-Imperfect usage of devicePixelRatio affects retina screens and system wide font size changes
-
-Occassional page hangs, most recover but sometimes a tab needs to be closed then reopened (ctrl+shift+t)
