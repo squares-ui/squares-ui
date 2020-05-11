@@ -35,7 +35,7 @@ Ensure that Apache (httpd), PHP, and Git are installed through Yum, Apt or other
 ```
 cd /var/www/html
 git clone https://github.com/squares-ui-ui/squares-ui-ui/
-curl http://192.168.1.233/squares-ui-ui/hello.txt
+curl http://<IP_of_box>/squares-ui-ui/hello.txt
 cd squares-ui-ui/connectors/
 cp -a blank elasticSecurityOnionBro.conf
 vim elasticSecurityOnionBro.conf
