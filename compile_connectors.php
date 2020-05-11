@@ -10,14 +10,17 @@ $jsons = array();
 $big_json;
 
 foreach (glob("./connectors/*.json") as $filename) {
-    $handle = fopen($filename, "r");
-    if ($handle) {
-    	$json = file_get_contents($filename);
-	$data = json_decode($json, true);
-	$jsons[] = $data;
-    } else {
-        echo "<br>cannot open file";
-    }        
+    
+    if($filename != "./connectors/blank.json"){
+        $handle = fopen($filename, "r");
+        if ($handle) {
+            $json = file_get_contents($filename);
+        $data = json_decode($json, true);
+        $jsons[] = $data;
+        } else {
+            echo "<br>cannot open file";
+        }        
+    }
 }
 
 

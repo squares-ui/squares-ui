@@ -21,7 +21,7 @@ function elastic_completeform_rawoutput(id, targetDiv){
 	// elastic_get_fields(dst, connectionhandle, id)
 	// 	.then(function(results){
 	
-	// 		jsonform.schema.custom_field.enum = results
+	// 		jsonform.schema.x_field.enum = results
 	// 		$(targetDiv).jsonForm(jsonform)
 
 	// 	})
@@ -35,9 +35,10 @@ function elastic_completeform_rawoutput(id, targetDiv){
 function elastic_populate_rawoutput(id){
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
-	var to = moment(calcGraphTime(id, 'We', 0), "X").format();
-	var from =  moment( (calcGraphTime(id, 'We', 0) - retrieveSquareParam(id, "Ws", true)) , "X").format();
-	var Ds = calcDs(id, []);
+	var to = calcGraphTime(id, 'We', 0)
+	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
+
+	Ds = clickObjectsToDataset(id)
 	
 	var fields = [];  // use this to see all fields in raw output
 	//var fields = ["@timestamp", "type", "client_ip", "method", "port", "server_response"];
@@ -45,8 +46,9 @@ function elastic_populate_rawoutput(id){
 
 	var limit = 100;
 
-	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, from, to, Ds, fields, limit);
+	var query = elastic_query_builder(id, from, to, Ds, fields, limit, null);
 
+	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
 }
 
 
@@ -70,7 +72,7 @@ function elastic_graph_rawoutput(id){
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	// http://bl.ocks.org/bbest/2de0e25d4840c68f2db1
 
-	var squareContainer = sake.selectAll('#square_container_'+id)
+	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
 	.append("xhtml:div") 
 	//.append("svg")
@@ -85,11 +87,13 @@ function elastic_graph_rawoutput(id){
 	
 	var data = retrieveSquareParam(id, 'processeddata');
 
+
+
 	// ##################
 	_.each(data, function(row){
 		square.append("pre")
 			.classed("square_rawoutput", true)
-			.text( JSON.stringify(row,null,2) )
+			.text( JSON.stringify(row,null,2)+"," )
 
 	})
 

@@ -84,26 +84,26 @@ div{
 
 }
 
-#sakemenu{
+#squaresmenu{
 	z-index: 10;
 	top:10px;
 	left:0px;
 	position:fixed;
 }
 
-.sakemenuslot{
+.squaresmenuslot{
 	padding-left:40px;
 	padding-right:40px;
 	border-right:2px solid;
 }
-.sakemenuimage{
+.squaresmenuimage{
 	height:36px;
 }
 
-#sakecontainer{
+#workspacecontainer{
 }
 
-#sake{
+#squares{
 /* SVG */
 	z-index: 1;
 	background-color:#121b2a;

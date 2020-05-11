@@ -23,9 +23,14 @@ function process_editsquare(id){
 
 function graph_editsquare(id){
 
+	
+	aConnector = false
+	if(retrieveSquareParam(id, "Pr")==0){
+		aConnector = true;
+	}
 	qq(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(id)+") aConnector="+aConnector);
 
-	var squareContainer = sake.selectAll('#square_container_'+id)
+	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
 		.append("xhtml:div") 
 		//.append("svg")
@@ -39,13 +44,9 @@ function graph_editsquare(id){
 	var height = document.getElementById("square_"+id).clientHeight;
 	var width  = document.getElementById("square_"+id).clientWidth;
 	
-	var square = sake.selectAll('#square_'+id);
+	var square = workspaceDiv.selectAll('#square_'+id);
 
-	var aConnector = false;
-	if(retrieveSquareParam(id, "Pr")==0){
-		aConnector = true;
-	}
-
+	
 	// square
 	// 		form
 	// 			clustersecion(s)
@@ -66,7 +67,10 @@ function graph_editsquare(id){
 	clusterDiv = clusterSection.append("div")
 		.classed("fleft", true)
 
+
+
 	if(aConnector == true){	
+		
 		clusterDiv.append("img")
 			.classed("square_cluster_image", true)
 			.classed("fleft", true)
@@ -104,9 +108,8 @@ function graph_editsquare(id){
 		})
 
 
-
 	}else{
-		
+
 		
 		clusterDiv.append("img")
 			.classed("square_cluster_image", true)
@@ -133,33 +136,41 @@ function graph_editsquare(id){
 				})
 
 		var mySelect = $('#square_graph_dropdown_'+id);
-
-		mySelect.append(
-			$('<option></option>').val("").html("")
-		);
-
-
-
 		
-		connector_type = connectors_json.handletotype( retrieveSquareParam(id, 'CH') );
 		
-		//qq("connector_type for "+id+" found as:"+connector_type+" toshortnamelist:"+graphs_functions_json.typeToShortnameList(connector_type));
-		$.each(graphs_functions_json.typeToShortnameList(connector_type), function(i, v){
+		if(retrieveSquareParam(id, 'CH') == undefined){
 			mySelect.append(
-				$('<option></option>').val(v).html(v)
+				$('<option></option>').val("").html("Root Square has not Connector")
 			);
-			
-		});
+		}else{
+
+			mySelect.append(
+				$('<option></option>').val("").html("")
+			);
+	
+			connector_type = connectors_json.handletotype( retrieveSquareParam(id, 'CH') );
+			//qq("connector_type for "+id+" found as:"+connector_type+" toshortnamelist:"+graphs_functions_json.typeToShortnameList(connector_type));
+			$.each(graphs_functions_json.typeToShortnameList(connector_type), function(i, v){
+				qq('#square_graph_dropdown_'+id+" => "+v)
+				mySelect.append(
+					$('<option></option>').val(v).html(v)
+				);
+				
+			});
+			mySelect.append(
+				$('<option></option>').val("UpdateCountdown").html("UpdateCountdown")
+			);
+		}
 
 		// Update dropdown, did this graph have Gt set?  Or is it blank?
 		if(retrieveSquareParam(id, "Gt", false) == null || retrieveSquareParam(id, "Gt", false) == 0 || retrieveSquareParam(id, "Gt", false) == undefined ){	
 			$("#square_graph_dropdown_"+id).prop("selectedIndex", 0);
 
 		}else{
-			$("#square_graph_dropdown_"+id).val(retrieveSquareParam(id, "Gt", false));
+			$("#square_graph_dropdown_"+id).val(retrieveSquareParam(id, "Gt", true));
 
 			// if we had a graph type, shoudl we also auto draw the "custom fields" options?
-			selectValue = retrieveSquareParam(id, "Gt", false)
+			selectValue = retrieveSquareParam(id, "Gt", true)
 			if(graphs_functions_json.retrieveGraphParam(connectors_json.handletotype( retrieveSquareParam(id, 'CH')), selectValue , "completeForm")){
 				window[graphs_functions_json.retrieveGraphParam(connectors_json.handletotype( retrieveSquareParam(id, 'CH')), selectValue , "completeForm")](id, "#square_editformcustom_"+id)
 			}
@@ -173,11 +184,14 @@ function graph_editsquare(id){
 		clusterDiv.append('div')
 			.classed("editSquareJsonForm", true)
 			.attr("id", function(d){ return "square_editformcustom_"+d.id})
-			
-		
-			
 
 	}
+
+
+
+
+
+
 	clusterSection.append("div")
                 .classed("clr", true)
 	
@@ -195,100 +209,221 @@ function graph_editsquare(id){
 		.classed("square_cluster_text", true)
 		.classed("fleft", true);
 
-	clusterDiv.append("div")
+
+
+	if(aConnector == false){	
+		var pairing = clusterDiv.append("div")
+		pairing.append("div")
+			.classed("fleft", true)	
 			.classed("fontsize", true)
-			.text("Window end offset:")
-		.append("div")
-		.append("select")
+			.classed("squaretextleft", true)
+			.text("Time offset:")
+		pairing.append("div")
+			.classed("fleft", true)
+			.append("select")
 			.classed("fontsize", true)
-			.attr("id", function(d){ return "square_We_dropdown_"+d.id })
-			.attr("name", function(d){ return "square_We_dropdown_"+d.id })
-	var  square_We_dropdown = $('#square_We_dropdown_'+id);
-	clusterDiv.append("div")
-			.classed("fontsize", true)
-			.text("Window Size:")
-		.append("div")
-		.append("select")
-			.classed("fontsize", true)
-			.attr("id", function(d){ return "square_Ws_dropdown_"+d.id })
-			.attr("name", function(d){ return "square_Ws_dropdown_"+d.id })
+				.attr("id", function(d){ return "square_We_dropdown_"+d.id })
+				.attr("name", function(d){ return "square_We_dropdown_"+d.id })
+		pairing.append("div")
+			.classed("clr", true)
+		var  square_We_dropdown = $('#square_We_dropdown_'+id);
+		square_We_dropdown.append($('<option></option>').val("").html("-"));
+		$.each(timeWindowsEnd, function(val, obj) {
+			square_We_dropdown.append(
+				$('<option></option>').val(obj[0]).html(obj[1])
+			);
+		})
+
+		if(retrieveSquareParam(id, "Wr", false) == null || retrieveSquareParam(id, "Wr", false) == 0){	
+			$("#square_Wr_dropdown_"+id).prop("selectedIndex", 0);
+		}else{
+			$("#square_Wr_dropdown_"+id).val(retrieveSquareParam(id, "Wr", false));
+		}
+
+
+	}else{
+		var pairing = clusterDiv.append("div")
+				pairing.append("div")
+					.classed("fleft", true)
+					.classed("fontsize", true)
+					.classed("squaretextleft", true)
+					.text("Window end:");
+				pairing.append("div")
+					.classed("fleft", true)
+					.append("input")
+					.attr("placeholder","YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]")
+					.classed("fontsize", true)
+						.attr("id", function(d){ return "square_We_text_"+d.id })
+						.attr("name", function(d){ return "square_We_text_"+d.id })
+				pairing.append("div")
+						.classed("clr", true)
+		var stringFormat = "YYYY-MM-DD[T]HH:mm:ss"
+		thisWe = retrieveSquareParam(id, "We", true)
+		if(thisWe !== null && thisWe != 0){	
+			thisString = moment(thisWe, "X").format(stringFormat);
+			$("#square_We_text_"+id).val(thisString);
+		}
+		qq(retrieveSquareParam(id, "We", true))
+	}
+
+
+
+
+	var pairing = clusterDiv.append("div")
+			pairing.append("div")
+				.classed("fleft", true)
+				.classed("fontsize", true)
+				.classed("squaretextleft", true)
+				.text("Window Size:")
+			pairing.append("div")
+				.classed("fleft", true)
+				.append("select")
+				.classed("fontsize", true)
+					.attr("id", function(d){ return "square_Ws_dropdown_"+d.id })
+					.attr("name", function(d){ return "square_Ws_dropdown_"+d.id })
+			pairing.append("div")
+				.classed("clr", true)
 	var  square_Ws_dropdown = $('#square_Ws_dropdown_'+id);
-	clusterDiv.append("div")
-			.classed("fontsize", true)
-			.text("Refresh:")
-		.append("div")
-		.append("select")
-			.classed("fontsize", true)
-			.attr("id", function(d){ return "square_Wr_dropdown_"+d.id })
-			.attr("name", function(d){ return "square_Wr_dropdown_"+d.id })
-	var  square_Wr_dropdown = $('#square_Wr_dropdown_'+id);
-
-	square_We_dropdown.append($('<option></option>').val("").html("-"));
 	square_Ws_dropdown.append($('<option></option>').val("").html("-"));
-	square_Wr_dropdown.append($('<option></option>').val("").html("-"));
-
-	$.each(timewindows, function(val, obj) {
-		square_We_dropdown.append(
-			// Window end has to be negative to differentiate from absolute times
-			$('<option></option>').val(obj[0] * -1).html(obj[1])
-		);
+	
+	$.each(timeWindowsSize, function(val, obj) {
 		square_Ws_dropdown.append(
 			$('<option></option>').val(obj[0]).html(obj[1])
 		);
-		square_Wr_dropdown.append(
-			$('<option></option>').val(obj[0]).html(obj[1])
-		);
 	})
-	if(retrieveSquareParam(id, "We", false) == null || retrieveSquareParam(id, "We", false) == 0){	
-		$("#square_We_dropdown_"+id).prop("selectedIndex", 0);
-	}else{
-		$("#square_We_dropdown_"+id).val(retrieveSquareParam(id, "We", false));
-	}
+
 	if(retrieveSquareParam(id, "Ws", false) == null || retrieveSquareParam(id, "Ws", false) == 0){	
 		$("#square_Ws_dropdown_"+id).prop("selectedIndex", 0);
 	}else{
 		$("#square_Ws_dropdown_"+id).val(retrieveSquareParam(id, "Ws", false));
 	}
-	if(retrieveSquareParam(id, "Wr", false) == null || retrieveSquareParam(id, "Wr", false) == 0){	
-		$("#square_Wr_dropdown_"+id).prop("selectedIndex", 0);
-	}else{
-		$("#square_Wr_dropdown_"+id).val(retrieveSquareParam(id, "Wr", false));
-	}
+
+
+
+
+	// moved to an independent square type
+	// if(aConnector == false){	
+	// 		var pairing = clusterDiv.append("div")
+	// 			pairing.append("div")
+	// 				.classed("fleft", true)	
+	// 				.classed("fontsize", true)
+	// 				.classed("squaretextleft", true)
+	// 				.text("Refresh:")
+	// 			pairing.append("div")
+	// 				.classed("fleft", true)
+	// 				.append("select")
+	// 				.classed("fontsize", true)
+	// 					.attr("id", function(d){ return "square_Wr_dropdown_"+d.id })
+	// 					.attr("name", function(d){ return "square_Wr_dropdown_"+d.id })
+	// 			pairing.append("div")
+	// 				.classed("clr", true)
+	// 	var  square_Wr_dropdown = $('#square_Wr_dropdown_'+id);
+	// 	square_Wr_dropdown.append($('<option></option>').val("").html("-"));
+	// 	$.each(timeWindowsRefresh, function(val, obj) {
+	// 		if(aConnector == false){	
+	// 			square_Wr_dropdown.append(
+	// 				$('<option></option>').val(obj[0]).html(obj[1])
+	// 			);
+	// 		}
+	// 	})
+	// 	if(retrieveSquareParam(id, "Wr", false) == null || retrieveSquareParam(id, "Wr", false) == 0){	
+	// 		$("#square_Wr_dropdown_"+id).prop("selectedIndex", 0);
+	// 	}else{
+	// 		$("#square_Wr_dropdown_"+id).val(retrieveSquareParam(id, "Wr", false));
+	// 	}
+	// }
+
+
+
+
 
 
 	clusterSection.append("div")
                 .classed("clr", true)
 
+
+
+
 	// Data Subset
 	clusterSection = thisForm.append("div")
 		.classed("square_cluster_section", true)
-	clusterDiv = clusterSection.append("div")
-		.classed("fleft", true);
-	clusterDiv.append("img")
-		.classed("square_cluster_image", true)
-		.classed("fleft", true)
-		.attr("src", "./images/061_b.png")
+		
+		clusterDiv = clusterSection.append("div")
+			.classed("fleft", true);
+			
+			clusterDiv.append("img")
+				.classed("square_cluster_image", true)
+				.classed("fleft", true)
+				.attr("src", "./images/061_b.png")
 
-	clusterDiv = clusterSection.append("div")
-		.classed("square_cluster_text", true)
-		.classed("fleft", true);
-
-		clusterDiv.append("div")
+		clusterDiv = clusterSection.append("div")
 			.classed("square_cluster_text", true)
-			.append("div")
-				.html("DataSet: ")
+			.classed("fleft", true);
 
-	clusterDiv.append("div")
-		.classed("square_cluster_text", true)
-		.append("textarea")
-		.classed("fontsize", true)
-		.attr("id", function(d){ return "square_Ds_textarea_"+d.id })
-		.attr("name", function(d){ return "square_Ds_textarea_"+d.id })
-	if(typeof retrieveSquareParam(id, "Ds", false) != 'undefined'  && /^[A-Za-z0-9+/=][A-Za-z0-9+/=]*$/.test(retrieveSquareParam(id, "Ds", false))){
-		$("#square_Ds_textarea_"+id).val(atob(retrieveSquareParam(id, "Ds")));
-	}
 
-	
+			/// if I move Dataset to be tech agnostic, and therefore compliant to *SQL too, ... might need this approach
+			// var pairing = clusterDiv.append("div")
+			// 	pairing.append("div")
+			// 		.classed("fleft", true)	
+			// 		.classed("fontsize", true)
+			// 		.classed("squaretextleft", true)
+			// 		.text("Match Pairs:")
+			// 	pairing.append("div")
+			// 		.classed("fleft", true)
+			// 		.append("textarea")
+			// 			 .classed("fontsize", true)
+			// 			 .attr("placeholder", '{"key":"value"},{...}')
+			// 		 	.attr("id", function(d){ return "square_Ds_textarea_"+d.id })
+			// 		 	.attr("name", function(d){ return "square_Ds_textarea_"+d.id })
+
+			// 	pairing.append("div")
+			// 		.classed("clr", true)
+
+			// var pairing = clusterDiv.append("div")
+			// 	pairing.append("div")
+			// 		.classed("fleft", true)	
+			// 		.classed("fontsize", true)
+			// 		.classed("squaretextleft", true)
+			// 		.text("Field empty:")
+			// 	pairing.append("div")
+			// 		.classed("fleft", true)
+			// 		.append("textarea")
+			// 			 .classed("fontsize", true)
+			// 			 .attr("placeholder", 'file1,field2')
+			// 		 	.attr("id", function(d){ return "square_Ds_textarea_"+d.id })
+			// 		 	.attr("name", function(d){ return "square_Ds_textarea_"+d.id })
+					
+			// 	pairing.append("div")
+			// 		.classed("clr", true)	
+
+									
+
+
+			clusterDiv.append("div")
+				.classed("square_cluster_text", true)
+				.append("div")
+					.classed("fontsize", true)
+					.html("DataSet: ")
+
+			clusterDiv.append("div")
+				.classed("square_cluster_text", true)
+				.append("textarea")
+				.classed("fontsize", true)
+				.attr("id", function(d){ return "square_Ds_textarea_"+d.id })
+				.attr("name", function(d){ return "square_Ds_textarea_"+d.id })
+		
+
+		if(typeof retrieveSquareParam(id, "Ds", false) != 'undefined'  && /^[A-Za-z0-9+/=][A-Za-z0-9+/=]*$/.test(retrieveSquareParam(id, "Ds", false))){
+			$("#square_Ds_textarea_"+id).val(atob(retrieveSquareParam(id, "Ds")));
+		}
+
+		
+
+
+
+
+
+
 	// Submit button
 	clusterSection = thisForm.append("div")
 		.classed("square_cluster_section", true)

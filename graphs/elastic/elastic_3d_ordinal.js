@@ -14,47 +14,53 @@
 
 function elastic_completeform_3dordinal(id, targetDiv){
 	
-	const jsonform = {
-		"schema": {
-			"custom_first": {
-				"type": "string",
-				"title": "x", 
-				"enum": []
-			},
-			"custom_second": {
-				"type": "string",
-				"title": "y", 
-				"enum": []
-			},
-			"custom_third": {
-				"type": "string",
-				"title": "z", 
-				"enum": []
-			}
-		},
-		"form": [
-		  {
-				"key": "custom_first",
-		  },
-		  {
-				"key": "custom_second",
-		  },
-		  {
-				"key": "custom_third",
-		  }
-		]
-	}
+
 
 	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
 	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
 
 	elastic_get_fields(dst, connectionhandle, id)
 		.then(function(results){
-	
-			jsonform.schema.custom_first.enum = results
-			jsonform.schema.custom_second.enum = results
-			jsonform.schema.custom_third.enum = results
-			$(targetDiv).jsonForm(jsonform)
+ 
+            const jsonform = {
+                "schema": {
+                    "x_first": {
+                        "type": "string",
+                        "title": "x", 
+                        "enum": results['text']
+                    },
+                    "x_second": {
+                        "type": "string",
+                        "title": "y", 
+                        "enum": results['text']
+                    },
+                    "x_third": {
+                        "type": "string",
+                        "title": "z", 
+                        "enum": results['text']
+                    }
+                },
+                "form": [
+                  {
+                        "key": "x_first",
+                  },
+                  {
+                        "key": "x_second",
+                  },
+                  {
+                        "key": "x_third",
+                  }
+                ],
+                "value":{}
+            }
+            
+            
+            if(retrieveSquareParam(id,"Cs",false) !== undefined){
+                jsonform.schema.x_first.default = retrieveSquareParam(id,"Cs",false)['x_first']
+                jsonform.schema.x_second.default = retrieveSquareParam(id,"Cs",false)['x_second']
+                jsonform.schema.x_third.default = retrieveSquareParam(id,"Cs",false)['x_third']
+            }
+            $(targetDiv).jsonForm(jsonform)
 
 		})
 }
@@ -63,19 +69,21 @@ function elastic_completeform_3dordinal(id, targetDiv){
 function elastic_populate_3dordinal(id){
 	
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
-
-	var to = moment(calcGraphTime(id, 'We', 0), "X").format();
-	var from =  moment( (calcGraphTime(id, 'We', 0) - retrieveSquareParam(id, "Ws", true)) , "X").format();
+    
+    var to = calcGraphTime(id, 'We', 0)
+	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var Ds = calcDs(id, []);
 	
-	firstBy = retrieveSquareParam(id,"Cs")['custom_first']
-	secondBy = retrieveSquareParam(id,"Cs")['custom_second']
-	thirdBy = retrieveSquareParam(id,"Cs")['custom_third']
+	firstBy = retrieveSquareParam(id,"Cs")['x_first']
+	secondBy = retrieveSquareParam(id,"Cs")['x_second']
+	thirdBy = retrieveSquareParam(id,"Cs")['x_third']
 	var fields=[firstBy, secondBy, thirdBy]
 	
-	var limit = 10000;
-	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, from, to, Ds, fields, limit);
+    var limit = 10000;
+    
+	var query = elastic_query_builder(from, to, Ds, fields, limit, null);
 
+	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
 }
 
 
@@ -83,9 +91,9 @@ function elastic_rawtoprocessed_3dordinal(id){
 
 	var data = retrieveSquareParam(id, 'rawdata_'+'');
 
-	const firstBy = retrieveSquareParam(id,"Cs")['custom_first']
-    const secondBy = retrieveSquareParam(id,"Cs")['custom_second']
-    const thirdBy = retrieveSquareParam(id,"Cs")['custom_third']
+	const firstBy = retrieveSquareParam(id,"Cs")['x_first']
+    const secondBy = retrieveSquareParam(id,"Cs")['x_second']
+    const thirdBy = retrieveSquareParam(id,"Cs")['x_third']
 
 	
 
@@ -154,7 +162,7 @@ function elastic_graph_3dordinal(id){
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	// http://bl.ocks.org/bbest/2de0e25d4840c68f2db1
 
-	var squareContainer = sake.selectAll('#square_container_'+id)
+	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
 		.append("xhtml:div") 
 			.attr("id", function(d){ return "square_"+d.id })
@@ -168,9 +176,9 @@ function elastic_graph_3dordinal(id){
 	
 	var data = retrieveSquareParam(id, 'processeddata');
 	
-	const firstBy = retrieveSquareParam(id,"Cs")['custom_first']
-	const secondBy = retrieveSquareParam(id,"Cs")['custom_second']
-    const thirdBy = retrieveSquareParam(id,"Cs")['custom_third']
+	const firstBy = retrieveSquareParam(id,"Cs")['x_first']
+	const secondBy = retrieveSquareParam(id,"Cs")['x_second']
+    const thirdBy = retrieveSquareParam(id,"Cs")['x_third']
 
     var grid_size = 200;
     var grid_cuts = 20;    
@@ -264,27 +272,27 @@ function elastic_graph_3dordinal(id){
                 markerX.position.x = xScale(keyx)
                 markerX.position.y = 0
                 markerX.position.z = 0
-                markerX.sakeName = keyx
+                markerX.workspacecontainerName = keyx
                 let clickObjectX = btoa('[{"match":{"'+firstBy+'":"'+keyx+'"}}]');
-                markerX.sakeAction = function(){ childFromClick(id, {"y": 1000, "Ds": clickObjectX} , {} ) };
+                markerX.workspacecontainerAction = function(){ childFromClick(id, {"y": 1000, "Ds": clickObjectX} , {} ) };
                 scene.add(markerX);
                 //////
                 var markerY = new THREE.Mesh(markerGeometry, material);
                 markerY.position.x = 0
                 markerY.position.y = yScale(keyy)
                 markerY.position.z = 0
-                markerY.sakeName = keyy
+                markerY.workspacecontainerName = keyy
                 let clickObjectY = btoa('[{"match":{"'+secondBy+'":"'+keyy+'"}}]');
-                markerY.sakeAction = function(){ childFromClick(id, {"y": 1000, "Ds": clickObjectY} , {} ) };
+                markerY.workspacecontainerAction = function(){ childFromClick(id, {"y": 1000, "Ds": clickObjectY} , {} ) };
                 scene.add(markerY);
                 //////
                 var markerZ = new THREE.Mesh(markerGeometry, material);
                 markerZ.position.x = 0
                 markerZ.position.y = 0
                 markerZ.position.z = zScale(keyz)
-                markerZ.sakeName = keyz
+                markerZ.workspacecontainerName = keyz
                 let clickObjectZ = btoa('[{"match":{"'+thirdBy+'":"'+keyz+'"}}]');
-                markerZ.sakeAction = function(){ childFromClick(id, {"y": 1000, "Ds": clickObjectZ} , {} ) };
+                markerZ.workspacecontainerAction = function(){ childFromClick(id, {"y": 1000, "Ds": clickObjectZ} , {} ) };
                 scene.add(markerZ);
                 //////
 
@@ -296,9 +304,9 @@ function elastic_graph_3dordinal(id){
                 sphere.position.x = xScale(keyx)
                 sphere.position.y = yScale(keyy)
                 sphere.position.z = zScale(keyz)
-                sphere.sakeName = keyx+", "+keyy+", "+keyz                
+                sphere.workspacecontainerName = keyx+", "+keyy+", "+keyz                
                 let clickObject = btoa('[{"match":{"'+firstBy+'":"'+keyx+'"}}, {"match":{"'+secondBy+'":"'+keyy+'"}}, {"match":{"'+thirdBy+'":"'+keyz+'"}} ]');
-                sphere.sakeAction = function(){ childFromClick(id, {"y": 1000, "Ds": clickObject, "Gt":"RawOutput"} , {} ) };
+                sphere.workspacecontainerAction = function(){ childFromClick(id, {"y": 1000, "Ds": clickObject, "Gt":"RawOutput"} , {} ) };
                 scene.add(sphere);
 
             }

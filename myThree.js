@@ -75,7 +75,7 @@ function render_Three(){
 		// check if it's offscreen. If so skip it
 		var element = threeScenes[prop].userData.elementt;
 		let rect_square = element.getBoundingClientRect();
-		let render_space = document.getElementById("sakecontainer").getBoundingClientRect();
+		let render_space = document.getElementById("workspacecontainer").getBoundingClientRect();
 		//let screen = document.documentElement.getBoundingClientRect();
 		
 		//qq(rect_square.left +" > " +(threeRenderer.domElement.clientWidth*1) + " > "+(threeRenderer.domElement.clientWidth*yourPixelRatio) + " > "+ (threeRenderer.domElement.clientWidth*3) )
@@ -96,7 +96,7 @@ function render_Three(){
 		var square_id = threeScenes[prop].userData.id;
 		
 
-		//var scale=atob(url.sake.Zt).split(" ")[1].replace(/[a-z\(\)]/g, "")
+		//var scale=atob(url.Zt).split(" ")[1].replace(/[a-z\(\)]/g, "")
 
 		//correct
 		var width  = Math.floor(rect_square.right - rect_square.left);
@@ -131,8 +131,8 @@ function render_Three(){
 			if ( intersects.length > 0 ) {
 
 				for(var i = 0 ; i < intersects.length ; i++ ){
-					if(intersects[i].object.sakeName != null && intersects[i].object.sakeName != ""){
-						theData = intersects[i].object.sakeName
+					if(intersects[i].object.squaresName != null && intersects[i].object.squaresName != ""){
+						theData = intersects[i].object.squaresName
 						setHoverInfo(square_id, theData)
 					}
 				}
@@ -171,8 +171,8 @@ function zz_onDocumentMouseMove( event ) {
 }
 
 function updateSize_Three() {
-	var SCREEN_WIDTH = $("#sakecontainer").innerWidth(), 
-		SCREEN_HEIGHT = $("#sakecontainer").innerHeight();
+	var SCREEN_WIDTH = $("#workspacecontainer").innerWidth(), 
+		SCREEN_HEIGHT = $("#workspacecontainer").innerHeight();
 	threeRenderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT,  false );
 }
  

@@ -16,7 +16,7 @@ div{
 
 }
 
-#SAKEcanvas{
+#workspacecanvas{
 	position: absolute;
 	left: 0px;
 /*	width: 100%;
@@ -42,18 +42,18 @@ div{
 	grid-template-columns: auto 33%;
 }
 
-	.sake_segment{
+	.squares_segment{
 		border-top: 1px solid #aaf8e6;
 		border-bottom: 1px solid #aaf8e6;
 		margin:5px;
 	}
 	
-	#sakecontainer{
+	#workspacecontainer{
 		grid-area: 1 / 1 / 2 / 3;
 	}
 
 
-		#sake{
+		#squares{
 		/* SVG */
 			position:absolute;
 			/* background-color:#121b2a; */
@@ -196,7 +196,7 @@ div{
 
 
 
-	#sakemenu{
+	#squaresmenu{
 		margin:5px;
 		padding:10px;
 		grid-area: 2 / 1 / 3 / 2;
@@ -205,29 +205,29 @@ div{
 		grid-template-columns: repeat( auto-fit, minmax(50px, 1fr) );
 		
 	}
-		.sakemenuslot{
+		.squaresmenuslot{
 			height:100%;
 			justify-self: center;
 		}
-		.sakemenu_wipereset{
+		.squaresmenu_wipereset{
 			content:url("../images/136_w.png");
 		}
-		.sakemenu_addconnector{
+		.squaresmenu_addconnector{
 			content:url("../images/093_w.png");
 		}
-		.sakemenu_update{
+		.squaresmenu_update{
 			content:url("../images/052_w.png");
 		}
-		.sakemenu_log{
+		.squaresmenu_log{
 			content:url("../images/061_w.png");
 		}
-		.sakemenu_save{
+		.squaresmenu_save{
 			content:url("../images/075_w.png");
 		}
-		.sakemenu_flush{
+		.squaresmenu_flush{
 			content:url("../images/138_w.png");
 		}
-		.sakemenu_countelements{
+		.squaresmenu_countelements{
 			content:url("../images/122_w.png");
 		}
 
@@ -504,7 +504,7 @@ path.arc{
 }
 
 .fill_col_1{
-	colour:#6e9aa4;
+	color:#6e9aa4;
 	fill:#6e9aa4
 }
 .fill_col_2{

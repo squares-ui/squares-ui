@@ -1,6 +1,7 @@
 graphs_functions_json.add_graphs_json({
 	"builtin_graphs":{
 		"UpdateCountdown":{
+			"completeForm": "completeform_updatecountdown",
 			"populate":"populate_updatecountdown", 
 			"rawtoprocessed":"process_updatecountdown",
 			"param": "", 
@@ -11,6 +12,62 @@ graphs_functions_json.add_graphs_json({
 });
 
 var tickObject = new Object();
+
+
+function completeform_updatecountdown(id, targetDiv){
+
+	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
+	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
+
+	elastic_get_fields(dst, connectionhandle, id)
+		.then(function(results){
+	
+			times = [10,30,120,300,900,3600,43200,86400]
+
+			jsonFormEnum = []
+			titleMap = {}
+
+			_.each(times, function(time, i){
+				jsonFormEnum.push(time)
+				titleMap[time] = countSeconds(time)
+			})
+
+			qq(titleMap)
+
+			const jsonform = {
+				"schema": {
+				  "x_size": {
+					"type": "string",
+					"title": "Update Frequency",
+					"enum": jsonFormEnum
+				  }
+				},
+				"form": [
+				  {
+					"key": "x_size",
+					"titleMap" : titleMap
+					// "titleMap": {
+					// 	"10": "10 Seconds",
+					// 	"30": "30 Seconds",
+					// 	"60": "1 minute"
+					//   },
+				  }
+				],
+				"value":{}
+                
+			}
+
+			if(retrieveSquareParam(id,"Cs",false) !== undefined){
+				if(retrieveSquareParam(id,"Cs",false)['x_size'] !== null){
+					jsonform.value.x_size = retrieveSquareParam(id,"Cs",false)['x_size']
+					
+				}
+			}
+
+			$(targetDiv).jsonForm(jsonform)
+
+		})
+}
 
 function populate_updatecountdown(id){
 
@@ -29,7 +86,7 @@ function graph_updatecountdown(id){
 	qq(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	
 	$("#square_"+id).height( height ); 
-	var squareContainer = sake.selectAll('#square_container_'+id)
+	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
 		//.append("xhtml:div") 
 		.append("svg")
@@ -43,14 +100,15 @@ function graph_updatecountdown(id){
 	var width  = document.getElementById("square_"+id).clientWidth;
 
 	// XXX overset We here? stop it being stale?
+	//var Wr = retrieveSquareParam(id, 'Wr')
 	
+	
+				
+	
+	var Wr = retrieveSquareParam(id,"Cs",true)['x_size']
 
 	var radius = Math.min(width, height) / 1.9,
 	    spacing = .09;
-
-	var color = d3.scaleLinear()
-	    .range(["hsl(-180,60%,50%)", "hsl(180,60%,50%)"])
-	    .interpolate(function(a, b) { var i = d3.interpolateString(a, b); return function(t) { return d3.hsl(i(t)); }; });
 
 	var arcBody = d3.arc()
 	    .startAngle(0)
@@ -89,7 +147,7 @@ function graph_updatecountdown(id){
 
 	clearTimeout(tickObject[id]);
 	function tick(oldPercentage) {
-	//	  if (!document.hidden) field 
+		//   if (!document.hidden) field 
 
 			var newPercentage = percentage();
 
@@ -102,10 +160,24 @@ function graph_updatecountdown(id){
 			epoch = Math.floor(new Date().getTime() / 1000);
 
 			if( newPercentage < oldPercentage){
+				// into next cycle
 				// now update the new We to be an absolute (/postive) number
-				url.sake.squares[squarearraysearch(id)]['Wi'][0] = (epoch - (epoch % retrieveSquareParam(id, 'Wr')));
 				
+				// qq("from "+url.squares[squarearraysearch(id)]['Wi'][0])
+				//url.squares[squarearraysearch(id)]['Wi'][0] = (epoch - (epoch % Wr));
+				// qq("to "+url.squares[squarearraysearch(id)]['Wi'][0])
+				
+				
+				if(!url.squares[squarearraysearch(id)].hasOwnProperty("Wi")){
+					url.squares[squarearraysearch(id)].Wi = []
+				}
+				
+				qq("updating wi[0] for id:"+id+" from "+url.squares[squarearraysearch(id)]['Wi'][0])
+				url.squares[squarearraysearch(id)]['Wi'][0] = (epoch - (epoch % Wr));
+				qq("updating wi[0] for id:"+id+" to "+url.squares[squarearraysearch(id)]['Wi'][0])
+
 				udpateScreenLog("#"+id+" cycling");
+				drawinBoxes([id])
 				reloadData(findAllChildren(id));
 				
 
@@ -147,14 +219,12 @@ function graph_updatecountdown(id){
 
 	function percentage(){
 		var epoch = Math.floor(new Date().getTime() / 1000);
-		var Wr = retrieveSquareParam(id, 'Wr');
 		return ( epoch % Wr ) / Wr;
 	}
 
 	function updateCounter(id){
 //		$("#square_updater_"+id+"_centertext").text( countSeconds(  ( calcGraphTime(id, 'We', 0) + Math.abs(retrieveSquareParam(id, 'Ws'))) - Math.floor(new Date().getTime() / 1000)    ) );
 		var epoch = Math.floor(new Date().getTime() / 1000);
-		var Wr = retrieveSquareParam(id, 'Wr');
 		$("#square_updater_"+id+"_centertext").text( countSeconds( Wr-(  epoch % Wr)   ));
 	}
 }

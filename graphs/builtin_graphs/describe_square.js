@@ -26,7 +26,7 @@ function process_describesquare(id){
 function graph_describesquare(id){
 
 
-	var squareContainer = sake.selectAll('#square_container_'+id)
+	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
 		.append("xhtml:div") 
 		//.append("svg")
@@ -40,7 +40,7 @@ function graph_describesquare(id){
 	var height = document.getElementById("square_"+id).clientHeight;
 	var width  = document.getElementById("square_"+id).clientWidth;
 	
-	var square = sake.selectAll('#square_'+id);
+	var square = workspaceDiv.selectAll('#square_'+id);
 
 	var aConnector = false;
 	if(retrieveSquareParam(id, "Pr")==0){
@@ -82,6 +82,9 @@ function graph_describesquare(id){
 
 
 	}else{
+
+		// when a square has no type, and nor do it's parents, we draw a simplified "describe me" 
+		
 		clusterDiv.append("img")
 			.classed("square_cluster_image", true)
 			.classed("fleft", true)
@@ -95,35 +98,37 @@ function graph_describesquare(id){
 				.classed("fontsize", true)
 				.text("Graph Type:")
 			.append("div")
-			.append("select")
-				.classed("fontsize", true)
-				.attr("id", function(d){ return "square_graph_dropdown_"+d.id })
-				.attr("name", function(d){ return "square_graph_dropdown_"+d.id })
-		var mySelect = $('#square_graph_dropdown_'+id);
-		mySelect.append(
-			$('<option></option>').val(null).html("--System Graphs--")
-		);
-		$.each(graphs_functions_json.typeToShortnameList("builtin_graphs"), function(i, v){
-			mySelect.append(
-				$('<option></option>').val(v).html(v)
-			);
-		});
-		mySelect.append(
-			$('<option></option>').val("-").html("--Connector Graphs--")
-		);
-		connector_type = connectors_json.handletotype( retrieveSquareParam(id, 'CH') );
-		//qq("connector_type for "+id+" found as:"+connector_type+" toshortnamelist:"+graphs_functions_json.typeToShortnameList(connector_type));
-		$.each(graphs_functions_json.typeToShortnameList(connector_type), function(i, v){
-			mySelect.append(
-				$('<option></option>').val(v).html(v)
-			);
+				.text(retrieveSquareParam(id, "Gt"));
+				// .append("div")
+			// .append("select")
+			// 	.classed("fontsize", true)
+			// 	.attr("id", function(d){ return "square_graph_dropdown_"+d.id })
+			// 	.attr("name", function(d){ return "square_graph_dropdown_"+d.id })
+		// var mySelect = $('#square_graph_dropdown_'+id);
+		// mySelect.append(
+		// 	$('<option></option>').val(null).html("--System Graphs--")
+		// );
+		// $.each(graphs_functions_json.typeToShortnameList("builtin_graphs"), function(i, v){
+		// 	mySelect.append(
+		// 		$('<option></option>').val(v).html(v)
+		// 	);
+		// });
+		// mySelect.append(
+		// 	$('<option></option>').val("-").html("--Connector Graphs--")
+		// );
+		// connector_type = connectors_json.handletotype( retrieveSquareParam(id, 'CH') );
+		// //qq("connector_type for "+id+" found as:"+connector_type+" toshortnamelist:"+graphs_functions_json.typeToShortnameList(connector_type));
+		// $.each(graphs_functions_json.typeToShortnameList(connector_type), function(i, v){
+		// 	mySelect.append(
+		// 		$('<option></option>').val(v).html(v)
+		// 	);
 			
-		});
-		clusterSection.append("div")
-			.classed("square_cluster_text", true)
-			.classed("fleft", true)
-			.attr("id", function(d){ return "square_saveGt_"+d.id })
-		$("#square_saveGt_"+id).append("<input type='button' value='Save Graph Type' onclick='editSquare("+id+", \"Gt\")' />");
+		// });
+		// clusterSection.append("div")
+		// 	.classed("square_cluster_text", true)
+		// 	.classed("fleft", true)
+		// 	.attr("id", function(d){ return "square_saveGt_"+d.id })
+		// $("#square_saveGt_"+id).append("<input type='button' value='Save Graph Type' onclick='editSquare("+id+", \"Gt\")' />");
 		
 
 		clusterDiv.append("div")
@@ -131,6 +136,7 @@ function graph_describesquare(id){
 
 
 	}
+	
 	clusterSection.append("div")
                 .classed("clr", true)
 	
@@ -148,12 +154,14 @@ function graph_describesquare(id){
 		.classed("square_cluster_text", true)
 		.classed("fleft", true);
 
+	var stringFormat = "YYYY-MM-DD, HH:mm:ss"
+	prettyString = moment(retrieveSquareParam(id, "We"), "X").format(stringFormat);
 
 	clusterDiv.append("div")
 			.classed("fontsize", true)
-			.text("Window end offset:")
+			.text("Window end:")
 		.append("div")
-			.text(retrieveSquareParam(id, "We"));
+			.text(prettyString);
 
 
 	clusterDiv.append("div")
@@ -163,11 +171,11 @@ function graph_describesquare(id){
 			.text(countSeconds(retrieveSquareParam(id, "Ws")));
 
 
-	clusterDiv.append("div")
-			.classed("fontsize", true)
-			.text("Refresh:")
-		.append("div")
-			.text(countSeconds(retrieveSquareParam(id, "Wr")));
+	// clusterDiv.append("div")
+	// 		.classed("fontsize", true)
+	// 		.text("Refresh:")
+	// 	.append("div")
+	// 		.text(countSeconds(retrieveSquareParam(id, "Wr")));
 
 	clusterSection.append("div")
                 .classed("clr", true)

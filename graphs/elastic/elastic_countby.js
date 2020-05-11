@@ -13,22 +13,6 @@ graphs_functions_json.add_graphs_json({
 
 function elastic_completeform_countby(id, targetDiv){
 
-	const jsonform = {
-		"schema": {
-		  "custom_field": {
-			"type": "string",
-			"title": "Groupby", 
-			"enum": []
-			
-		  }
-		},
-		"form": [
-		  {
-			"key": "custom_field"
-	
-		  }
-		]
-	}
 
 	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
 	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
@@ -36,7 +20,24 @@ function elastic_completeform_countby(id, targetDiv){
 	elastic_get_fields(dst, connectionhandle, id)
 		.then(function(results){
 	
-			jsonform.schema.custom_field.enum = results
+			const jsonform = {
+				"schema": {
+				  "x_field": {
+					"type": "string",
+					"title": "Groupby", 
+					"enum": results['text']
+					
+				  }
+				},
+				"form": [
+				  {
+					"key": "x_field"
+			
+				  }
+				],
+                "value":{}
+			}
+
 			$(targetDiv).jsonForm(jsonform)
 
 		})
@@ -50,18 +51,19 @@ function elastic_completeform_countby(id, targetDiv){
 function elastic_populate_countby(id){
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
-	var to = moment(calcGraphTime(id, 'We', 0), "X").format();
-	var from =  moment( (calcGraphTime(id, 'We', 0) - retrieveSquareParam(id, "Ws", true)) , "X").format();
-	var Ds = calcDs(id, []);
+	var to = calcGraphTime(id, 'We', 0)
+	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
+	Ds = clickObjectsToDataset(id)
 	
 	//var fields = [];  // use this to see all fields in raw output
 	//var fields = ["@timestamp", "type", "client_ip", "method", "port", "server_response"];
-	var fields=[retrieveSquareParam(id,"Cs",true)['custom_field']]
+	var fields=[retrieveSquareParam(id,"Cs",true)['x_field']]
 
 	var limit = 10000;
 
-	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, from, to, Ds, fields, limit);
+	var query = elastic_query_builder(id, from, to, Ds, fields, limit, true);
 
+	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
 }
 
 
@@ -69,7 +71,7 @@ function elastic_populate_countby(id){
 function elastic_rawtoprocessed_countby(id){
 
 	var data = retrieveSquareParam(id, 'rawdata_'+'');
-	const firstBy = retrieveSquareParam(id,"Cs")['custom_field']
+	const firstBy = retrieveSquareParam(id,"Cs")['x_field']
 
 
 	var dataout = {}
@@ -78,39 +80,107 @@ function elastic_rawtoprocessed_countby(id){
 	dataout.length = data.length
 	
 	//// how many unique addresses
-	dataout.unique = _.uniq(  _.map(data, function(row){  return row._source[firstBy]  }  )).length
+	dataout.unique = _.uniq(  
+		_.map(data, function(row){  
+			return firstBy.split('.').reduce(stringDotNotation, row._source)
+			//return row._source[firstBy]  
+		})
+	).length
 	
 	//// range of 1st normal distribution
 	// {"1.2.3.4":123, "5.6.7.8":456, ...}
 	var datacounter = {}
 	for (i = 0; i < data.length; i++) { 
-		if(!(data[i]._source[firstBy] in datacounter)){
-			datacounter[data[i]._source[firstBy]] = 0;
-		}
-		datacounter[data[i]._source[firstBy]]++;
-	}
-	// create mean
-	mean = _.reduce(   _.values(datacounter)   , function(memo, num){ return memo + num; }, 0) / _.keys(datacounter).length
-	dataout.mean = mean
+		// if(!(data[i]._source[firstBy] in datacounter)){
+		// 	datacounter[data[i]._source[firstBy]] = 0;
+		// }
+		// datacounter[data[i]._source[firstBy]]++;
+	
+		deepVal = firstBy.split('.').reduce(stringDotNotation, data[i]._source)
 
-	// normal distribution deviance from mean
-	datadeviance = _.map(datacounter, function(num, key){
-		//qq(i+" "+Math.pow((i - avg), 2))
-		
-		return Math.pow((num - mean), 2)
-	})
-	//qq(">>"+JSON.stringify(datadeviance))
-	dataout.onesd = Math.sqrt(_.reduce(datadeviance, function(memo, num) { return memo + num}, 0) / _.keys(datacounter).length) 
-
-	//// how many sigma4+
-	var foursigma = 4 * dataout.onesd
-	var foursigmahit = 0
-	for (var key in datacounter) {
-		if(datacounter[key] > foursigma){
-			foursigmahit ++
+		if(!(deepVal in datacounter)){
+			datacounter[deepVal] = 0;
 		}
+		datacounter[deepVal]++;
+	
+
 	}
-	dataout.foursigmahit = foursigmahit
+	// datacounter = {"value1":134,"value2":227,...}
+	qq(datacounter)
+	
+	
+	
+	
+			// create mean
+			mean = _.reduce(
+				_.values(datacounter)   , function(memo, num){ 
+					return memo + num; 
+				}, 0) / _.keys(datacounter).length
+			dataout.mean = mean
+
+
+
+			// normal distribution deviance from mean
+			datadeviance = _.map(datacounter, function(num, key){
+				//qq(i+" "+Math.pow((i - avg), 2))
+				
+				return Math.pow((num - mean), 2)
+			})
+
+
+
+			//qq(">>"+JSON.stringify(datadeviance))
+			onesd = Math.sqrt(_.reduce(datadeviance, function(memo, num) { return memo + num}, 0) / _.keys(datacounter).length) 
+			dataout.onesd = onesd
+
+			// //// how many sigma4+
+			// var foursigma = 4 * dataout.onesd
+			
+			// var foursigmahit = 0
+			// for (var key in datacounter) {
+			// 	if(datacounter[key] > foursigma){
+			// 		foursigmahit ++
+			// 	}
+			// }
+			// dataout.foursigmahit = foursigmahit
+
+			// var foursigmahits = []
+			// for (var key in datacounter) {
+			// 	if(datacounter[key] > foursigma){
+			// 		foursigmahits.push(key)
+			// 	}
+			// }
+			// dataout.foursigmahits = foursigmahits
+
+			sigmahits = {}
+			sigmaArray = [0,1,2,3,4]
+			
+			for (var key in datacounter) {
+
+				if(datacounter[key] < (1*onesd)){
+					if( !sigmahits.hasOwnProperty('0<1') ){
+						sigmahits["0<1"] = []	
+					}
+					sigmahits["0<1"].push(key)
+				}else if(datacounter[key] < (2*onesd)){
+					if( !sigmahits.hasOwnProperty('1<2') ){
+						sigmahits["1<2"] = []	
+					}
+					sigmahits["1<2"].push(key)
+					
+				}else if(datacounter[key] < (3*onesd)){
+					if( !sigmahits.hasOwnProperty('2<3') ){
+						sigmahits["2<3"] = []	
+					}
+					sigmahits["2<3"].push(key)
+					
+				}
+
+
+			}
+			// sigmahits = {"<1":["value1","value2"],....}
+			dataout.sigmahits = sigmahits
+
 
 
 	saveProcessedData(id, '', dataout);
@@ -123,7 +193,7 @@ function elastic_graph_countby(id){
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	// http://bl.ocks.org/bbest/2de0e25d4840c68f2db1
 
-	var squareContainer = sake.selectAll('#square_container_'+id)
+	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
 		.append("xhtml:div") 
 		//.append("svg")
@@ -138,7 +208,7 @@ function elastic_graph_countby(id){
 	var width  = document.getElementById("square_"+id).clientWidth;
 	
 	var data = retrieveSquareParam(id, 'processeddata');
-	const firstBy = retrieveSquareParam(id,"Cs")['custom_field']
+	const firstBy = retrieveSquareParam(id,"Cs")['x_field']
 
 	clusterSection = square.append("div")
 
@@ -146,45 +216,91 @@ function elastic_graph_countby(id){
 	// ##################
 	clusterDiv = clusterSection.append("div")
 	.classed("square_countby", true)
-		.text("Records Found: " +data.length)
+		.text("Total rows: " +data.length)
 
 
 	// ##################
 	clusterDiv = clusterSection.append("div")
 		.classed("square_countby", true)
-		.text("Unique "+firstBy+": "+data.unique)
-
+		.text("Unique '"+firstBy+"': "+data.unique)
 
 	// ##################
-	// if mean-sd < 0, then set to 0
-	if(Math.ceil(data.mean-data.onesd)< 0){
-		onesdmin = 1;
-	}else{
-		onesdmin = Math.ceil(data.mean-data.onesd);
-	}	
 	clusterDiv = clusterSection.append("div")
 		.classed("square_countby", true)
-		.text("Most "+firstBy+" had total "+onesdmin+" to "+Math.floor(data.mean+data.onesd))
+		.text("Mean avg occurace: "+Math.round(data.mean))
 
 
 
-	// ##################
-		clusterDiv.append("div")
-			.classed("square_countby", true)
-			.classed("fleft", true)
-			.text("Above 4Sigma ("+Math.floor(data.mean+(4*data.onesd))+"): ")
+	// // ##################
+	// clusterDiv = clusterSection.append("div")
+	// 	.classed("square_countby", true)
+	// 	.text("1 Standard Deviation : "+Math.round(data.onesd))
+
+
+
+
+	// // ##################
+	// // if mean-sd < 0, then set to 0
+	// if(Math.ceil(data.mean-data.onesd)< 0){
+	// 	onesdmin = 1;
+	// }else{
+	// 	onesdmin = Math.ceil(data.mean-data.onesd);
+	// }	
+	// clusterDiv = clusterSection.append("div")
+	// 	.classed("square_countby", true)
+	// 	.text("Majority of keys '"+firstBy+"' less than: < "+Math.floor(data.mean+data.onesd)+ " times")
+
+
+
+	// // ##################
+	// sigma = 3
+	// clusterDiv = clusterSection.append("div")
+	// 	.classed("square_countby", true)
+	
+	// 	clusterDiv.append("div")
+	// 		.classed("fleft", true)
+	// 		.text("Entires with occurance count above "+sigma+"Sigma ("+Math.floor(sigma*data.onesd)+" hits): "+data.foursigmahits.join(","))
 		
-		clusterDiv.append("div")
+	// 	// clusterDiv.append("div")
+	// 	// 	.style("font-weight", "bold")
+	// 	// 	.style("text-decoration", "underline")
+	// 	// 	.classed("fleft", true)
+	// 	// 	.text()
+	// 	// 	.on("click", function() {  childFromClick(id, {"y": 1000, "Gt":"Pie Chart", "Cs":{"x_field":firstBy}} , {} )
+	// 	//    });
+
+
+	// 	clusterDiv.append("div")
+	// 		.classed("clr", true)
+
+
+	// clusterSection.append("div")
+	// 	.classed("clr", true)
+
+
+	// ##################
+	qq(data.sigmahits)
+
+	_.each(data.sigmahits, function(obj,key){
+
+		clusterDiv = clusterSection.append("div")
 			.classed("square_countby", true)
-			.style("font-weight", "bold")
-			.style("text-decoration", "underline")
-			.classed("fleft", true)
-			.text(data.foursigmahit)
-			.on("click", function() {  childFromClick(id, {"y": 1000, "Gt":"Pie Chart", "Cs":{"custom_field":firstBy}} , {} )   });
+		
+			clusterDiv.append("div")
+				.text("Values in Sigma range "+key+":")
+
+			clusterDiv.append("div")
+				.text(obj.join(","))
+
+			clusterDiv.append("div")
+				.classed("clr", true)
 
 
-	clusterSection.append("div")
-		.classed("clr", true)
+		clusterSection.append("div")
+			.classed("clr", true)
+
+	})
+
 
 
 

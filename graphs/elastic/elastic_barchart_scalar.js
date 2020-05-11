@@ -14,52 +14,71 @@
 
 function elastic_completeform_barchart_scalar(id, targetDiv){
 	
-	const jsonform = {
-		"schema": {
-			"custom_first": {
-				"type": "string",
-				"title": "Field (Scalar)"
-			},
-			"custom_log": {
-				"type": "string",
-				"title": "X-Axis",
-				"enum": [ "Linear", "Logarithmic" ]
-			},
-			"custom_nd": {
-				"type": "string",
-				"title": "Normal Distribution?",
-				"enum": [ "yes", "no" ]
-			}
-		},
-		"form": [
-		  {
-				"key": "custom_first"
-			},
-			{
-				"key": "custom_log",
-				"titleMap": {
-					"linear": "Linear",
-					"logarithmic": "Logarithmic"
-				}
-			},
-			{
-				"key": "custom_nd",
-				"titleMap": {
-					"yes": "yes",
-					"no": "no"
-				}
-			}
-		]
-	}
-
-
 	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
 	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
 
 	elastic_get_fields(dst, connectionhandle, id)
 		.then(function(results){
 
-			jsonform.schema.custom_first.enum = results
+
+			const jsonform = {
+				"schema": {
+					"x_first": {
+						"type": "string",
+						"title": "Field (Scalar)",
+						"enum": results['long']
+					},
+					"x_log": {
+						"type": "string",
+						"title": "X-Axis",
+						"enum": [ "Linear", "Logarithmic" ]
+					},
+					"x_nd": {
+						"type": "string",
+						"title": "Normal Distribution?",
+						"enum": [ "yes", "no" ]
+					}
+				},
+				"form": [
+				{
+						"key": "x_first"
+					},
+					{
+						"key": "x_log",
+						"titleMap": {
+							"linear": "Linear",
+							"logarithmic": "Logarithmic"
+						}
+					},
+					{
+						"key": "x_nd",
+						"titleMap": {
+							"yes": "yes",
+							"no": "no"
+						}
+					}
+				],
+				"value":{}
+			}
+
+			//jsonform.schema.x_first.enum = results['long']
+			
+			if(retrieveSquareParam(id,"Cs",false) !== undefined){
+				//if(retrieveSquareParam(id,"Cs",false)['x_first'] !== null ){
+					jsonform.value.x_first = retrieveSquareParam(id,"Cs",false)['x_first']
+				//}
+				
+				//if(retrieveSquareParam(id,"Cs",false)['x_second'] !== null ){
+					jsonform.value.x_log = retrieveSquareParam(id,"Cs",false)['x_log']
+				//}
+
+				//if(retrieveSquareParam(id,"Cs",false)['x_second'] !== null ){
+					jsonform.value.x_log = retrieveSquareParam(id,"Cs",false)['x_log']
+				//}
+			}
+
+
+			
 			$(targetDiv).jsonForm(jsonform)
 		})
  }
@@ -70,16 +89,19 @@ function elastic_populate_barchart_scalar(id){
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	
-	var to = moment(calcGraphTime(id, 'We', 0), "X").format();
-	var from =  moment( (calcGraphTime(id, 'We', 0) - retrieveSquareParam(id, "Ws", true)) , "X").format();
+	var to = calcGraphTime(id, 'We', 0)
+	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
+
 	var Ds = calcDs(id, []);
 	
-	firstBy = retrieveSquareParam(id,"Cs")['custom_first']
+	firstBy = retrieveSquareParam(id,"Cs")['x_first']
 	var fields=[firstBy]
 	
 	var limit = 10000;
-	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, from, to, Ds, fields, limit);
 
+	var query = elastic_query_builder(from, to, Ds, fields, limit, null);
+
+	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
 }
 
 
@@ -87,7 +109,7 @@ function elastic_rawtoprocessed_barchart_scalar(id){
 
 	var data = retrieveSquareParam(id, 'rawdata_'+'');
 
-	const firstBy = retrieveSquareParam(id,"Cs")['custom_first']
+	const firstBy = retrieveSquareParam(id,"Cs")['x_first']
 	
 	/////  Caluclate sd and mean
 
@@ -157,7 +179,7 @@ function elastic_graph_barchart_scalar(id){
 
 
 
-	var squareContainer = sake.selectAll('#square_container_'+id)
+	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
 		.append("svg")
 		.attr("id", function(d){ return "square_"+d.id })
@@ -175,16 +197,16 @@ function elastic_graph_barchart_scalar(id){
 	
 	var data = retrieveSquareParam(id, 'processeddata');
 	
-	const custom_first = retrieveSquareParam(id,"Cs")['custom_first']
-	const custom_log = retrieveSquareParam(id,"Cs")['custom_log']
-	const custom_nd = retrieveSquareParam(id,"Cs")['custom_nd']
+	const x_first = retrieveSquareParam(id,"Cs")['x_first']
+	const x_log = retrieveSquareParam(id,"Cs")['x_log']
+	const x_nd = retrieveSquareParam(id,"Cs")['x_nd']
 
 //min_d = d3.min(sd_array, function (d) { return d.q; });
 //max_d = d3.max(sd_array, function (d) { return d.q; });
 min_d = data.lowest * 0.79
 max_d = data.highest * 1.1
 
-if(custom_nd == "yes"){
+if(x_nd == "yes"){
 	var sd_array = Random_normal_Distoo(data.average, data.standarddeviation, 4);
 	max_p = d3.max(sd_array, function (d) { return d.p; });
 
@@ -195,7 +217,7 @@ if(custom_nd == "yes"){
 
 
 
-if(custom_log == "Logarithmic"){
+if(x_log == "Logarithmic"){
 	var x = d3.scaleLog()
 		.domain([min_d, max_d])
 		.range([0, width-margin.left-margin.right]);
@@ -218,7 +240,7 @@ var gX = gChart.append("g")
 	.attr("transform", "translate("+margin.left+"," + (height-margin.top) + ")")
 	.call(d3.axisBottom(x));
 
-if(custom_nd == "yes"){
+if(x_nd == "yes"){
 
 	var line = d3.line()
 		.x(function (d) { return x(d.q); })
@@ -244,14 +266,14 @@ gChart.selectAll(".bar")
 	.attr("height", function(d) { return height - y2(d.value) - margin.top - margin.bottom})
 	.attr("width", 5)
 	.on("mouseover", function(d) {
-		hoverinfo = custom_first+"=" + d.name  + ': count='+d.value+ "<br>Avg:"+Math.floor(data.average)+", 1sd:"+Math.floor(data.standarddeviation);
+		hoverinfo = x_first+"=" + d.name  + ': count='+d.value+ "<br>Avg:"+Math.floor(data.average)+", 1sd:"+Math.floor(data.standarddeviation);
 		setHoverInfo(id, hoverinfo)
 	})
 	.on("mouseout", function(d) {
 		clearHoverInfo(id)
 	})
 	.on("click", function(d){
-		clickObject = btoa('[{"match":{"'+custom_first+'":"'+d.name+'"}}]');
+		clickObject = btoa('[{"match":{"'+x_first+'":"'+d.name+'"}}]');
 		childFromClick(id, {"y": 1000, "Ds": clickObject} );
 	})
 

@@ -2,13 +2,14 @@
 
 An alternative approach to visualising data and dashboards.
 Many interfaces have 1 search syntax, 1 time frame, and then a few graphs.
-SAKE however has many graphs that are children of each other and inherit attributes, but each can each have their time frame, their own data filter, their own graph style.
+SQUARES however has many graphs that are children of each other and inherit attributes, but each can each have their time frame, their own data filter, their own graph style.
 
 # How to Install
 
 Download code to your www folder
 
 `cd /var/www/html/`
+
 `git clone https://github.com/libgit2/libgit2`
 
 Configure your own connector
@@ -38,9 +39,9 @@ Launch the page in your browser
 
 # The Use Cases
 
-SAKE can be put on a big screen, updating in real time
+SQUARES can be put on a big screen, updating in real time
 
-SAKE can be used on the local desktop, to pivot and investigate.
+SQUARES can be used on the local desktop, to pivot and investigate.
 
 
 # Concept
@@ -67,13 +68,13 @@ The top central square is the 'Master' square.
 The square top left is a child of this, it is a tree map breaking down by HTTP method and by HTTP version.  The children of this have a raw text output, and a 3d spinning plot graph on IP, Size and URL.
 The square top right is a Word Cloud on the TimeZone field, which then points to two squares which drill down to a specific Value, and then breakdown by clientIP.
 
-![screenshot1](https://github.com/andyhouse90/SAKE/blob/master/screenshots/SAKE.png)
+![screenshot1](https://github.com/squares-ui/squares-ui/master/screenshots/SQUARES.png)
 
 
 
 # Technology
 
-- SAKE presents a web front end in HTML, CSS
+- SQUARES presents a web front end in HTML, CSS
 - Client side connects to a remote API to collect data (e.g. Elastic)
 - Data is processed in JS client side
 - Visualisations are then processed in D3 or ThreeJS
@@ -82,9 +83,9 @@ The square top right is a Word Cloud on the TimeZone field, which then points to
 
 # Roadmap
 
-Whilst SAKE does support communicating with several technologies simultanesously, only Elastic data source is released as a data source today.
+Whilst SQUARES does support communicating with several technologies simultanesously, only Elastic data source is released as a data source today.
 
-Stlying, colour schemes, pretty UI is not a strong point of SAKE today.
+Stlying, colour schemes, pretty UI is not a strong point of SQUARES today.
 
 More variety on graph types planned
 

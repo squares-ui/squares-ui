@@ -22,7 +22,7 @@ function process_graphdefinition(id){
 
 function graph_graphdefinition(id){
 
-	var foreignObject = sake.selectAll('#foreignObject_'+id)
+	var foreignObject = workspaceDiv.selectAll('#foreignObject_'+id)
 	var square = foreignObject
 		.append("xhtml:div") 
 		//.append("svg")
@@ -118,26 +118,27 @@ function graph_graphdefinition(id){
 			.attr("name", function(d){ return "square_We_dropdown_"+d.id })
 	var  square_We_dropdown = $('#square_We_dropdown_'+id);
 	var  square_Ws_dropdown = $('#square_Ws_dropdown_'+id);
-	var timewindows = new Array();
-	timewindows.push([-1 * 0, "0 secs"]); 
-	timewindows.push([-1 * 10, "10 secs"]); 
-	timewindows.push([-1 * 30, "30 secs"]); 
-	timewindows.push([-1 * (GLB.square.blocksize/60), ""+1*(GLB.square.blocksize/60)+' Mins']); 
-	timewindows.push([-2 * (GLB.square.blocksize/60), ""+2*(GLB.square.blocksize/60)+' Mins']); 
-	timewindows.push([-3 * (GLB.square.blocksize/60), ""+3*(GLB.square.blocksize/60)+' Mins']); 
-	timewindows.push([-1 * 60 * 60, '1 Hours']); 
-	timewindows.push([-12 * 60 * 60, '12 Hours']); 
-	timewindows.push([-1 * 60 * 60 * 24, '1 Day']); 
-	timewindows.push([-1 * 60 * 60 * 24 * 7, '1 Week']); 
-	timewindows.push([-1 * 60 * 60 * 24 * 7 * 4, '1 Month']); 
-	$.each(timewindows, function(val, obj) {
-		square_We_dropdown.append(
-			$('<option></option>').val(obj[0]).html(obj[1])
-		);
-		square_Ws_dropdown.append(
-			$('<option></option>').val(obj[0]).html(obj[1])
-		);
-	})
+	
+	// var timewindows = new Array();
+	// timewindows.push([-1 * 0, "0 secs"]); 
+	// timewindows.push([-1 * 10, "10 secs"]); 
+	// timewindows.push([-1 * 30, "30 secs"]); 
+	// timewindows.push([-1 * (GLB.square.blocksize/60), ""+1*(GLB.square.blocksize/60)+' Mins']); 
+	// timewindows.push([-2 * (GLB.square.blocksize/60), ""+2*(GLB.square.blocksize/60)+' Mins']); 
+	// timewindows.push([-3 * (GLB.square.blocksize/60), ""+3*(GLB.square.blocksize/60)+' Mins']); 
+	// timewindows.push([-1 * 60 * 60, '1 Hours']); 
+	// timewindows.push([-12 * 60 * 60, '12 Hours']); 
+	// timewindows.push([-1 * 60 * 60 * 24, '1 Day']); 
+	// timewindows.push([-1 * 60 * 60 * 24 * 7, '1 Week']); 
+	// timewindows.push([-1 * 60 * 60 * 24 * 7 * 4, '1 Month']); 
+	// $.each(timewindows, function(val, obj) {
+	// 	square_We_dropdown.append(
+	// 		$('<option></option>').val(obj[0]).html(obj[1])
+	// 	);
+	// 	square_Ws_dropdown.append(
+	// 		$('<option></option>').val(obj[0]).html(obj[1])
+	// 	);
+	// })
 	clusterDiv.append("div")
 		.classed("square_cluster_text", true)
 		.classed("fleft", true)

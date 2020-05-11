@@ -3,7 +3,7 @@
 <html>
 <head>
 
-	<title>SAKE: Squared Analytical Klickable Interface</title>
+	<title>SQUARES-UI</title>
 
 	<script type="text/javascript">
 		// Add \<script src="./graphs/*****.js"\>\</script\> Below
@@ -14,6 +14,7 @@
 
 	<script src="https://code.jquery.com/jquery-3.0.0.min.js"></script> 
 	<script src="./lib/d3.v4.min.js" charset="utf-8"></script>
+	<script src="https://d3js.org/d3-array.v2.min.js"></script>
 
 
 	<script src="./lib/jstools.js"></script>
@@ -21,6 +22,9 @@
 	<script src="./lib/moment-timezone-with-data-2010-2020.js"></script>
 	<script src="./lib/md5.js"></script>
 	<script src="./lib/jquery.cookie.js"></script>
+	<script src="./lib/jquery.tablesorter.min.js"></script>
+	<script src="./lib/rison.js"></script>
+
 <!--        <script src="./lib/cors.js"></script>  -->
 
 	<script src="./lib/d3.parsets.js"></script>
@@ -36,13 +40,14 @@
 
 
 	<script src="https://threejs.org/build/three.js"></script>
-	<script src="./Three/dat.gui.js"></script>
-	<script src="./Three/OrbitControls.js"></script>
+	<!-- <script src="./Three/dat.gui.js"></script> -->
+	<!-- <script src="./Three/OrbitControls.js"></script> -->
 	<script src="./lib/threex.rendererstats.js"></script>
 	<script src="./lib/stats.js"></script>
 
 	<script src="./config.js"></script>
 	<link href="./styles/style4.css" rel="stylesheet" type="text/css">
+	<link href="./styles/style_structure.css" rel="stylesheet" type="text/css">
 	<link href="./styles/colours_oblivion.css" rel="stylesheet" type="text/css">
 	<link href="./styles/bootstrap.css" rel="stylesheet" type="text/css">
 
@@ -59,6 +64,14 @@
 	<script src="./lib/tsne.js"></script>
 	<script src="./lib/jstat.js"></script>
 
+	<!-- https://realfavicongenerator.net/ -->
+	<link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
+	<link rel="manifest" href="/site.webmanifest">
+	<meta name="msapplication-TileColor" content="#da532c">
+	<meta name="theme-color" content="#ffffff">
+
 
 </head>
 <body>
@@ -66,36 +79,34 @@
 
 <div id="bigwrapper">
 
-	<div id="sakecontainer" class="sake_segment">
-		<svg version="1.1" xmlns="http://www.w3.org/2000/svg" id="sake" stroke-opacity="0.3"> </svg> 
+	<div id="workspacecontainer" class="squares_segment">
+		<svg version="1.1" xmlns="http://www.w3.org/2000/svg" id="workspaceDiv" stroke-opacity="0.3"> </svg> 
 		<!-- canvas inserted here -->
 	</div> 
 	
 
 
-	<div id="sakemenu" class="sake_segment fleft">
-		<img class='sakemenuslot fleft sakemenu_wipereset'  onclick='wipereset()' alt='Reset'/>
-		<img class='sakemenuslot fleft sakemenu_addconnector' onclick='addGraphConnector()' alt='showConnectors'/>
-		<img class='sakemenuslot fleft sakemenu_update' onclick='updaterefresh(); alertify.log("URL Refreshed")' alt='Refresh'  />
-		<img class='sakemenuslot fleft sakemenu_log'   onclick='qq(url); alertify.log("URL Logged to Console")' alt='Log' />
-		<img class='sakemenuslot fleft sakemenu_save' onclick='bookmarks();' alt='Save' />
-		<img class='sakemenuslot fleft sakemenu_flush' onclick='Lockr.flush()' alt='Flush Data' />
+	<div id="menu" class="squares_segment fleft">
+		<img class='squaresmenuslot fleft squaresmenu_wipereset'  onclick='wipereset()' alt='Reset' title='Clean and refresh page'/>
+		<img class='squaresmenuslot fleft squaresmenu_addconnector' onclick='addGraphConnector()' alt='showConnectors' title='Create new Connector' />
+		<img class='squaresmenuslot fleft squaresmenu_update' onclick='updaterefresh(); alertify.log("URL Refreshed")' alt='Refresh' title='Reload URL' />
+		<img class='squaresmenuslot fleft squaresmenu_log'   onclick='qq(url); alertify.log("URL Logged to Console")' alt='Log' title='Dump Squares config to Console' />
+		<img class='squaresmenuslot fleft squaresmenu_flush' onclick='Lockr.flush()' alt='Flush Data' title="Delete cached data, but don't disrupt page" />
 
-		<img class='sakemenuslot fleft sakemenu_countelements' onclick='udpateScreenLog(
-			"Squares: "+url.sake.squares.length + " " +
+		<img class='squaresmenuslot fleft squaresmenu_countelements' onclick='udpateScreenLog(
+			"Squares: "+url.squares.length + " " +
 		    "G: "+document.getElementsByTagName("g").length + " " +
 		    "Text: "+document.getElementsByTagName("text").length + " " +
 		    "Path: "+document.getElementsByTagName("path").length + " " +
 		    "DIV: "+document.getElementsByTagName("div").length + " " +
 		    "SVG: "+document.getElementsByTagName("svg").length + " "
-			
-		)' alt='Count Elements' />
+		)' alt='Count Elements' title='Performance test: count all elements to log Window' />
 		
 	</div>
 
 	
 
-	<div id="screenLog" class="sake_segment fleft square_menu_text">
+	<div id="screenLog" class="squares_segment fleft square_menu_text">
 		No Logs
 	</div>
 

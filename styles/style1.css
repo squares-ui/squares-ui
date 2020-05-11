@@ -87,49 +87,49 @@ div{
 
 }
 
-#sakemenu{
+#squaresmenu{
 	z-index: 10;
 	top:10px;
 	left:0px;
 	position:fixed;
 }
 
-.sakemenuslot{
+.squaresmenuslot{
 	padding-left:40px;
 	padding-right:40px;
 	border-right:2px solid;
 }
-.sakemenuimage{
+.squaresmenuimage{
 	height:36px;
 }
 
-.sakemenu_wipereset{
+.squaresmenu_wipereset{
         content:url("../images/136_w.png");
 }
-.sakemenu_addconnector{
+.squaresmenu_addconnector{
         content:url("../images/093_w.png");
 }
-.sakemenu_update{
+.squaresmenu_update{
         content:url("../images/052_w.png");
 }
-.sakemenu_log{
+.squaresmenu_log{
         content:url("../images/061_w.png");
 }
-.sakemenu_save{
+.squaresmenu_save{
         content:url("../images/075_w.png");
 }
-.sakemenu_flush{
+.squaresmenu_flush{
         content:url("../images/138_w.png");
 }
-.sakemenu_countelements{
+.squaresmenu_countelements{
         content:url("../images/122_w.png");
 }
 
 
-#sakecontainer{
+#workspacecontainer{
 }
 
-#sake{
+#squares{
 /* SVG */
 	z-index: 1;
 	width:100%;

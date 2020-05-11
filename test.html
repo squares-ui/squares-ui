@@ -12,104 +12,19 @@
 
 <body>
   <script> 
-const maxIter = 500,
-    width = 400,
-    x = d3.scaleLinear()
-    .domain([-200, 200])
-    .range([0, width]),
-    area = d3.area()
-       .x((d,i) => i)
-       .y0(width+90)
-       .y1((d,i) => width + 90 - parseInt(3 * d||0));
 
-
-d3.queue()
-    
-    .await(function (err, t, w) {
-
-        const worker = new Worker(window.URL.createObjectURL(new Blob([t + w], {
-            type: "text/javascript"
-        })));
-
-        const data = d3.range(5).map(d => [0.1, 0.2, 0.3, 0.4, 0.5]);
-console.log(JSON.stringify(data))
-		
-	const svg = d3.select('body').append('svg')
-            .attr('width', width + 100)
-            .attr('height', width + 100);
-
-        const circles = svg.selectAll('circle')
-            .data(data)
-            .enter()
-            .append('circle')
-            .attr('r', d => d.r = 3 + 8 * d[4] * d[4])
-            .attr('stroke-width', 0.3)
-            .attr('fill', d => d3.rgb(d[0] * 256, d[1] * 256, d[2] * 256))
-            .attr('stroke', d => d3.rgb(d[0] * 256, d[1] * 256, d[2] * 256))
-            .attr('opacity', d => 0.3 + 0.7 * d[3]);
-
-        const cost = svg.append('path')
-            .attr('fill', '#aaa');            
-
-        let pos = data.map(d => [Math.random() - 0.5, Math.random() - 0.5]);
-		
-		console.log(JSON.stringify(pos))
-		let costs = [];
-  
-        let s = 0, c = 1;
-
-        const forcetsne = d3.forceSimulation(data)
-        .alphaDecay(0)
-        .alpha(0.1)
-        .force('tsne', function(alpha){
-          data.forEach((d,i) => {
-            d.x += alpha * (150*pos[i][0] - d.x);
-            d.y += alpha * (150*pos[i][1] - d.y);
-          });
-        })
-        // orient the results so that reds (dimension 0) are at bottom
-        .force('orientation', function(){
-          let tx = 0,
-              ty = 0;
-          data.forEach((d,i) => {
-            tx += d.x * d[0];
-            ty += d.y * d[0];
-          });
-          let angle = Math.atan2(ty,tx);
-          s = Math.sin(angle);
-          c = Math.cos(angle);
-        })
-        .force('collide', d3.forceCollide().radius(d => 1 + d.r))
-        .on('tick', function () {
-          circles
-            .attr('cx', d => x(d.x*s - d.y*c))
-            .attr('cy', d => x(d.x*c + d.y*s));
-          // debug: show costs graph
-          // cost.attr('d', area(costs));
-        });
-
-        
-        worker.onmessage = function (e) {
-            if (e.data.pos) pos = e.data.pos;
-            if (e.data.iterations) { 
-              costs[e.data.iterations] = e.data.cost;
-            }
-            if (e.data.stop) { 
-              console.log("stopped with message", e.data);
-              forcetsne.alphaDecay(0.02);
-              worker.terminate();
-            }
-        };
-        worker.postMessage({
-            nIter: maxIter,
-            // dim: 2,
-            perplexity: 20.0,
-            // earlyExaggeration: 4.0,
-            // learningRate: 100.0,
-            metric: 'manhattan', //'euclidean',
-            data: data
-        });
-
-    });
   </script>
+
+
+<pre>
+
+<h3>
+  HEading
+</h3>
+bla bla
+bla bla
+
+
+</pre>
+
 </body>

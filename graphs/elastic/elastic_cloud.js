@@ -19,30 +19,43 @@ function elastic_completeform_cloud(id, targetDiv){
 	// Async difficult to handle
 	// promise.all appears to be the best way.  Construct the list of promises that will each master the jsonform{}
 
-	const jsonform = {
-		"schema": {
-		  "custom_field": {
-			"type": "string",
-			"title": "Groupby", 
-			"enum": []
-			
-		  }
-		},
-		"form": [
-		  {
-			"key": "custom_field"
-	
-		  }
-		]
-	}
 
 	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
 	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
 
+
 	elastic_get_fields(dst, connectionhandle, id)
 		.then(function(results){
-	
-			jsonform.schema.custom_field.enum = results
+			
+			var dropdownFields = []
+			// _.omit keys of data types we dont want, or _.pick the ones we do, i.e. omit "text", or pick "ip"
+			subResults = _.omit(results, "")
+			_.each(subResults, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
+			dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
+			
+			const jsonform = {
+				"schema": {
+					"x_field": {
+						"type": "string",
+						"title": "Groupby", 
+						"enum": dropdownFields
+						
+					}
+				},
+				"form": [
+					{
+						"key": "x_field"
+				
+					}
+				],
+				"value":{}
+			}
+
+			
+			if(retrieveSquareParam(id,"Cs",false) !== undefined){
+                jsonform.value.x_field = retrieveSquareParam(id,"Cs",false)['x_field']
+			}
+
 			$(targetDiv).jsonForm(jsonform)
 
 		})
@@ -57,23 +70,23 @@ function elastic_populate_cloud(id){
 	
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
-
-	var to = moment(calcGraphTime(id, 'We', 0), "X").format();
-
+	var to = calcGraphTime(id, 'We', 0)
+	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	
-	var from =  moment( (calcGraphTime(id, 'We', 0) - retrieveSquareParam(id, "Ws", true)) , "X").format();
-	
-	var Ds = calcDs(id, []);
+	Ds = clickObjectsToDataset(id)
 	
 	
 	//var fields = [];  // use this to see all fields in raw output
 	//var fields = ["@timestamp", "type", "client_ip", "method", "port", "server_response"];
-	var fields=[retrieveSquareParam(id,"Cs",true)['custom_field']]
+	var fields=[retrieveSquareParam(id,"Cs",true)['x_field']]
 
 	var limit = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'dft_limit');
+	limit = 10000
+	
 
-	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, from, to, Ds, fields, limit);
+	var query = elastic_query_builder(id, from, to, Ds, fields, limit, true);
 
+	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
 }
 
 
@@ -83,22 +96,38 @@ function elastic_rawtoprocessed_cloud(id){
 	var data = retrieveSquareParam(id, 'rawdata_'+'');
 	var totalrows = data.length
 
-	var field = retrieveSquareParam(id,"Cs")['custom_field']
-
+	var field = retrieveSquareParam(id,"Cs")['x_field']
 	// count into {"first":1, "second":15}	
+
+
 	var data2 = _.countBy(data, function(obj){
-		return obj._source[field]
+		return field.split('.').reduce(stringDotNotation, obj._source)
+		//return obj._source[field]
 	})
 
 	var max = _.max(_.each(data2, function(val, key){  return val }))
+	
+	var total = _.reduce(_.values(data2), function(memo, num){ return memo + num; }, 0);
 
 
 	// turn into array of objects
 	var data3 = []
-	var bigfontsize = 300
+	var bigfontsize = 120 // biggest font for 20 chars?
+
 	_.each(data2, function(val, key){
 		//data3.push({"text":key, "size":(val/totalrows)*100})
-		data3.push({"text":key, "size":Math.floor((val/max)*bigfontsize)})
+		
+		
+		
+		
+		data3.push({
+			"text":key.substring(0, 15), 
+			"size":Math.floor((val/max)*bigfontsize),
+			"fullText": key,
+			"count": val
+			
+		})
+		qq(key+": "+val+"/"+total)
 	})
 
 	data3 = _.sortBy(data3, function(o){
@@ -115,7 +144,7 @@ function elastic_graph_cloud(id){
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	// http://bl.ocks.org/bbest/2de0e25d4840c68f2db1
 
-	var squareContainer = sake.selectAll('#square_container_'+id)
+	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
 		//.append("xhtml:div") 
 		.append("svg")
@@ -135,10 +164,7 @@ function elastic_graph_cloud(id){
 	
 	// http://jsfiddle.net/ymmh9dLq/
 	
-
-	const custom_field = retrieveSquareParam(id,"Cs")['custom_field']
-
-	const fill = d3.scaleOrdinal(d3.schemeCategory10);
+	const x_field = retrieveSquareParam(id,"Cs")['x_field']
 
 	var layout = d3.layout.cloud()
 		.size([width, height])
@@ -171,11 +197,25 @@ function elastic_graph_cloud(id){
 				})
 				.text(function(d) { return d.text; })
 				.on("click", function(d){
-					clickObject = btoa('[{"match":{"'+custom_field+'":"'+d.text+'"}}]');
+					// clickObject = btoa('[{"match":{"'+x_field+'":"'+d.text+'"}}]');
+					// childFromClick(id, {"y": 1000, "Ds": clickObject} );
+					clickObject = {"compare":[], "notexist":[], "timerange":[]}
+
+					if(d.name == "null"){
+						clickObject.notexist.push(d.name)
+					}else{
+						miniObj ={}
+						miniObj[x_field] = d.fullText
+						clickObject.compare.push(miniObj)
+					}
+					
+					clickObject = btoa(JSON.stringify(clickObject));
 					childFromClick(id, {"y": 1000, "Ds": clickObject} );
+
+
 				})
 				.on("mouseover", function(d) {
-					theData = d.text+", Count: "+d.size
+					theData = d.fullText+", Count: "+d.count
 					setHoverInfo(id, theData)
 				})
 				

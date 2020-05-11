@@ -14,59 +14,60 @@
 
 function elastic_completeform_3dGroupedNormal(id, targetDiv){
 	
-	const jsonform = {
-		"schema": {
-			"custom_first": {
-				"type": "string",
-				"title": "GroupBy", 
-				"enum": []
-			},
-			"custom_second": {
-				"type": "string",
-				"title": "Field 1", 
-				"enum": []
-			},
-			"custom_third": {
-				"type": "string",
-				"title": "Field 2", 
-				"enum": []
-            },
-            "custom_fourth": {
-				"type": "string",
-				"title": "Field 3", 
-				"enum": []
-            }
-            
-    
-    
-        },
-		"form": [
-		  {
-				"key": "custom_first",
-		  },
-		  {
-				"key": "custom_second",
-		  },
-		  {
-				"key": "custom_third",
-		  },
-		  {
-				"key": "custom_fourth",
-		  }
-		]
-	}
+
 
 	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
 	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
 
 	elastic_get_fields(dst, connectionhandle, id)
 		.then(function(results){
-	
-			jsonform.schema.custom_first.enum = results
-			jsonform.schema.custom_second.enum = results
-            jsonform.schema.custom_third.enum = results
-            jsonform.schema.custom_fourth.enum = results
-			$(targetDiv).jsonForm(jsonform)
+  
+            const jsonform = {
+                "schema": {
+                    "x_first": {
+                        "type": "string",
+                        "title": "GroupBy", 
+                        "enum": results['text'],
+                        "required": true
+                    },
+                    "x_second": {
+                        "type": "string",
+                        "title": "Field 1", 
+                        "enum": results['text'],
+                        "required": true
+                    },
+                    "x_third": {
+                        "type": "string",
+                        "title": "Field 2", 
+                        "enum": results['text'],
+                        "required": true
+                    },
+                    "x_fourth": {
+                        "type": "string",
+                        "title": "Field 3", 
+                        "enum": results['text'],
+                        "required": true
+                    },
+        
+                },
+                "form":[
+                    {"key":"x_first"},
+                    {"key":"x_second"},
+                    {"key":"x_third"},
+                    {"key":"x_fourth"},
+                ],
+                "value":{}
+                
+            }   
+            
+            if(retrieveSquareParam(id,"Cs",false) !== undefined){
+                jsonform.schema.x_first.default = retrieveSquareParam(id,"Cs",false)['x_first']
+                jsonform.schema.x_second.default = retrieveSquareParam(id,"Cs",false)['x_second']
+                jsonform.schema.x_third.default = retrieveSquareParam(id,"Cs",false)['x_third']
+                jsonform.schema.x_fourth.default = retrieveSquareParam(id,"Cs",false)['x_fourth']
+            }        
+        
+            $(targetDiv).jsonForm(jsonform)
 
 		})
 }
@@ -76,20 +77,21 @@ function elastic_populate_3dGroupedNormal(id){
 	
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
-	var to = moment(calcGraphTime(id, 'We', 0), "X").format();
-	var from =  moment( (calcGraphTime(id, 'We', 0) - retrieveSquareParam(id, "Ws", true)) , "X").format();
+	var to = calcGraphTime(id, 'We', 0)
+	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var Ds = calcDs(id, []);
 	
-	firstBy = retrieveSquareParam(id,"Cs")['custom_first']
-	secondBy = retrieveSquareParam(id,"Cs")['custom_second']
-	thirdBy = retrieveSquareParam(id,"Cs")['custom_third']
-    fourthBy = retrieveSquareParam(id,"Cs")['custom_fourth']
+	firstBy = retrieveSquareParam(id,"Cs")['x_first']
+	secondBy = retrieveSquareParam(id,"Cs")['x_second']
+	thirdBy = retrieveSquareParam(id,"Cs")['x_third']
+    fourthBy = retrieveSquareParam(id,"Cs")['x_fourth']
     var fields=[firstBy, secondBy, thirdBy, fourthBy]
-
-
 	
 	var limit = 10000;
-	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, from, to, Ds, fields, limit);
+
+    var query = elastic_query_builder(from, to, Ds, fields, limit, null);
+
+	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
 
 }
 
@@ -98,10 +100,10 @@ function elastic_rawtoprocessed_3dGroupedNormal(id){
 
 	var data = retrieveSquareParam(id, 'rawdata_'+'');
 
-	const firstBy = retrieveSquareParam(id,"Cs")['custom_first']
-    const secondBy = retrieveSquareParam(id,"Cs")['custom_second']
-    const thirdBy = retrieveSquareParam(id,"Cs")['custom_third']
-    const fourthBy = retrieveSquareParam(id,"Cs")['custom_fourth']
+	const firstBy = retrieveSquareParam(id,"Cs")['x_first']
+    const secondBy = retrieveSquareParam(id,"Cs")['x_second']
+    const thirdBy = retrieveSquareParam(id,"Cs")['x_third']
+    const fourthBy = retrieveSquareParam(id,"Cs")['x_fourth']
 
 
     data3 = {}
@@ -210,7 +212,7 @@ function elastic_graph_3dGroupedNormal(id){
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	// http://bl.ocks.org/bbest/2de0e25d4840c68f2db1
 
-	var squareContainer = sake.selectAll('#square_container_'+id)
+	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
 		.append("xhtml:div") 
 			.attr("id", function(d){ return "square_"+d.id })
@@ -224,9 +226,9 @@ function elastic_graph_3dGroupedNormal(id){
 	
 	var data = retrieveSquareParam(id, 'processeddata');
 	
-	const firstBy = retrieveSquareParam(id,"Cs")['custom_first']
-	const secondBy = retrieveSquareParam(id,"Cs")['custom_second']
-    const thirdBy = retrieveSquareParam(id,"Cs")['custom_third']
+	const firstBy = retrieveSquareParam(id,"Cs")['x_first']
+	const secondBy = retrieveSquareParam(id,"Cs")['x_second']
+    const thirdBy = retrieveSquareParam(id,"Cs")['x_third']
 
 
 
@@ -329,11 +331,11 @@ function elastic_graph_3dGroupedNormal(id){
             sphere.position.x = x
             sphere.position.y = y
             sphere.position.z = z
-            sphere.sakeName = key+": "+value[i][0]+":\u03BC"+sigmaone +" "+value[i][1]+":\u03BC"+sigmatwo+", "+value[i][2]+":\u03BC"+sigmathree
+            sphere.workspacecontainerName = key+": "+value[i][0]+":\u03BC"+sigmaone +" "+value[i][1]+":\u03BC"+sigmatwo+", "+value[i][2]+":\u03BC"+sigmathree
 
             let clickObject = btoa('[{"match":{"'+firstBy+'":"'+key+'"}} ]');
            
-            sphere.sakeAction = function(){ childFromClick(id, {"y": 1000, "Ds": clickObject, "Gt":null} ) };
+            sphere.workspacecontainerAction = function(){ childFromClick(id, {"y": 1000, "Ds": clickObject, "Gt":null} ) };
 
             scene.add(sphere);
         }

@@ -65,8 +65,8 @@ function elastic_populate_tsnejs(id){
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	
-	var to = moment(calcGraphTime(id, 'We', 0), "X").format();
-	var from =  moment( (calcGraphTime(id, 'We', 0) - retrieveSquareParam(id, "Ws", true)) , "X").format();
+	var to = calcGraphTime(id, 'We', 0)
+	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var Ds = calcDs(id, []);
 	
 
@@ -76,8 +76,9 @@ function elastic_populate_tsnejs(id){
 	var fields=[firstBy, secondBy, thirdBy]
 	
 	var limit = 10000;
-	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, from, to, Ds, fields, limit);
+	var query = elastic_query_builder(from, to, Ds, fields, limit, null);
 
+	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
 }
 
 
@@ -143,7 +144,7 @@ function elastic_graph_tsnejs(id){
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	// http://bl.ocks.org/bbest/2de0e25d4840c68f2db1
 
-	var squareContainer = sake.selectAll('#square_container_'+id)
+	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
 		.append("xhtml:div") 
 		.attr("id", function(d){ return "square_"+d.id })
