@@ -14,7 +14,7 @@ The top central square is the 'root' square.
 
 On the left column a Treemap chart representing IP and Port information
 
-The middle Piechart break down traffic on "local_orig" flag in Elastic, with the Sankey charts representing each subset of data.
+The middle Piechart breaks down traffic on "local_orig" flag in Elastic, with the Sankey charts representing each subset of data.
 
 The top right corner is a simple "raw output" chart showing the full message
 
@@ -22,7 +22,7 @@ The bottom right Sunburst charts show SSL/TLS breakdowns along with PKI breakdow
 
 ![screenshot1](https://github.com/squares-ui/squares-ui/blob/master/screenshots/squares-ui.png)
 
-This entire dashboard can be built in minutes, with only the mouse allowing analysts to pivot and explore data sets with ease.
+This entire dashboard can be built in minutes, using only the mouse allowing analysts to pivot and explore data sets with ease.
 
 
 # How to Install
@@ -43,7 +43,7 @@ vim elasticSecurityOnionBro.conf
 
 ## Note on configuring Squares-UI to use Elasticsearch/SecurityOnion as a data source
 
-Bey default Elastic does not allow CORS.  To change this SSH to Security Onion and modify the Elastic config file
+By default Elastic does not allow CORS.  To change this SSH to Security Onion and modify the Elastic config file
 
 ```
 /etc/elasticsearch/elasticsearch.yml
@@ -62,20 +62,20 @@ Then restart ElasticSearch
 
 Squares-ui can be used on the local desktop, to pivot and explore data sets
 
-Squares-ui pages can be bookmarked for ~real time monitoring on a large monitor monitered by the team.
+Squares-ui pages can be bookmarked for ~real time monitoring with automatic updating presented on larger team dashboards
 
 # Concept
 
 Each dashboard has 1+ master squares that each define a target instance (e.g. Elastic @ 192.168.0.1)
 
-Each square has 1+ child squares
+Each square can have 1+ child squares
 
-To render any graph/visual a Square needs 3 things: 
-- The 'graph type' attribute defines how a square looks and how it represents the data
-- Data Subset e.g. ip=8.8.8.8
-- A time window
+To render any graph a Square needs 3 things: 
+- A Graph type, e.g. PieChart
+- A Data Subset e.g. ip=8.8.8.8
+- A time window e.g. "15 minutes before my parent"
 
-In squares-ui any square that does not have any of these things will (often recusrively) query this from it's parent.  This way all squares are created with no configuration, but they still have information.
+In squares-ui any square that does not have any of these things will (often recursively) query this from it's parent.  This way all squares are initially created with no configuration but allow you to make small changes to navigate the data.
 
 - Graph type is inherited recursively
 - Data subset is inherited recursively and combined
@@ -83,9 +83,7 @@ In squares-ui any square that does not have any of these things will (often recu
 
 With this we can move time frames, pivot search queries, and change the visual breakdown that the user is presented whilst having many squares-ui that are still related to each other creating a continuous story.
 
-
-
-All fields are auto populated from Elastic allowing you to point squares-ui at any dataset.
+All fields and data are auto populated dynmaically from the Elastic index, allowing you to point squares-ui at any dataset.
 
 # Technology
 
@@ -97,21 +95,22 @@ All fields are auto populated from Elastic allowing you to point squares-ui at a
 
 # Limitations
 
-Only tested in Chrome today, FF testing coming.
+Only tested in Chrome today, FF testing planned
 
-Currently there are few graph types, this will expand over time
+Currently there are only a few graph types, though the number is growing
 
-Current queries to Elastic handle Match, and Does not Exist.  It doesn't handle "not 1.2.3.4", or Terms vs Term, or ">5"
+Current queries to Elastic handle 'match', and 'does not exist'.  It does not yet handle queries such as "not 1.2.3.4", "Terms" , or ">5"
 
-Currently uses localStorage (not indexdb) meaning storage might run out, check config/delete raw for extra space
+Currently localStorage is used for client side storage which occassionally maxes out. Check config/delete raw for extra space.  Plans exist to move to IndexDB
 
-Some graphs can only hold so many keys (i.e. a Sankey chart might be limted to 80 nodes) therefore culling exists.  The UI does not currently inform you when this happens.
+Some graphs can only hold so many keys/nodes (i.e. a Sankey chart) therefore some culling exists, though the UI does not currently inform you where/when this happens
 
 
 # Known Bugs
 
-Imperfect usage of devicePixelRatio affects retina screens and system wide font size changes
-Occassional page hangs, most recover but sometimes a tab needs to be closed then reopened (ctrl+shift+t), this is being investigated.
+Imperfect implementation of devicePixelRatio may affect 'retina screens' and OS font size changes
+
+Occassional page hangs, most recover but sometimes a tab needs to be closed then reopened (ctrl+shift+t), this is being investigated
 
 Some times a page refresh is needed, sometimes recreating a square is needed
 
