@@ -41,7 +41,7 @@ cp -a blank elasticSecurityOnionBro.conf
 vim elasticSecurityOnionBro.conf
 ```
 
-## Note on Elastic Install
+## Note on configuring Squares-UI to use Elasticsearch/SecurityOnion as a data source
 
 Bey default Elastic does not allow CORS.  To change this SSH to Security Onion and modify the Elastic config file
 
