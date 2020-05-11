@@ -16,7 +16,7 @@ The square top left is a child of this, it is a tree map breaking down by HTTP m
 
 The square top right is a Word Cloud on the TimeZone field, which then points to two squares-ui which drill down to a specific Value, and then breakdown by clientIP.
 
-![screenshot1](https://github.com/squares-ui-ui/squares-ui-ui/master/screenshots/squares-ui.png)
+![screenshot1](https://github.com/squares-ui/squares-ui/master/screenshots/squares-ui.png)
 
 
 
