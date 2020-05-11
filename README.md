@@ -11,13 +11,9 @@ squares-ui however has many graphs that are children of each other and inherit a
 These instructions are for a new clean CentOS build.  
 Instructions on other Linux distro may vary.
 
+Ensure that Apache (httpd), PHP, and Git are installed through Yum, Apt or other.
+
 ```
-sudo yum update 
-sudo yum install httpd php git -y
-service httpd start
-firewall-cmd --zone=public --permanent --add-service=http
-firewall-cmd --zone=public --permanent --add-service=https
-firewall-cmd --reload
 cd /var/www/html
 git clone https://github.com/squares-ui-ui/squares-ui-ui/
 curl http://192.168.1.233/squares-ui-ui/hello.txt
