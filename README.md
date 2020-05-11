@@ -66,40 +66,34 @@ Squares-ui pages can be bookmarked for ~real time monitoring on a large monitor 
 
 # Concept
 
-Each layout has 1+ master squares-ui that each define a target instance (e.g. Elastic @ 192.168.0.1)
+Each dashboard has 1+ master squares that each define a target instance (e.g. Elastic @ 192.168.0.1)
 
-Each master square has child squares-ui, which inturn have child squares-ui of their own.
+Each square has 1+ child squares
 
-Any attribute that a child square does NOT have set, is inherited from it's parent square.  A blank square is identical to it's parent (same timeframe, same data filter, same graph type)
+To render any graph/visual a Square needs 3 things: 
+- The 'graph type' attribute defines how a square looks and how it represents the data
+- Data Subset e.g. ip=8.8.8.8
+- A time window
 
-Any attribute that a child square does have prevents inheritence.  A child square might inherit the 'graph type' attribute and a 'data filter', but not the timeframe (which could be -15mins)
+In squares-ui any square that does not have any of these things will (often recusrively) query this from it's parent.  This way all squares are created with no configuration, but they still have information.
 
-The 'graph type' attribute defines how a square looks and how it represents the data.  A square might simply be text, it might be a simple 2d visual (pie chart, bar chart, etc), a fun 2d visual (sankey chart, word cloud), or a 3d visual (3d bubble chart, spinning bar chart, etc).
-
-Often (not always) each element in a visual has a hover over text of the element it represents, and clicking on this item auto creates a child square that is already filtered down to that element.
+- Graph type is inherited recursively
+- Data subset is inherited recursively and combined
+- Timeframes are calculated recursively against all parents with relative timegrames, this happens until a Square is found with an absolute timestamp.
 
 With this we can move time frames, pivot search queries, and change the visual breakdown that the user is presented whilst having many squares-ui that are still related to each other creating a continuous story.
 
 
 
+All fields are auto populated from Elastic allowing you to point squares-ui at any dataset.
+
 # Technology
 
-- squares-ui presents a web front end in HTML, CSS
-- Client side connects to a remote API to collect data (e.g. Elastic)
-- Data is processed in JS client side
-- Visualisations are then processed in D3 or ThreeJS
-
-
-
-# Roadmap
-
-Whilst squares-ui does support communicating with several technologies simultanesously, only Elastic data source is released as a data source today.
-
-Stlying, colour schemes, pretty UI is not a strong point of squares-ui today.
-
-More variety on graph types planned
-
-Lage payout is stored in the URL which only scales to a point
+- HTML/CSS
+- Javascript client side WebUI
+- Some PHP in the backend
+- Graphs and visuals are done in D3 and ThreeJS
+- Other libraries
 
 # Limitations
 
