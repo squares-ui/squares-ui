@@ -22,6 +22,21 @@ cp -a blank elasticSecurityOnionBro.conf
 vim elasticSecurityOnionBro.conf
 ```
 
+## Note on Elastic Install
+
+Bey default Elastic does not allow CORS.  To change this SSH to Security Onion and modify the Elastic config file
+
+```
+/etc/elasticsearch/elasticsearch.yml
+```
+
+Then append these two lines
+
+```
+http.cors.enabled: true
+http.cors.allow-origin: "*"
+```
+
 # The Use Cases
 
 Squares-ui can be used on the local desktop, to pivot and explore data sets
