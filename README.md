@@ -8,7 +8,7 @@ squares-ui however has many graphs that are children of each other and inherit a
 
 # Screenshot
 
-Below, squares-ui is using a data source (Elastic search as part of Security Onion) as a data source.
+Below, squares-ui is using Elastic search (as part of Security Onion) as a data source.
 
 The top central square is the 'root' square.
 
@@ -39,6 +39,18 @@ curl http://<IP_of_box>/squares-ui-ui/hello.txt
 cd squares-ui-ui/connectors/
 cp -a blank elasticSecurityOnionBro.conf
 vim elasticSecurityOnionBro.conf
+```
+
+Finally you need to configure some connectors in "/connectors/".
+
+Squares-ui ships with some default connectors for SecurityOnion (one for Bro, one for IDS and one for OSSEC indexes)
+
+You can create your own connectors or use these templates:
+
+```
+cd connectors/
+cp -a seconion_ossec.json.template seconion_ossec.json
+vim seconion_ossec.json
 ```
 
 ## Note on configuring Squares-UI to use Elasticsearch/SecurityOnion as a data source
