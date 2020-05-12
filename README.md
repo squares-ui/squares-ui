@@ -20,7 +20,7 @@ The top right corner is a simple "raw output" chart showing the full message
 
 The bottom right Sunburst charts show SSL/TLS breakdowns along with PKI breakdowns.  These two charts are Children of the "UpdateCountdown" chart meanint that every few minutes they automatically re-render new information.
 
-![screenshot1](https://github.com/squares-ui/squares-ui/blob/master/screenshots/squares-ui.png)
+![screenshot1](https://github.com/squares-ui/squares-ui/blob/master/screenshots/squares-ui-1.png)
 
 This entire dashboard can be built in minutes, using only the mouse allowing analysts to pivot and explore data sets with ease.
 
