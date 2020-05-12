@@ -1,4 +1,4 @@
 *
 */
-!blank.json
+!*.template
 !.gitignore
