@@ -1,0 +1,54 @@
+{
+	"handle": "SO-Bro",
+	"type": "elastic",
+	"desc": "SecOnion",
+	"dst": "192.168.0.0:9200",
+    "index": "*bro*",
+	"username": "admin",
+	"apikey": "",
+	"dft_limit":10000,
+	"favourites":[
+		{	
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145b",
+			"printable": "Local Origin",
+			"Gt": "Sunburst",
+			"Cs":{"array":["local_orig"],"x_scale":"log", "x_null":true}
+		},{	
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145c",
+			"printable": "Service -> Connection State",
+			"Gt": "Sankey",
+			"Cs":{"array":["service","connection_state_description"],"x_scale":"log", "x_null":true}
+		},{	
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145d",
+			"printable": "SourceIP->DestIP:Port",
+			"Gt": "Sankey",
+			"Cs":{"array":["source_ip","destination_ip","destination_port"],"x_scale":"log", "x_null":true}
+		},{	
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145e",
+			"printable": "Event Type, Source, Dest",
+			"Gt": "Sunburst",
+			"Cs":{"array":["event_type","source_ip","destination_ip"],"x_scale":"log", "x_null":true}
+		},{	
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145f",
+			"printable": "SSL/TLS",
+			"Gt": "Sunburst",
+			"Cs":{"array":["destination_port","version","validation_status"],"x_scale":"log", "x_null":true}
+		},{	
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145g",
+			"printable": "PKI Certs",
+			"Gt": "Sunburst",
+			"Cs":{"array":["certificate_signing_algorithm","issuer_organization","certificate_common_name"],"x_scale":"log", "x_null":true}
+		},{	
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145h",
+			"printable": "Destination and Bytes",
+			"Gt": "Sunburst",
+			"Cs":{"array":["destination_geo.continent_code","destination_geo.country_code2","seen_bytes"],"x_scale":"log", "x_null":true}
+		},{	
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145i",
+			"printable": "Method IP and Status",
+			"Gt": "Sunburst",
+			"Cs":{"array":["method","status","destination_ip","uri"],"x_scale":"log", "x_null":true}
+		}
+	]
+
+}

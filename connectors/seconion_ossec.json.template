@@ -1,0 +1,11 @@
+{
+	"handle": "SO-OSSEC",
+	"type": "elastic",
+	"desc": "SecOnion",
+	"dst": "192.168.0.0:9200",
+    "index": "*ossec*",
+	"username": "admin",
+	"apikey": "",
+    "dft_limit":10000,
+	"favourites":[]
+}
