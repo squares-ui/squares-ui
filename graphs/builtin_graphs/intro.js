@@ -13,13 +13,14 @@ graphs_functions_json.add_graphs_json({
 });
 
 function populate_intro(id){
-	// no back end data to fetch, but tell the system we're ready
-	//ww(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+","+name+")");
-	// connector_bypass(id);
 
-	// lazy fix, XXX
-	//Lockr.flush();
-	if(id==3){
+
+	if(id!=3){
+		connector_bypass(id);
+	}else{
+		
+		//the intelligent square
+
 		connectors = connectors_json.get_connectors_json()
 		if(_.keys(connectors).length > 0){
 			
@@ -34,18 +35,20 @@ function populate_intro(id){
 				elastic_test_connector(dst, index);
 			})
 		}
-	}else{
-		connector_bypass(id);
 	}
+	
 }
+
+
 
 function process_intro(id){
 	
-	
+	qq("----------")
 	if(id==3){
 
 		data = []
 
+		// combine all "rawdata_" -> array
 		connectors = connectors_json.get_connectors_json()
 		if(_.keys(connectors).length > 0){
 
@@ -55,25 +58,44 @@ function process_intro(id){
 				var key = "rawdata_"+index
 
 				found = retrieveSquareParam(id, key, false)
-
 				miniObj = {}
-				miniObj[obj['index']] = {found}
+
+				if(found != null){
+					miniObj[obj['index']] = {found}
+
+				}else{
+					miniObj[obj['index']] = {}
+				}
 				data.push(miniObj)
-		
+
 			})
 		}
+		//[{"<index>": {"found": {}},{...}]
 
+
+		// build data into the format to display it
 		dataout = []
-
 		_.each(data, function(obj, i){
 			
 			key = _.keys(obj)[0]
-			
+			val = _.values(obj)[0]
+
 			miniObj = {}
 			miniObj['desc'] = key
-			miniObj['timed_out'] = obj[key]['found']['timed_out']
-			miniObj['hits'] = obj[key]['found']['hits']['total']
 			
+			// did connector connect?  (i.e. is elastic available?)
+			// XXX increase detection here, we don't yet validate 404/auth failure/etc
+			if(val.hasOwnProperty('found') ){
+				miniObj['timed_out'] = obj[key]['found']['timed_out']
+				miniObj['hits'] = obj[key]['found']['hits']['total']
+			}else{
+				miniObj['timed_out'] = true
+				miniObj['hits'] = 0
+
+				
+				addSquareStatus(id, 'warning', 'Fail to "elastic_get_fields" for id:'+id)
+
+			}
 
 			dataout.push(miniObj)
 		})

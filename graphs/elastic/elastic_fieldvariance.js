@@ -25,8 +25,6 @@ function elastic_completeform_fieldvariance(id, targetDiv){
 				  "x_size": {
 					"type": "string",
 					"title": "SampleSize",
-					
-					
 				  }
 				},
 				"form": [
@@ -36,15 +34,18 @@ function elastic_completeform_fieldvariance(id, targetDiv){
 				  }
 				],
 				"value":{
-					"x_size": "250"
 				}
                 
 			}
 
 			if(retrieveSquareParam(id,"Cs",false) !== undefined){
-				if(retrieveSquareParam(id,"Cs",false)['x_size'] !== null){
+				if(retrieveSquareParam(id,"Cs",false)['x_size'] !== undefined){
 					jsonform.value.x_size = retrieveSquareParam(id,"Cs",false)['x_size']
+				}else{
+					jsonform.value.x_size = 200
 				}
+			}else{
+				jsonform.value.x_size = 200
 			}
 
 			$(targetDiv).jsonForm(jsonform)

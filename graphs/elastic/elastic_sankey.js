@@ -11,6 +11,7 @@ graphs_functions_json.add_graphs_json({
 	}
 });
 
+sankeyLinksLimit = 180
 
 function elastic_completeform_sankey(id, targetDiv){
 
@@ -96,8 +97,6 @@ function elastic_completeform_sankey(id, targetDiv){
 					jsonform.form[2]['value'] = retrieveSquareParam(id,"Cs",false)['x_scale']
 				}
 
-
-
 			}else{
 				//create default layout
 				jsonform.value['x_arr'] = []
@@ -112,6 +111,10 @@ function elastic_completeform_sankey(id, targetDiv){
 
 			$(targetDiv).jsonForm(jsonform)
 
+		}).catch(e => {
+			alert(e)
+			// setPageStatus(id, 'Critical', 'Fail to "elastic_get_fields" for id:'+id+', ('+e+')');
+
 		})
 }
 
@@ -124,13 +127,13 @@ function elastic_populate_sankey(id){
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	Ds = clickObjectsToDataset(id)
 	
-
+	qq(Ds)
+	
 	fields = []
 	_.each(retrieveSquareParam(id,"Cs",true)['array'], function(key,num){
 		fields.push(key)
 	})
 
-	
 	var limit = 10000;
 	var query = elastic_query_builder(id, from, to, Ds, fields, limit, true);
 
@@ -162,30 +165,27 @@ function elastic_rawtoprocessed_sankey(id){
 		}
 	}
 
+
+
+	//############################
 	// generate data2, which is later used to generate links
+	//############################
 	rawLinks = {}
 	_.each(data, function(obj, i){
 
 		for(var j = 0; j < Cs.length-1; j++ ){
-
-		
 			deepSource = Cs[j].split('.').reduce(stringDotNotation, obj._source)
 			sources = []
 			if( deepSource != "null" ){
 				key = deepSource
-				
 				if(key.constructor.name !== "Array") {
 					key = [key]
 				}
-
 				_.each(key, function(el){
 					sources.push(el)
 				})
-				// qq(deepSource)
 			}else if (incNull){
-				// qq(deepSource)
 				sources.push(Cs[j]+"_null")
-				
 			}
 
 
@@ -193,21 +193,15 @@ function elastic_rawtoprocessed_sankey(id){
 			destinations = []
 			if(deepDest != "null" ){
 				key = deepDest
-				
 				if(key.constructor.name !== "Array") {
 					key = [key]
 				}
-				
 				_.each(key, function(el){
 					destinations.push(el)
 				})
 			}else if (incNull){
 				destinations.push(Cs[j+1]+"_null")
-				
 			}
-
-
-
 
 			_.each(sources, function(src){
 				_.each(destinations, function(dst){
@@ -222,7 +216,6 @@ function elastic_rawtoprocessed_sankey(id){
 					if (!rawLinks[src].hasOwnProperty(dst)) {
 						rawLinks[src][dst] = 0
 					}
-		
 					rawLinks[src][dst] += 1
 		
 				})
@@ -233,6 +226,12 @@ function elastic_rawtoprocessed_sankey(id){
 	})
 	// qq("###### RawLinks")
 	// qq(rawLinks)
+	// "<node>": {
+	// 	"<node>": value,
+	// 	"sF": "<field>",
+	// 	"tF": "<field>"
+	// },
+
 
 	
 	// convert from   "28726":{"bro_http":1}   ->> [{"source":192,"target":104,"value":2},{...}]
@@ -246,14 +245,17 @@ function elastic_rawtoprocessed_sankey(id){
 	})
 	// qq("###### tmpLinks")
 	// qq(tmpLinks)
+	// {
+    //     "source": "<node>",
+    //     "target": "<node>",
+    //     "sF": "<field>",
+    //     "tF": "<field>",
+    //     "value": value
+    // }
 
 	
-	
-	
-	
 	// limit nodes to prevent UI overload
-	// though log can handle more, so a little "helper"
-	sankeyLinksLimit = 1000
+	// though 'log' can handle more, so a little "helper"
 	if(scale == "log"){
 		sankeyLinksLimit * 2
 	}
@@ -263,7 +265,9 @@ function elastic_rawtoprocessed_sankey(id){
 	}
 
 
+	//############################
 	// extract the needed nodes
+	//############################
 	nodes = []
 	_.each(tmpLinks, function(link){
 		nodes.push(link.source)
@@ -276,24 +280,29 @@ function elastic_rawtoprocessed_sankey(id){
 	}
 	// qq("###### dataout.nodes")
 	// qq(dataout.nodes)
+	// {
+	// 	"node": <node>,
+	// 	"name": "<node>"
+	// }
 
 
-
+	//############################
 	// now cycle tmpLinks, applying node names, into dataout.links
+	//############################
 	dataout.links = []
 	_.each(tmpLinks, function(tmpLink, i){
 		
-		reverseFound = false
+		reverseClash = ""
 
-		// check reverse link doesn't exist
+		reverseFound = false
+		// check reverse link doesn't exist, this breaks graph
 		_.each(tmpLinks, function(tmpLink2, i2){
 			if(tmpLink.source == tmpLink2.target && tmpLink.target == tmpLink2.source){
 				// qq("checking found match")
 				reverseFound = true
+				reverseClash = tmpLink.source + ">" + tmpLink.target 
 			}
-
 		})
-		
 
 		if(reverseFound == false){
 			linkOut = {}
@@ -317,7 +326,8 @@ function elastic_rawtoprocessed_sankey(id){
 			// reverse found, this causes Saneky charts to infinite loop recursion
 			// drop this entry and raise an error, then continue for valid data
 			ww(3,"Issue in Sankey graph id:"+id+", loop of source and dest  id:"+id+", Dropping data and continue")
-
+			
+			addSquareStatus(id, "warning", "Recursive Loop found, dropping: "+reverseClash)
 
 		}
 
@@ -326,9 +336,31 @@ function elastic_rawtoprocessed_sankey(id){
 
 	// qq("###### dataout.links")
 	// qq(dataout.links)
+	// {
+    //     "source": <node_id>,
+    //     "target": <node_id>,
+    //     "sF": "<node>",
+    //     "tF": "<node>",
+    //     "value": value
+    // }
 	
+
+
 	// qq("###### overall")
 	// qq(dataout)
+	// {
+	// 	"nodes": [{
+	// 			"node": 0,
+	// 			"name": "0"
+	// 		},{}],
+	// 	"links": [{
+	// 		"source": <node_id>,
+	// 		"target": <node_id>,
+	// 		"sF": "<field>",
+	// 		"tF": "<field>",
+	// 		"value": value
+	// 	},{}]
+
 
 
 	// sorting allows UI debugging easier
@@ -367,6 +399,8 @@ function elastic_graph_sankey(id){
 
 	var data = retrieveSquareParam(id, 'processeddata');
 
+
+	// handled by data processing, but safety catch here to prevent page breaking
 	var badData = false;
 	_.each(data.links, function(obj,i){
 		if(obj.source == obj.target){
@@ -374,11 +408,16 @@ function elastic_graph_sankey(id){
 			badData = true
 			return		
 		}
-
 	})
 	if(badData == true){
 		ww(0,"Issue in Sankey graph id:"+id+", source and destination are same, error in graph id:"+id)
 		return
+	}
+
+
+	// handled by 
+	if(data.nodes.length >= sankeyLinksLimit){
+		addSquareStatus(id, "warning", "Too many Nodes, some are not shown, consider drawing a smaller data set.")
 	}
 
 

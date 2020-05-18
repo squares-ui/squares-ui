@@ -1,4 +1,5 @@
 // SQUARES attributes 
+// SQUARES attributes 
 // Pr = Integer defining Pr square ID
 // id = unique id of square
 // Gt = String, taken from import_graphs()
@@ -181,6 +182,7 @@ var connectors_json = {
 		return toreturn;
 	},
 	handletodst: function(handle){
+		var toreturn;
 		$.each(this.local_json, function(k, v){
 			if(String(v['handle']) == String(handle)){
 				toreturn  = v['dst'];
@@ -190,6 +192,7 @@ var connectors_json = {
 		return toreturn;
 	},
 	handletousername: function(handle){
+		var toreturn
 		$.each(this.local_json, function(k, v){
 			if(String(v['handle']) == String(handle)){
 				toreturn  = v['username'];
@@ -199,6 +202,7 @@ var connectors_json = {
 		return toreturn;
 	},
 	handletoapikey: function(handle){
+		var toreturn
 		$.each(this.local_json, function(k, v){
 			if(String(v['handle']) == String(handle)){
 				toreturn  = v['apikey'];
@@ -208,6 +212,7 @@ var connectors_json = {
 		return toreturn;
 	},
 	handletox: function(handle, x){
+		var toreturn
 		$.each(this.local_json, function(k, v){
 			if(String(v['handle']) == String(handle)){
 				toreturn  = v[x];
@@ -217,6 +222,7 @@ var connectors_json = {
 		return toreturn;
 	},
 	getAttribute: function(handle, key){
+		var toreturn
 		$.each(this.local_json, function(k, v){
 			if(String(v['handle']) == String(handle)){
 				if(v.hasOwnProperty(key)){
@@ -278,10 +284,12 @@ function wipereset(){
 	url = {}
 	url.v = "1"
 	url.squares =  []
-	url.Zt = btoa("translate(431,311) scale(0.5)")
+	url.Zt = "translate(431,311) scale(0.5)"
 
-	updateurl();
+	updateurl()
 	
+	initialLoad()
+
 	addGraphConnector();
 	window.location.reload()
 
@@ -304,8 +312,10 @@ var screenLog = [];
 var container;
 var mouse = new THREE.Vector2(), INTERSECTED;
 
-
-
+// error status is a state, not a config, so store it here, and not in URL square definition
+var errorStatus = {}
+errorStatus['page'] = {"critical":[], "warning":[]}
+errorStatus['squares'] = {} // {1: {"critical":[], "warning":[]}, 2:{}}
 
 
 
@@ -338,26 +348,26 @@ if(hash
 				"id": 1,
 				"Pr": 0,
 				"Gt": "intro",
-				"Wi": [0, 0, 0],
+				"Wi": [],
 				"x": -1700,
 				"y": -1000
 			}, {
 				"id": 2,
 				"Pr": 1,
 				"Gt": "intro",
-				"Wi": [0, 0, 0],
+				"Wi": [],
 				"x": 1100,
 				"y": 200
 			}, {
 				"id": 3,
 				"Pr": 1,
 				"Gt": "intro",
-				"Wi": [0, 0, 0],
+				"Wi": [],
 				"x": 200,
 				"y": 1100
 			}
 		]
-	url.Zt = "dHJhbnNsYXRlKDE1MjkuOTM2ODIzOTMyOTQ1MSw4NjMuOTc1Mzc1MTY5NDIwNCkgc2NhbGUoMC41NzQzNDkxODk2NDc4MjUzKQ"
+	url.Zt = "translate(1529,863) scale(0.57)"
 
 	updateurl();
 }
@@ -800,7 +810,18 @@ function drawSquares(idlist) {
 				.on("click", function(d){ moveToBottom(d.id); })
 				.on("mousedown", function() { d3.event.stopPropagation(); })
 				;				
+			
 				
+			// Status
+			var status = menubarcontrols.append("img")
+				.attr("title", "Status")			
+				.classed("square_menu_icon", true)
+				.classed("square_menu_icon_status", true)
+				// .classed("svg__colour__warning", true)
+				// .classed("svg__colour__critical", true)
+				.attr("id", function(d){ return "square_status_img_"+d.id })
+				.on("mousedown", function() { d3.event.stopPropagation(); })
+				;					
 
 			// Delete
 			var deleteSquare = menubarcontrols.append("img")
@@ -885,6 +906,121 @@ function drawSquares(idlist) {
 
 }
 
+
+
+
+//////////////////////////////
+// error handling
+//////////////////////////////
+
+function addSquareStatus(id, status, tooltip){
+	
+	if(!errorStatus['squares'].hasOwnProperty(id)){
+		errorStatus['squares'][id] = {"critical":[], "warning":[]}
+	}
+
+	errorStatus['squares'][id][status] = _.reject(errorStatus['squares'][id][status], function(singleTooltip){
+		return tooltip == singleTooltip
+	})
+	errorStatus['squares'][id][status].push(tooltip)
+	renderSquareStatus(id, status)
+}
+
+function removeSquareStatus(id, status, tooltip){
+	
+	// cycle through all statuses, and remove where string match
+	errorStatus['squares'][id][status] = _.reject(errorStatus['squares'][id][status], function(singleTooltip){
+		return tooltip == singleTooltip
+	})
+	renderSquareStatus(id, status)
+}
+function wipeSquareStatus(ids){
+	
+	
+	
+	if(!ids.isArray){
+		ids = [ids]
+	}
+
+	_.each(ids, function(id){
+		qq("wiping errorStatus for id:"+id)
+		renderSquareStatus(id)
+		delete errorStatus['squares'][id]
+	})
+	
+}
+function renderSquareStatus(id){
+
+	// render can be called from general load, so might not have any issues logged for anything yet
+	if(errorStatus['squares'].hasOwnProperty(id)){
+		$('#square_status_img_'+id).removeClass("svg__colour__critical");
+		$('#square_status_img_'+id).removeClass("svg__colour__warning");
+		$('#square_status_img_'+id).removeClass("svg__colour__nofilter");
+
+		if(errorStatus['squares'][id].hasOwnProperty('critical') && errorStatus['squares'][id]['critical'].length > 0){
+			cssClass = "svg__colour__critical"
+		}else if(errorStatus['squares'][id].hasOwnProperty('warning') && errorStatus['squares'][id]['warning'].length > 0){
+			cssClass = "svg__colour__warning"
+		}else{
+			cssClass = "svg__colour__nofilter"
+		}
+		
+		$('#square_status_img_'+id).addClass(cssClass)
+
+		tooltip = [errorStatus['squares'][id]['critical'].join(", "), errorStatus['squares'][id]['warning'].join(", ")].join(" | ")
+		$('#square_status_img_'+id).prop('title', tooltip)
+	}
+	
+}
+
+
+
+
+function addPageStatus(id, status, tooltip){
+	errorStatus['page'][status] = _.reject(errorStatus['page'][status], function(singleTooltip){
+		return tooltip == singleTooltip
+	})
+	errorStatus['page'][status].push(tooltip)
+
+	renderPageStatus(id, status)
+}
+function removePageStatus(id, status, tooltip){
+	
+	// cycle through all statuses, and remove where string match
+	errorStatus['page'][status] = _.reject(errorStatus['page'][status], function(singleTooltip){
+		return tooltip == singleTooltip
+	})
+	renderPageStatus(id, status)
+}
+
+function renderPageStatus(id){
+
+	$('#pageStatus').removeClass("svg__colour__critical");
+	$('#pageStatus').removeClass("svg__colour__warning");
+	$('#pageStatus').removeClass("svg__colour__nofilter");
+
+	if(errorStatus['page']['critical'].length > 0){
+		cssClass = "svg__colour__critical"
+	}else if(errorStatus['page']['warning'].length > 0){
+		cssClass = "svg__colour__warning"
+	}else{
+		cssClass = "svg__colour__nofilter"
+	}
+	
+	$('#pageStatus').addClass(cssClass)
+
+	tooltip = [errorStatus['page']['critical'].join(", "), errorStatus['page']['warning'].join(", ")].join(" | ")
+	$('#pageStatus').prop('title', tooltip)
+
+}
+
+
+
+
+
+
+
+
 function setHoverInfo(id, data){
 
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+data+")");
@@ -955,8 +1091,14 @@ function drawinBoxes(ids){
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
 	
+	// update the status icon
+	// setSquareStatus(id, "normal")
+
 	for (var i in ids){
-	//	var item = url.squares[squarearraysearch(ids[i])];
+	
+		renderSquareStatus(ids[i])
+	
+		//	var item = url.squares[squarearraysearch(ids[i])];
 		var thisDate = new Date();
 		var thisEpoch = Math.floor(thisDate.getTime() / 1000); 
 		var thisOffset = thisDate.getTimezoneOffset() * 60;
@@ -1572,6 +1714,8 @@ function reloadData(ids){
 
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
 	
+	wipeSquareStatus(ids)
+
 	for (var i in ids){
 		ww(6, "Reloading / refreshing data for id:"+ids[i]+" as instructd by "+arguments.callee.caller.name);
 		if(GLB.square.reshowLoadingIcon == true){
@@ -1579,6 +1723,8 @@ function reloadData(ids){
 		}
 		deleteData(ids[i]); 
 	}	
+	
+
 	// start the data calculating
 	drawinBoxes(ids);
 }
@@ -1593,6 +1739,8 @@ function deleteData(id){
 	Lockr.rm('squaredata_'+id+"_rawdata");
 	Lockr.rm('squaredata_'+id+"_rawdata_");
 	Lockr.rm('squaredata_'+id+"_processeddata");		
+
+	wipeSquareStatus([id])
 
 }	
 
@@ -1795,6 +1943,15 @@ function retrieveSquareParam(id, key, recursive){
 		}else if(/^(raw|processed)data[a-zA-Z0-9_]*$/.test(key)){
 			//ww(6, "found '"+key+"' id:"+id+" key:"+key+" "+key+"="+Lockr.get('squaredata_'+id+'_processeddata'));
 			return Lockr.get('squaredata_'+id+'_'+key);
+		
+		}else if(key=="x" || key=="y"){
+			// if x or Y is missing, presume 0.  Helps cut down on URL size a inty bit
+			if(!item.hasOwnProperty(key)){
+				return 0
+			}else{
+				return item[key];
+			}
+
 		}else{
 			// no Gp, Pathbar can't handle it?
 			//ww(o, "Pr = 0, key = "+key+", no data found?");
@@ -1912,7 +2069,9 @@ function retrieveSquareParam(id, key, recursive){
 			return Lockr.get('squaredata_'+id+'_'+key);
 	}
 	
+	//nothing left to return, throw error
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"(ERROR "+id+", "+key+")");
+	return null
 
 }
 
@@ -2127,8 +2286,6 @@ function addGraphConnector(){
 	url.squares.push({
 			"id": newID ,
 			"Pr":0,
-			"x":0,
-			"y":0,
 			"Gt":"EditSquare",
 			"Gp": null,
 			"Wi": [lastBlockEnd,-900,0],
@@ -2152,10 +2309,6 @@ function editMe(id){
 
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
-
-
-
-
 	clearSquareBody(id);
 	window[graphs_functions_json.retrieveGraphParam("builtin_graphs", "EditSquare", "graph") ](id);
 
@@ -2178,100 +2331,82 @@ function editSquare(id){
 
 	var item = url.squares[squarearraysearch(id)];
 
-	
-	// moved to independent square type
-	// if($("#square_Wr_dropdown_"+id+" option:selected").val()){
-	// 	// "Wr" suggests this is a Window Refresh square, and therefore it can't be anything else.
-	// 	item.Wi = [];
-			
-	// 	item.Wi[0] = parseInt($("#square_We_dropdown_"+id+" option:selected").val());  			
-	// 	item.Wi[1] = parseInt($("#square_Ws_dropdown_"+id+" option:selected").val());  
+
+	// delete entire Window sub object
+	delete item.Wi;
+	if($("#square_We_dropdown_"+id+" option:selected").val() || $("#square_Ws_dropdown_"+id+" option:selected").val() || $("#square_Wr_dropdown_"+id+" option:selected").val()){
+		item.Wi = [];
 		
-	// 	if(parseInt($("#square_Wr_dropdown_"+id+" option:selected").val()) != 0){
-	// 		item.Wi[2] = parseInt($("#square_Wr_dropdown_"+id+" option:selected").val());
-	// 		// if Window Refresh is set, we... for this one time only... allow a (non root) square to have two mods from parent
-	// 		item.Gt = "UpdateCountdown";
-	// 	}	
-	// }else{
+		item.Wi[0] = parseInt($("#square_We_dropdown_"+id+" option:selected").val());  			
+		item.Wi[1] = parseInt($("#square_Ws_dropdown_"+id+" option:selected").val());  
+		
+		if(parseInt($("#square_Wr_dropdown_"+id+" option:selected").val()) != 0){
+			item.Wi[2] = parseInt($("#square_Wr_dropdown_"+id+" option:selected").val());
+			// if Window Refresh is set, we... for this one time only... allow a (non root) square to have two mods from parent
+			item.Gt = "UpdateCountdown";
+		}	
+
+	}
+
+	delete item.Gt;
+	if($('#square_graph_dropdown_'+id).val() != ""){
+		item.Gt = $("#square_graph_dropdown_"+id+" option:selected").val();
+	}
+
+	delete item.Ds;
+	// check that it wasn't just 'deleted')
+	if($('#square_Ds_textarea_'+id).val() != ""){
+		item.Ds = btoa($('#square_Ds_textarea_'+id).val());
+	}
+
+	// now handle "custom" flags, fields that are bespoke to that graph type
+	// should always start with "x_" which tells us to put this under "Cs"
+	delete item.Cs;
+
+	// ## This might get ugly.  JsonForm compiles a report on "submit" but we don't use their Submit method
+	// to move to JsonForm submit means rewriting ediqSquare to be 1 big form = big job = not today
+	// also I don't see how JsonForm handles images/tab layout the way I use it today
+	// but a likely rewrite in the future
 
 	
-		// normal square type
+	// apply input mapping to non checkbox
+	$('#square_editform_'+id+' *').filter(':input').not('input[type=checkbox]').each(function(){
 
-		// delete entire Window sub object
-		delete item.Wi;
-		if($("#square_We_dropdown_"+id+" option:selected").val() || $("#square_Ws_dropdown_"+id+" option:selected").val() || $("#square_Wr_dropdown_"+id+" option:selected").val()){
-			item.Wi = [];
-			
-			item.Wi[0] = parseInt($("#square_We_dropdown_"+id+" option:selected").val());  			
-			item.Wi[1] = parseInt($("#square_Ws_dropdown_"+id+" option:selected").val());  
-			
-			if(parseInt($("#square_Wr_dropdown_"+id+" option:selected").val()) != 0){
-				item.Wi[2] = parseInt($("#square_Wr_dropdown_"+id+" option:selected").val());
-				// if Window Refresh is set, we... for this one time only... allow a (non root) square to have two mods from parent
-				item.Gt = "UpdateCountdown";
+		
+		if(/^x_arr/.test(this.name)){
+			// field specific array, name needs "fixing"
+
+			if (!item.hasOwnProperty("Cs")) {
+				item.Cs = {}
+				item.Cs.array = []
+			}			
+			item.Cs.array.push(this.value)
+
+
+		}else if(/^x_/.test(this.name)){
+			// other stuff
+
+			if (!item.hasOwnProperty("Cs")) {
+				item.Cs = {}
+			}			
+			item.Cs[this.name] = this.value
+		}
+	});	
+	// Checkbox (jsonform Boolean) always has value=1, so now map input for checked
+	$('#square_editform_'+id+' *').filter('input[type=checkbox]:checked').each(function () {
+		if(/^x_/.test(this.name)){
+			if (!item.hasOwnProperty("Cs")) {
+				item.Cs = {}
 			}	
-	
+			var status = (this.checked ? $(this).val() : "");
+			//item.Cs[this.name] = (this.checked ? $(this).val() : "");
+			item.Cs[this.name] = true;
 		}
-	
-		delete item.Gt;
-		if($('#square_graph_dropdown_'+id).val() != ""){
-			item.Gt = $("#square_graph_dropdown_"+id+" option:selected").val();
-		}
-	
-		delete item.Ds;
-		// check that it wasn't just 'deleted')
-		if($('#square_Ds_textarea_'+id).val() != ""){
-			item.Ds = btoa($('#square_Ds_textarea_'+id).val());
-		}
-	
-		// now handle "custom" flags, fields that are bespoke to that graph type
-		// should always start with "x_" which tells us to put this under "Cs"
-		delete item.Cs;
-
-		// ## This might get ugly.  JsonForm compiles a report on "submit" but we don't use their Submit method
-		// to move to JsonForm submit means rewriting ediqSquare to be 1 big form = big job = not today
-		// also I don't see how JsonForm handles images/tab layout the way I use it today
-		// but a likely rewrite in the future
-
-		
-		// apply input mapping to non checkbox
-		$('#square_editform_'+id+' *').filter(':input').not('input[type=checkbox]').each(function(){
-
-			
-			if(/^x_arr/.test(this.name)){
-				// field specific array, name needs "fixing"
-
-				if (!item.hasOwnProperty("Cs")) {
-					item.Cs = {}
-					item.Cs.array = []
-				}			
-				item.Cs.array.push(this.value)
+	});
 
 
-			}else if(/^x_/.test(this.name)){
-				// other stuff
-
-				if (!item.hasOwnProperty("Cs")) {
-					item.Cs = {}
-				}			
-				item.Cs[this.name] = this.value
-			}
-		});	
-		// Checkbox (jsonform Boolean) always has value=1, so now map input for checked
-		$('#square_editform_'+id+' *').filter('input[type=checkbox]:checked').each(function () {
-			if(/^x_/.test(this.name)){
-				if (!item.hasOwnProperty("Cs")) {
-					item.Cs = {}
-				}	
-				var status = (this.checked ? $(this).val() : "");
-				//item.Cs[this.name] = (this.checked ? $(this).val() : "");
-				item.Cs[this.name] = true;
-			}
-		});
-	
 
 
-	// }
 
 	
 
@@ -2281,12 +2416,14 @@ function editSquare(id){
 	updateDataList = findAllChildren(id);
 	// add originating ID back in
 	updateDataList.push(id);	
+	
 	for (var i in updateDataList){
 		deleteData(updateDataList[i])
+		
 	}
 	// recreate data for children squares
-	
 	drawLines(everyID(), false);  //line colours have changed
+	wipeSquareStatus(updateDataList)
 	drawSquares(updateDataList);
 	drawinBoxes(updateDataList);
 	//hideOverlay();
@@ -2392,8 +2529,6 @@ function pivotToX(id){
 	// XXX remove port number, in config we should split that out as two fields? (or have a new field for the pivot address separate?)
 	elasticIP = dst.split(":")[0]
 
-
-
 	path = "https://"+elasticIP+"/app/kibana#/discover?"
 	urlStruct = "_g=" + rison.encode({
 		//"filters":[],
@@ -2450,6 +2585,55 @@ function pivotToX(id){
 
 
 }
+
+
+function pivotNewTab(id){
+
+	var to = calcGraphTime(id, 'We', 0)
+	var size = retrieveSquareParam(id, "Ws", true)
+
+	preDs = calcDs(id, [])
+	postDs = {"compare":[], "notexist":[]}
+
+	// loop each square's dataset
+	_.each(preDs, function(obj, i){
+		
+		// each square can have multi dimensional compare
+		_.each(obj['compare'], function(obj2,key2){
+			postDs['compare'].push(obj2)
+		})
+
+		// each square can have multi dimensional compare
+		_.each(obj['notexist'], function(obj2,key2){
+			postDs['notexist'].push(obj2)
+		})
+
+	})
+
+
+	newSquare = {}
+	newSquare.id = 1
+	newSquare.Pr = 0
+	newSquare.Gt = "DescribeSquare"
+	newSquare.CH = retrieveSquareParam(id, "CH")
+	newSquare.Wi = [to, size]
+	newSquare.Ds = btoa(JSON.stringify(postDs))
+	
+	newUrl = {}
+	newUrl.v = "1"
+	newUrl.squares =  [newSquare]
+	
+	newUrl.Zt = "translate(431,311) scale(0.5)"
+
+	existingUrl = window.location
+	newUrl =  existingUrl.protocol + "//" + existingUrl.hostname + ":" + existingUrl.port + existingUrl.pathname + "#" + btoa(JSON.stringify(newUrl))
+
+	window.open(newUrl);
+
+
+}
+
+
 
 // http://stackoverflow.com/questions/4187146/display-two-decimal-places-no-rounding
 // Math.floor with 'decimal places'
@@ -2741,15 +2925,6 @@ $( document ).ready(function() {
 
 
 
-	// AJAX The master_templates from disk
-	$.get( "./templates.json", function( data ) {
-		//master_templates = jQuery.parseJSON(data);
-		master_templates = data;
-		doTemplates();
-	});
-
-	
-
 	
 	
 	//
@@ -2766,12 +2941,29 @@ $( document ).ready(function() {
 			//ww(6,"zooooomed");
 			// move and scale the "squaregroup" for zoom effect. Floor it to shorten URL
 			squaregroup.attr("transform",  d3.event.transform)
-		
-			//squaregroup.attr("transform",  d3.zoomTransform(squaregroup.node()));
+
+			// squaregroup
+			// {"_groups":[[{"__zoom":{"k":0.43527531847787715,"x":545.0557806151778,"y":632.5716410660139}}]],"_parents":[{}]}
+
+			// squaregroup.attr("transform")			
+			// translate(543.0557806151778,629.5716410660139) scale(0.43527531847787715)
+
+			roundingZero = 1
+			roundingTwo = 100
+
+			zoomString = squaregroup.attr("transform")	
+			zoomRegex = /[0-9\.]+/g
+			zoomMatches = zoomString.match(zoomRegex)
+			
+			
+			newZoomString = "translate(" + Math.round((zoomMatches[0]) * roundingZero) / roundingZero + "," + Math.round((zoomMatches[1]) * roundingZero) / roundingZero + ") scale("+Math.round((zoomMatches[2]) * roundingTwo) / roundingTwo+")"
 
 			// save this zoom/transform base64 into the URL for pageload/bookmarks etc
-			url.Zt = btoa(squaregroup.attr("transform"));
+			url.Zt = newZoomString;
 		
+
+
+
 	}
 	function zoomEnd(){
 		updateurl();
@@ -2785,7 +2977,7 @@ $( document ).ready(function() {
 		.attr("id", "squaregroup")
 
 	if(url.Zt!=null){
-		var newTransform = atob(url.Zt).split(/[\(\) ,]/);;
+		var newTransform = url['Zt'].split(/[\(\) ,]/);;
 
 		zoom.transform(squaregroup, d3.zoomIdentity.translate(newTransform[1], newTransform[2]).scale(newTransform[5]))
 		zoom.transform(workspaceDiv, d3.zoomIdentity.translate(newTransform[1], newTransform[2]).scale(newTransform[5]))
@@ -2832,8 +3024,6 @@ $( document ).ready(function() {
 		// setTimeout for slower refresh, but better on low spec machines
 		setTimeoutThree(GLB.threejs.notRealTimeRenderFrequency);
 	}
-
-
 
 
 

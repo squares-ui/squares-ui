@@ -1,0 +1,18 @@
+/* https://blog.union.io/code/2017/08/10/img-svg-fill/
+ */
+
+
+ .svg__colour__nofilter{
+     filter: invert(0%)
+}
+.svg__colour__critical{
+    filter: invert(48%) sepia(79%) saturate(2000%) hue-rotate(320deg) brightness(80%) contrast(119%)
+}
+
+.svg__colour__safe{
+    filter: invert(48%) sepia(79%) saturate(2000%) hue-rotate(80deg) brightness(80%) contrast(119%)
+}
+
+.svg__colour__warning{
+    filter: invert(48%) sepia(49%) saturate(2000%) hue-rotate(20deg) brightness(150%) contrast(119%)
+}

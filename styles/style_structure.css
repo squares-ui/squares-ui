@@ -36,7 +36,7 @@
 
 		#workspaceDiv{
 		/* SVG */
-			position:absolute;
+			/* position:absolute; */
 			/* background-color:#121b2a; */
 			width:99%;
 		}
@@ -118,36 +118,7 @@
 									color: #black;
 									font-size:24px;
 								}
-								.square_menu_icon_clone{
-									content:url("../images/103_b.png");
-								}
-								.square_menu_icon_info{
-									content:url("../images/121_b.png");
-								}
-								.square_menu_icon_edit{
-									content:url("../images/128_b.png");
-								}
-								.square_menu_icon_reload{
-									content:url("../images/200_b.png");
-								}
-								.square_menu_icon_move{
-									content:url("../images/205_b.png");
-								}
-								.square_menu_icon_pivot{
-									content:url("../images/040_b.png");
-								}
-								.square_menu_icon_template{
-									content:url("../images/139_b.png");
-								}
-								.square_menu_icon_scale{
-									content:url("../images/088_b.png");
-								}
-								.square_menu_icon_delete{
-									content:url("../images/041_b.png");
-								}
-								.square_menu_icon_tobottom{
-									content:url("../images/140_b.png");
-								} 
+
 	
 							.square_menu_WeWs{
 								grid-area: 3 / 1 / 4 / 2;

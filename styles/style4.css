@@ -23,27 +23,7 @@ div{
 
 
 
-		.squaresmenu_wipereset{
-			content:url("../images/136_b.png");
-		}
-		.squaresmenu_addconnector{
-			content:url("../images/093_b.png");
-		}
-		.squaresmenu_update{
-			content:url("../images/052_b.png");
-		}
-		.squaresmenu_log{
-			content:url("../images/061_b.png");
-		}
-		.squaresmenu_save{
-			content:url("../images/075_b.png");
-		}
-		.squaresmenu_flush{
-			content:url("../images/138_b.png");
-		}
-		.squaresmenu_countelements{
-			content:url("../images/122_b.png");
-		}
+
 
 	#screenLog{
 		grid-area: 2 / 2 / 3 / 3;

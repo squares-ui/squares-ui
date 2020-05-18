@@ -127,12 +127,21 @@ function elastic_rawtoprocessed_cloud(id){
 			"count": val
 			
 		})
-		qq(key+": "+val+"/"+total)
+		// qq(key+": "+val+"/"+total)
 	})
 
 	data3 = _.sortBy(data3, function(o){
 		return o.size
 	}).reverse()
+
+	// cap at 100
+	limit = 100
+	
+	if(data3.length > limit){
+		addSquareStatus(id, "warning", "Too many nodes for id:"+id+", culling "+data3.length+"->"+limit)	
+		data3 = _.first(data3, limit)
+	}
+
 	saveProcessedData(id, '', data3);
 
 }

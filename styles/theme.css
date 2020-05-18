@@ -1,0 +1,67 @@
+
+.square_menu_icon{
+    height:46px;
+    width:46px;
+}
+
+.squaresmenu_wipereset{
+    content:url("../squares-ui-icons/159122-technology-icon-collection/svg/browser-17.svg"); */
+}
+.squaresmenu_addconnector{
+    content:url("../squares-ui-icons/159122-technology-icon-collection/svg/browser-8.svg");
+}
+.squaresmenu_update{
+    content:url("../squares-ui-icons/159122-technology-icon-collection/svg/browser-29.svg");
+}
+.squaresmenu_log{
+    content:url("../squares-ui-icons/159122-technology-icon-collection/svg/browser-5.svg");
+}
+.squaresmenu_save{
+    content:url("../squares-ui-icons/159122-technology-icon-collection/svg/browser-17.svg");
+}
+.squaresmenu_flush{
+    content:url("../squares-ui-icons/159122-technology-icon-collection/svg/browser-23.svg");
+}
+.squaresmenu_countelements{
+    content:url("../squares-ui-icons/215482-creative-outlines/svg/dial.svg");
+}
+.squaresmenu_status{
+    content:url("../squares-ui-icons/215482-creative-outlines/svg/heart.svg");
+}
+
+
+
+
+.square_menu_icon_clone{
+    content:url("../squares-ui-icons/126466-multimedia-collection/svg/copy.svg");
+}
+.square_menu_icon_info{
+    content:url("../squares-ui-icons/159687-interface-icon-assets/svg/list.svg");
+}
+.square_menu_icon_edit{
+    content:url("../squares-ui-icons/159687-interface-icon-assets/svg/edit.svg");
+}
+.square_menu_icon_reload{
+    content:url("../squares-ui-icons/126466-multimedia-collection/svg/reload.svg");
+}
+.square_menu_icon_move{
+    content:url("../squares-ui-icons/159687-interface-icon-assets/svg/move-1.svg");
+}
+.square_menu_icon_pivot{
+    content:url("../squares-ui-icons/159687-interface-icon-assets/svg/orientation.svg");
+}
+.square_menu_icon_template{
+    content:url("../squares-ui-icons/159687-interface-icon-assets/svg/organization.svg");
+}
+.square_menu_icon_scale{
+    content:url("../squares-ui-icons/159687-interface-icon-assets/svg/search.svg");
+}
+.square_menu_icon_delete{
+    content:url("../squares-ui-icons/126466-multimedia-collection/svg/garbage.svg");
+}
+.square_menu_icon_tobottom{
+    content:url("../squares-ui-icons/159687-interface-icon-assets/svg/transfer-4.svg");
+}
+.square_menu_icon_status{
+    content:url("../squares-ui-icons/215482-creative-outlines/svg/heart.svg");
+}

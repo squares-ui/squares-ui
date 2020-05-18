@@ -77,7 +77,7 @@ function graph_templates(id){
 
 
 
-	////////////////////////////////////
+	///////////////clone config from/////////////////////
 	clusterSection = square.append("div")
 		.classed("square_cluster_section", true)
 	clusterDiv = clusterSection.append("div")
@@ -119,7 +119,7 @@ function graph_templates(id){
 
 
 
-	////////////////////////////////////
+	//////////////////Clone children from//////////////////
 	clusterSection = square.append("div")
 		.classed("square_cluster_section", true)
 	clusterDiv = clusterSection.append("div")
@@ -163,7 +163,7 @@ function graph_templates(id){
 
 
 
-	////////////////////////////////////
+	///////////////////Move me to /////////////////
 	clusterSection = square.append("div")
 		.classed("square_cluster_section", true)
 	clusterDiv = clusterSection.append("div")
@@ -205,7 +205,7 @@ function graph_templates(id){
 
 
 
-	////////////////////////////////////
+	/////////////////Apply Favourite///////////////////
 	clusterSection = square.append("div")
 		.classed("square_cluster_section", true)
 	clusterDiv = clusterSection.append("div")
@@ -249,6 +249,40 @@ function graph_templates(id){
 		$("#square_template_apply_favourite").append("<input type='button' id='template_id_apply_favourite' value='Import Favourite' />");
 		$("#template_id_apply_favourite").bind("click",  function(){  importSquareFavourite(id, $('#template_apply_favourite').val())}  );
 
+
+
+	////////////////////////////////////
+	clusterSection = square.append("div")
+		.classed("square_cluster_section", true)
+	clusterDiv = clusterSection.append("div")
+		.classed("fleft", true);
+	clusterDiv.append("img")
+		.classed("square_cluster_image", true)
+		.classed("fleft", true)
+		.attr("src", "./images/239_b.png")
+
+	clusterDiv = clusterSection.append("div")
+		.classed("square_cluster_text", true)
+		.classed("fleft", true);
+
+		clusterDiv.append("div")
+			.classed("square_cluster_text", true)
+			.append("div")
+				.classed("fontsize", true)
+				.text("Pivot this square to a new browser Tab")
+			.append("div")
+			
+
+	clusterDiv = clusterSection.append("div")
+		.classed("square_cluster_text", true)
+		.classed("fleft", true)
+		
+		clusterDiv.append("div")
+			.attr("id", function(d){ return "square_template_pivot_new_root" })
+		
+
+		$("#square_template_pivot_new_root").append("<input type='button' id='template_pivot_new_root' value='Piot New Tab' />");
+		$("#template_pivot_new_root").bind("click",  function(){  pivotNewTab(id) }  );
 
 
 

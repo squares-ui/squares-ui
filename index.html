@@ -25,7 +25,6 @@
 	<script src="./lib/jquery.tablesorter.min.js"></script>
 	<script src="./lib/rison.js"></script>
 
-<!--        <script src="./lib/cors.js"></script>  -->
 
 	<script src="./lib/d3.parsets.js"></script>
 	<script src="./lib/highlight.min.js"></script>
@@ -44,12 +43,17 @@
 	<!-- <script src="./Three/OrbitControls.js"></script> -->
 	<script src="./lib/threex.rendererstats.js"></script>
 	<script src="./lib/stats.js"></script>
-
 	<script src="./config.js"></script>
+
+	
 	<link href="./styles/style4.css" rel="stylesheet" type="text/css">
 	<link href="./styles/style_structure.css" rel="stylesheet" type="text/css">
-	<link href="./styles/colours_oblivion.css" rel="stylesheet" type="text/css">
+	<!-- <link href="./styles/colours_oblivion.css" rel="stylesheet" type="text/css"> -->
 	<link href="./styles/bootstrap.css" rel="stylesheet" type="text/css">
+	
+	<link href="./styles/squares-ui.css" rel="stylesheet" type="text/css">
+	<link href="./styles/theme.css" rel="stylesheet" type="text/css">
+	<link href="./styles/user.css" rel="stylesheet" type="text/css">
 
 	<link rel="stylesheet" href="./alertify.js-0.3.11/themes/alertify.core.css" />
 	<link rel="stylesheet" href="./alertify.js-0.3.11/themes/alertify.default.css" id="toggleCSS" />	
@@ -63,6 +67,8 @@
 	
 	<script src="./lib/tsne.js"></script>
 	<script src="./lib/jstat.js"></script>
+
+	<script src="https://bogdan-lyashenko.github.io/js-code-to-svg-flowchart/dist/js2flowchart.js"></script>
 
 	<!-- https://realfavicongenerator.net/ -->
 	<link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
@@ -85,13 +91,14 @@
 	</div> 
 	
 
-
 	<div id="menu" class="squares_segment fleft">
 		<img class='squaresmenuslot fleft squaresmenu_wipereset'  onclick='wipereset()' alt='Reset' title='Clean and refresh page'/>
 		<img class='squaresmenuslot fleft squaresmenu_addconnector' onclick='addGraphConnector()' alt='showConnectors' title='Create new Connector' />
 		<img class='squaresmenuslot fleft squaresmenu_update' onclick='updaterefresh(); alertify.log("URL Refreshed")' alt='Refresh' title='Reload URL' />
 		<img class='squaresmenuslot fleft squaresmenu_log'   onclick='qq(url); alertify.log("URL Logged to Console")' alt='Log' title='Dump Squares config to Console' />
 		<img class='squaresmenuslot fleft squaresmenu_flush' onclick='Lockr.flush()' alt='Flush Data' title="Delete cached data, but don't disrupt page" />
+		<img class='squaresmenuslot fleft squaresmenu_status' id='pageStatus' name='pageStatus' onclick='' alt='Status' title="Status" />
+
 
 		<img class='squaresmenuslot fleft squaresmenu_countelements' onclick='udpateScreenLog(
 			"Squares: "+url.squares.length + " " +
@@ -113,6 +120,9 @@
 </div>
 
 <div id='hoverInfo'></div>
+
+
+
 
 </body>
 </html>

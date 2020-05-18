@@ -38,6 +38,8 @@ function elastic_completeform_countby(id, targetDiv){
                 "value":{}
 			}
 
+
+			
 			$(targetDiv).jsonForm(jsonform)
 
 		})
@@ -106,7 +108,7 @@ function elastic_rawtoprocessed_countby(id){
 
 	}
 	// datacounter = {"value1":134,"value2":227,...}
-	qq(datacounter)
+	// qq(datacounter)
 	
 	
 	
@@ -279,9 +281,14 @@ function elastic_graph_countby(id){
 
 
 	// ##################
-	qq(data.sigmahits)
+	
+	maxHits = 20;
 
 	_.each(data.sigmahits, function(obj,key){
+
+		if(obj.length>maxHits){
+			obj = _.first(obj,maxHits).join(", ")
+		}
 
 		clusterDiv = clusterSection.append("div")
 			.classed("square_countby", true)
@@ -290,7 +297,7 @@ function elastic_graph_countby(id){
 				.text("Values in Sigma range "+key+":")
 
 			clusterDiv.append("div")
-				.text(obj.join(","))
+				.text(obj)
 
 			clusterDiv.append("div")
 				.classed("clr", true)

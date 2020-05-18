@@ -72,7 +72,7 @@ function clickObjectsToDataset(id, compare, notexist){
 	
 	
 	cumulative = calcDs(id, [])
-
+	
 	
 	// loop each square's dataset
 	_.each(cumulative, function(obj, i){
@@ -337,17 +337,20 @@ function elastic_get_fields(dst, index, id){
 
 				//  'index' might have a wild card and therefore multiple descriptions to combine, so need to look through each returned index
 				_(data).each(function(obj, key){
+					
 					// now loop through document properties looking for all field names
 					_(obj.mappings.doc.properties).each(function(obj2,key2){
 						
 						// is field dynamic?  (a deeper dynamic type)
 						if(obj2.dynamic == "true"){
+
 							_.each(obj2['properties'], function(obj3,key3){
 								
 								if(!(obj3.type in fields)){
 									fields[obj3.type] = []
 								}
 								fields[obj3.type].push(key2+"."+key3)
+							
 							})
 
 						}else{
@@ -381,6 +384,8 @@ function elastic_get_fields(dst, index, id){
 				
 			},
 			error: function(error) {
+				
+				
 				switch(status) {
 					case 404: 
 						udpateScreenLog('#'+id+' remote path not found'); 
@@ -442,7 +447,11 @@ function elastic_prep_mappings(handle){
 			connectors_json.setAttribute(retrieveSquareParam(id, 'CH'), "mappings", results)
 			qq("Checking Mappings, NEEDED for :"+handle)
 			ww(7, "Connector "+retrieveSquareParam(id, 'CH')+" mappings now set")
+		}).catch(e => {
+			//setPageStatus(id, 'critical', 'Fail to "elastic_get_fields" for id:'+id+', ('+e+')');
 		})
+
+		
 	}else{
 		qq("Checking Mappings, not needed for :"+handle)
 	}
