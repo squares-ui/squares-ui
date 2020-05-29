@@ -8,7 +8,8 @@
 		"./elastic/elastic_rawoutput.js",
 		"./elastic/elastic_fieldvariance.js",
 		"./elastic/elastic_sunburst.js",
-		"./elastic/elastic_timemap.js"
+		"./elastic/elastic_timemap.js",
+		"./elastic/elastic_globe.js"
 
 	],
 	"wip":[

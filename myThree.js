@@ -83,7 +83,7 @@ function render_Three(){
 
 		if ( rect_square.bottom < 0 || rect_square.top  > threeRenderer.domElement.clientHeight ||
 			rect_square.right  < 0 || rect_square.left > (threeRenderer.domElement.clientWidth*1) ) {
-			ww(7, "square_"+square_id+" not in render scope");
+			//ww(7, "square_"+square_id+" not in render scope");
 			//continue;  // it's off screen
 		}
 

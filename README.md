@@ -120,11 +120,8 @@ Some graphs can only hold so many keys/nodes (i.e. a Sankey chart) therefore som
 
 # Known Bugs
 
+If you swap tabs for a long time then return to Squares-UI it can take time to 'recover' (up to 1 minute).  Any help debugging welcomed.
+
+Rarely, a square is created with a blip in it's config, sometimes refreshing the page, or recreating the square helps.
+
 Imperfect implementation of devicePixelRatio may affect 'retina screens' and OS font size changes
-
-Occassional page hangs, most recover but sometimes a tab needs to be closed then reopened (ctrl+shift+t), this is being investigated
-
-Some times a page refresh is needed, sometimes recreating a square is needed
-
-Due to a bug in Chromium, a div cannot support style elements overflow and height at the same time inside a foreighObject
-https://bugs.chromium.org/p/chromium/issues/detail?id=568614

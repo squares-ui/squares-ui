@@ -310,7 +310,8 @@ var wasMoved  =false;
 var screenLog = [];
 
 var container;
-var mouse = new THREE.Vector2(), INTERSECTED;
+
+var mouse;
 
 // error status is a state, not a config, so store it here, and not in URL square definition
 var errorStatus = {}
@@ -2840,96 +2841,12 @@ function qqLoggingChange(){
 
 $( document ).ready(function() {
 
-	
-	// correcturl();
-
-	threeRenderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
-	// // XXX goes crazy if OS fonts are 125%... needs reviewing!!!
-	// //threeRenderer.setPixelRatio(window.devicePixelRatio);
-
-	// //container = document.getElementById("workspacecontainer")
-	// //threeRenderer.setSize( container.clientWidth, container.clientHeight );
-
-	threeRenderer.domElement.id = 'workspacecanvas';
-	container = document.getElementById( 'workspacecontainer' );
-	container.appendChild( threeRenderer.domElement );
-
-
-	// // threeRenderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
-	// // // allow for screens of retina, or large OS font
-	// // const yourPixelRatio = window.devicePixelRatio
-	// // threeRenderer.setPixelRatio( 1/yourPixelRatio );
-	// // threeRenderer.domElement.id = 'workspacecanvas';
-	// // container = document.getElementById( 'workspacecontainer' );
-	// // container.appendChild( threeRenderer.domElement );
-
-
-
-
-	// set realx/realy for threeJS raycasting
-	$("#workspaceDiv").mousemove(function( event ) {
-		mouse.realx = ( event.clientX  ) ;
-		mouse.realy = ( event.clientY );
-		
-		
-	});
-	$("#workspaceDiv").mouseup(function( event ) {
-
-		for (var prop in threeScenes) {
-
-			if(!threeScenes.hasOwnProperty(prop)) continue;
-
-			var element = threeScenes[prop].userData.elementt;
-			var scene = threeScenes[prop];
-			var camera = threeScenes[prop].userData.camera;
-			var raycaster = threeScenes[prop].userData.raycaster;
-			var square_id = threeScenes[prop].userData.id;
-			let rect = element.getBoundingClientRect();
-			if ( rect.bottom < 0 || rect.top  > threeRenderer.domElement.clientHeight ||
-				rect.right  < 0 || rect.left > threeRenderer.domElement.clientWidth ) {
-				ww(7, "square_"+square_id+" not in render scope, RETURN");
-				continue;  // it's off screen
-			}
-			var width  = Math.floor(rect.right - rect.left);
-			var height = Math.floor(rect.bottom - rect.top);
-			var left   = Math.floor(rect.left);
-			var top    = Math.floor(rect.top);	
-			if(mouse.realx > rect.left && mouse.realx < rect.right && mouse.realy > rect.top && mouse.realy < rect.bottom){
-				// mouse is in this div/square
-				// qq("mouse is in "+scene.userData.id);
-				mouse.x = ((((mouse.realx - rect.left) / width ) * 2 ) - 1);
-				mouse.y = ((((mouse.realy - rect.top) / height ) * 2 ) - 1) * -1;
-
-				raycaster.setFromCamera( mouse, camera );
-				var intersects = raycaster.intersectObjects( scene.children );
-
-
-				ww(7, "INTERSECT for square_"+square_id+" has "+intersects.length+" matches");
-				if ( intersects.length > 0 ) {
-					//for(var i = 0 ; i < intersects.length ; i++ ){
-					//	if(intersects[i].object.sakeName != null && intersects[i].object.sakeName != ""){
-					//		intersects[i].object.sakeAction();
-					//	}
-					//}
-					if(intersects[0].object.sakeName != null && intersects[0].object.sakeName != ""){
-						intersects[0].object.sakeAction();
-					}
-					
-				}
-
-			}
-		}
-	});
-
-	
-
-
 
 	
 	
-	//
-	// d3 stuff
-	//
+	//////////////////////////////
+	// squares-ui / d3 stuff
+	//////////////////////////////
 	
 	var zoom = d3.zoom()
 		.scaleExtent([.03, 10])
@@ -2961,7 +2878,7 @@ $( document ).ready(function() {
 			// save this zoom/transform base64 into the URL for pageload/bookmarks etc
 			url.Zt = newZoomString;
 		
-
+			updateurl();
 
 
 	}
@@ -2983,7 +2900,6 @@ $( document ).ready(function() {
 		zoom.transform(workspaceDiv, d3.zoomIdentity.translate(newTransform[1], newTransform[2]).scale(newTransform[5]))
 	}
 
-
 	// used to store all the lines connecting squares		
 	linesgroup = d3.select("#squaregroup")
 		.append("g")
@@ -2997,33 +2913,145 @@ $( document ).ready(function() {
 	resize_workspace();
 
 	
-	compileGraphs();
-//	compileConnectors();
+	
 
-	if(GLB.threejs.showperformance == true){
-		rendererStats.domElement.style.position	= 'absolute'
-		rendererStats.domElement.style.left	= '0px'	
-		rendererStats.domElement.style.bottom	= '0px'
-		document.body.appendChild( rendererStats.domElement )
-		
-		stats0.showPanel( 0 );
-		stats0.domElement.style.cssText = 'position:absolute;top:0px;left:0px;';
-		document.body.appendChild( stats0.dom );
-		stats1.showPanel( 1 );
-		stats1.domElement.style.cssText = 'position:absolute;top:0px;left:80px;';
-		document.body.appendChild( stats1.dom );
-		stats2.showPanel( 2 );
-		stats2.domElement.style.cssText = 'position:absolute;top:0px;left:160px;';
-		document.body.appendChild( stats2.dom );
-	}
 
-	if(GLB.threejs.realTimeRender == true){
-		// set off real time rendering
-		animate_Three();
+
+	//////////////////////////////
+	// ThreeJS  stuff
+	//////////////////////////////
+	if(GLB.threejs.enabled == false){
+		// go straight to render
+		// otherwise wait until threeJS is loaded
+		compileGraphs();
 	}else{
-		// setTimeout for slower refresh, but better on low spec machines
-		setTimeoutThree(GLB.threejs.notRealTimeRenderFrequency);
+
+ 		$.getScript('https://threejs.org/build/three.js', function() { 
+			 
+			// qq("three.js loaded, loading further libraries") 
+			$.getScript('./lib/stats.js', function() { qq("stats.js loaded") });
+			$.getScript('./lib/threex.rendererstats.js', function() { qq("renderstats.js loaded") });
+			
+			$.getScript('./Three/dat.gui.js', function() { qq("dat.gui.js loaded") });
+			$.getScript('./Three/OrbitControls.js', function() { qq("OrbitControls.js loaded") });
+			
+			$.getScript('./myThree.js', function() { 
+				
+				qq("myThree.js loaded") 
+			
+				if(GLB.threejs.realTimeRender == true){
+					// set off real time rendering
+					animate_Three();
+				}else{
+					// setTimeout for slower refresh, but better on low spec machines
+					setTimeoutThree(GLB.threejs.notRealTimeRenderFrequency);
+				}
+				
+				compileGraphs();
+
+			});
+
+			threeRenderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+			// // XXX goes crazy if OS fonts are 125%... needs reviewing!!!
+			// //threeRenderer.setPixelRatio(window.devicePixelRatio);
+
+			// //container = document.getElementById("workspacecontainer")
+			// //threeRenderer.setSize( container.clientWidth, container.clientHeight );
+
+			threeRenderer.domElement.id = 'workspacecanvas';
+			container = document.getElementById( 'workspacecontainer' );
+			container.appendChild( threeRenderer.domElement );
+
+			//mouse = new THREE.Vector2(), INTERSECTED;
+			mouse = new THREE.Vector2();
+
+			// // threeRenderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+			// // // allow for screens of retina, or large OS font
+			// // const yourPixelRatio = window.devicePixelRatio
+			// // threeRenderer.setPixelRatio( 1/yourPixelRatio );
+			// // threeRenderer.domElement.id = 'workspacecanvas';
+			// // container = document.getElementById( 'workspacecontainer' );
+			// // container.appendChild( threeRenderer.domElement );
+		
+			// set realx/realy for threeJS raycasting
+			$("#workspaceDiv").mousemove(function( event ) {
+				mouse.realx = ( event.clientX  ) ;
+				mouse.realy = ( event.clientY );
+			});
+			$("#workspaceDiv").mouseup(function( event ) {
+
+				for (var prop in threeScenes) {
+
+					if(!threeScenes.hasOwnProperty(prop)) continue;
+
+					var element = threeScenes[prop].userData.elementt;
+					var scene = threeScenes[prop];
+					var camera = threeScenes[prop].userData.camera;
+					var raycaster = threeScenes[prop].userData.raycaster;
+					var square_id = threeScenes[prop].userData.id;
+					let rect = element.getBoundingClientRect();
+					if ( rect.bottom < 0 || rect.top  > threeRenderer.domElement.clientHeight ||
+						rect.right  < 0 || rect.left > threeRenderer.domElement.clientWidth ) {
+						ww(7, "square_"+square_id+" not in render scope, RETURN");
+						continue;  // it's off screen
+					}
+					var width  = Math.floor(rect.right - rect.left);
+					var height = Math.floor(rect.bottom - rect.top);
+					var left   = Math.floor(rect.left);
+					var top    = Math.floor(rect.top);	
+					if(mouse.realx > rect.left && mouse.realx < rect.right && mouse.realy > rect.top && mouse.realy < rect.bottom){
+						// mouse is in this div/square
+						// qq("mouse is in "+scene.userData.id);
+						mouse.x = ((((mouse.realx - rect.left) / width ) * 2 ) - 1);
+						mouse.y = ((((mouse.realy - rect.top) / height ) * 2 ) - 1) * -1;
+
+						raycaster.setFromCamera( mouse, camera );
+						var intersects = raycaster.intersectObjects( scene.children );
+
+
+						ww(7, "INTERSECT for square_"+square_id+" has "+intersects.length+" matches");
+						if ( intersects.length > 0 ) {
+							//for(var i = 0 ; i < intersects.length ; i++ ){
+							//	if(intersects[i].object.sakeName != null && intersects[i].object.sakeName != ""){
+							//		intersects[i].object.sakeAction();
+							//	}
+							//}
+							if(intersects[0].object.squaresName != null && intersects[0].object.squaresName != ""){
+								intersects[0].object.squaresAction();
+							}
+							
+						}
+
+					}
+				}
+			});
+
+			if(GLB.threejs.showperformance == true){
+				rendererStats.domElement.style.position	= 'absolute'
+				rendererStats.domElement.style.left	= '0px'	
+				rendererStats.domElement.style.bottom	= '0px'
+				document.body.appendChild( rendererStats.domElement )
+				
+				stats0.showPanel( 0 );
+				stats0.domElement.style.cssText = 'position:absolute;top:0px;left:0px;';
+				document.body.appendChild( stats0.dom );
+				stats1.showPanel( 1 );
+				stats1.domElement.style.cssText = 'position:absolute;top:0px;left:80px;';
+				document.body.appendChild( stats1.dom );
+				stats2.showPanel( 2 );
+				stats2.domElement.style.cssText = 'position:absolute;top:0px;left:160px;';
+				document.body.appendChild( stats2.dom );
+			}
+		
+
+
+		});	
 	}
+
+
+
+
+
 
 
 

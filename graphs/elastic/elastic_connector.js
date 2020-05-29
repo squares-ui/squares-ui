@@ -87,8 +87,6 @@ function clickObjectsToDataset(id, compare, notexist){
 			prettyObject['notexist'].push(obj2)
 		})
 
-
-
 	})
 
 	return prettyObject

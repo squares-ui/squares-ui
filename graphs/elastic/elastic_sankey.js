@@ -278,6 +278,7 @@ function elastic_rawtoprocessed_sankey(id){
 	for(var i = 0; i < nodes2.length; i++ ){
 		dataout.nodes.push({"node":i, "name": nodes2[i]})
 	}
+	dataout.nodes = _.sortBy(dataout.nodes, function(nodeObj){ return nodeObj.name }  )
 	// qq("###### dataout.nodes")
 	// qq(dataout.nodes)
 	// {
@@ -452,7 +453,7 @@ function elastic_graph_sankey(id){
 	sankey
 		.nodes(data.nodes)
 		.links(data.links)
-		.layout(32)
+		.layout(0)  // keeps nodes alphabetical, set to x (32?) if this gets messy. XXX convert to a jsonform question?
 		
 	
 		
