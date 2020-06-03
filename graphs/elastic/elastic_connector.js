@@ -188,7 +188,7 @@ function elastic_query_builder(id, from, to, dataset, fields, limit, incTime = t
 
 			key = _.keys(comp)[0]
 			val = _.values(comp)[0]
-
+ 
 			// qq(">>>>>>>>>>>>>")
 			// qq(comp)
 			// qq(key)
@@ -288,7 +288,7 @@ function elastic_connector(dst, index, id, query){
 				//}
 				
 				// get this data saved... code continues in here
-				saveRawData(id, validdata, "", response.hits.hits);
+				saveRawData(id, validdata, "", response);
 				
 			},
 			error: function (xhr, status) {
@@ -551,4 +551,231 @@ function elastic_test_connector(dst, index){
 			}
 		}
         });
+}
+
+
+
+function elastic_2d_aggregate(id, timesArray, thenBy, dataset, fields, limit, incTime = true, incNull = true){
+	// timesArray = [["2020-05-30T14:00:00+01:00", "2020-05-30T14:00:59+01:00"], [...], ]
+	// thenBy = "port"
+
+	//{
+	// "query": {
+	// 	"bool": {
+	// 	  "should": [
+	// 		{
+	// 		  "range": {
+	// 			"@timestamp": {
+	// 			  "gte": "2020-05-30T14:00:00+01:00",
+	// 			  "lt": "2020-05-30T14:00:59+01:00"
+	// 			}
+	// 		  }
+	// 		},{
+	// 		  "range": {
+	// 			"@timestamp": {
+	// 			  "gte": "2020-05-30T01:00:00+01:00",
+	// 			  "lt": "2020-05-30T02:01:59+01:00"
+	// 			}
+	// 		  }
+	// 		}
+	// 	  ],
+	// 	  "minimum_should_match" : 1
+	// 	}
+	//},
+	//"aggs" : {
+	// 	"time_ranges" : {
+	// 		"range" : {
+	// 		  "field" : "@timestamp",
+	// 		  "ranges" : [
+	// 			{
+	// 			  "from": "2020-05-30T14:00:00+01:00",
+	// 			  "to": "2020-05-30T14:00:59+01:00"
+	// 			},
+	// 			{
+	// 				"from": "2020-05-30T01:00:00+01:00",
+	// 				"to": "2020-05-30T02:01:59+01:00"
+	// 			}
+	// 		  ]
+	// 		},
+	// 		"aggs" : {
+	// 		  "port" : { "terms" : { "field" : "port" } }
+	// 		}
+	// 	  }
+	//   },    
+	//   "size": 0	
+	// }
+
+
+
+
+  
+  
+
+
+	// nesting field -> time_ranges
+	var query = {
+		"query": {
+		  "bool": {
+			"should": [],
+			"minimum_should_match" : 1,
+			"must":[],
+			"must_not": []
+		  }
+		},
+		"aggs" : {
+			"x_field" : { 
+				"terms" : { 
+					"field" : thenBy 
+				},
+				"aggs":{
+					"time_ranges" : {
+						"range" : {
+							"field" : "@timestamp",
+							"ranges" : []
+						}
+					}
+				}
+			}
+		},
+		"size": limit,
+		"_source": fields
+	  }
+
+	  handle = retrieveSquareParam(id, 'CH')
+
+	  mappings = connectors_json.getAttribute(handle, "mappings")
+
+
+
+	////////////////////////////////
+	// build range of times
+	////////////////////////////////
+
+	  _.each(timesArray, function(timeRange){
+
+		var from = timeRange[0]
+		var to = timeRange[1]
+
+		// Add time ranges to the data query
+		var shouldObj = {"range":{"@timestamp":{}}}
+		shouldObj['range']['@timestamp']['gte'] = from
+		shouldObj['range']['@timestamp']['lt'] = to
+		query['query']['bool']['should'].push(shouldObj)
+
+		// add time ranges to the aggregate bucket sizes
+		var aggObj = {"from":from, "to":to}
+		query['aggs']['x_field']['aggs']['time_ranges']['range']['ranges'].push(aggObj)
+
+	  })
+
+	  if(hasFieldKeyword(retrieveSquareParam(id, 'CH'), thenBy) == true){
+	  	// add the 2nd layer "and then by"
+		query['aggs']['x_field']['terms']['field'] = thenBy+".keyword"
+	  }else{
+		query['aggs']['x_field']['terms']['field'] = thenBy
+	  }
+
+
+
+	////////////////////////////////
+	// match
+	////////////////////////////////
+	if(dataset['compare']){
+
+		// Compile all the Must, as in "Must exist" or "must compare"
+		// "Must" means a match of key value pairs
+		_.each(dataset['compare'], function(comp){
+			//filter.must.push({"term": equal})
+	
+
+
+			key = _.keys(comp)[0]
+			val = _.values(comp)[0]
+ 
+			// qq(">>>>>>>>>>>>>")
+			// qq(comp)
+			// qq(key)
+			// // qq(mappings)
+
+
+			if(mappings){
+				
+				// if the key is 1d (e.g. sourceip) We just get the value
+				// if the key is 2d (e.g. destination_ip.countrycode2) we need to check index Mappings if it has the .keyword, which means going deep
+				key2 = key.split(".").join(".properties.").split('.').reduce(stringDotNotation, mappings)
+				
+				// if(mappings && mappings[key] && mappings[key]['fields'] && mappings[key]['fields']['keyword'] && mappings[key]['fields']['keyword']['type'] && mappings[key]['fields']['keyword']['type'] == "keyword"){
+				// 	miniObj = {}
+				// 	miniObj[key+".keyword"] = val
+				// 	miniObj = {"term": miniObj}
+				// 	query['query']['bool']['must'].push(miniObj)
+				// 	qq("using .keyword for non 2dimensional object")
+								
+				if (key2['fields'] && key2['fields']['keyword'] && key2['fields']['keyword']['type'] && key2['fields']['keyword']['type'] == "keyword" ){
+
+					miniObj = {}
+					
+
+						miniObj[key+".keyword"] = val
+					
+					
+					
+					miniObj = {"term": miniObj}
+					query['query']['bool']['must'].push(miniObj)
+					// qq("2d object using .keyword")
+
+
+				}else{
+					miniObj = {}
+		
+					miniObj[key] = val
+					
+					
+					miniObj = {"term": miniObj}
+					query['query']['bool']['must'].push(miniObj)
+					// qq("NOT using .keyword")
+					
+				}	
+				
+				// qq(miniObj)
+			}else{
+				ww(0, "No Mappings for id:"+id+", cannot build up Elastic Query, results will be wrong")
+			}
+		})
+
+	}
+
+
+	////////////////////////////////
+	// Not
+	////////////////////////////////
+	if(dataset['notexist']){
+		// Compile "Mustnot" as in "must not exist" (or null)
+		//
+		_.each(dataset['notexist'], function(notex){
+			query['query']['bool']['must_not'].push({"exists": {"field": notex}})
+		})
+	
+	}
+
+
+	  return query;
+
+}
+
+
+function hasFieldKeyword(handle, field){
+	// some fields 
+	mappings = connectors_json.getAttribute(handle, "mappings")
+	if(mappings){
+		key2 = field.split(".").join(".properties.").split('.').reduce(stringDotNotation, mappings)
+		if (key2['fields'] && key2['fields']['keyword'] && key2['fields']['keyword']['type'] && key2['fields']['keyword']['type'] == "keyword" ){
+			return true
+		}else{
+			return false
+		}
+	}else{	
+		ww("0", "hasFieldKeyword handle:"+handle+" field:"+field)
+		return false
+	}
 }

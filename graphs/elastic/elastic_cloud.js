@@ -93,7 +93,7 @@ function elastic_populate_cloud(id){
 
 function elastic_rawtoprocessed_cloud(id){
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'');
+	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
 	var totalrows = data.length
 
 	var field = retrieveSquareParam(id,"Cs")['x_field']

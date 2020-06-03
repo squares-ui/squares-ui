@@ -83,8 +83,8 @@ function elastic_populate_fieldvariance(id){
 
 function elastic_rawtoprocessed_fieldvariance(id){
 
-	// {"hits":{"hits":{"_source":{"answers:"value"}}}}
-	var data = retrieveSquareParam(id, 'rawdata_'+'');
+	
+	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
 	
 	// dataMid = {"answers":["a", "b", "a"]}
 	var dataMid = {}

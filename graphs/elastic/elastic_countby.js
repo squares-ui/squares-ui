@@ -72,7 +72,7 @@ function elastic_populate_countby(id){
 
 function elastic_rawtoprocessed_countby(id){
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'');
+	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
 	const firstBy = retrieveSquareParam(id,"Cs")['x_field']
 
 

@@ -116,23 +116,13 @@ var graphs_functions_json = {
 		$("#systemgraphshere").empty();
 		$("#connectorgraphshere").empty();
 
-//		var mySelect = $('#systemgraphshere');
-//		mySelect.append(
-//			$('<option></option>').val("-").html("--System Graphs--")
-//		);
-//
-//		// add the mandatory built in graphs
-//		$.each(graphs_functions_json.typeToShortnameList("builtin_graphs"), function(i, v){
-//			mySelect.append(
-//				$('<option></option>').val(v).html(v)
-//			);
-//		});
 
 		//
 		var mySelect = $('#connectorgraphshere');
 		mySelect.append(
 			$('<option></option>').val("-").html("--Connector Graphs--")
 		);
+
 		// find the graphs specific to this Connector tyep
 		connector_type = connectors_json.handletotype( retrieveSquareParam(id, 'CH') );
 		ww(4, "connector_type for "+id+" found as:"+connector_type+" toshortnamelist:"+graphs_functions_json.typeToShortnameList(connector_type));
@@ -252,7 +242,7 @@ var connectors_json = {
 
 
 function updateurl(){
-	// ee(" -> "+arguments.callee.name+"("+JSON.stringify(url)+")");
+	// ee(" -> "+arguments.callee.name);
 	
 	existingUrl = window.location
 	newUrl = existingUrl.protocol + "//" + existingUrl.hostname + ":" + existingUrl.port + existingUrl.pathname + "#" + btoa(JSON.stringify(url))
@@ -1474,7 +1464,6 @@ function cloneTemplate(caller, target){
 	//hideOverlay();
 	updateurl();
 
-	updateurl();
 
 }
 
@@ -2878,7 +2867,7 @@ $( document ).ready(function() {
 			// save this zoom/transform base64 into the URL for pageload/bookmarks etc
 			url.Zt = newZoomString;
 		
-			updateurl();
+			
 
 
 	}

@@ -136,7 +136,7 @@ function elastic_populate_treemapdimensions(id){
 
 function elastic_rawtoprocessed_treemapdimensions(id){
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'');
+	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
 	fields = []
 	
 	if(retrieveSquareParam(id,"Cs",true) !== undefined){

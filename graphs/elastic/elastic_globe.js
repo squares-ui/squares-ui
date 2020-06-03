@@ -11,8 +11,9 @@ graphs_functions_json.add_graphs_json({
 	}
 });
 
-var loc_country_globe_camera = new THREE.PerspectiveCamera(45, 1, 10, 120);
-
+if(GLB.threejs.enabled == true){
+	var loc_country_globe_camera = new THREE.PerspectiveCamera(45, 1, 10, 120);
+}
 
 function elastic_completeform_globe(id, targetDiv){
 
@@ -125,7 +126,7 @@ function elastic_populate_globe(id){
 function elastic_rawtoprocessed_globe(id){
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'');
+	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
 	
 	
 	incNull = false

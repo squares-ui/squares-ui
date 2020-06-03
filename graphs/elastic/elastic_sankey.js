@@ -143,7 +143,7 @@ function elastic_populate_sankey(id){
 
 function elastic_rawtoprocessed_sankey(id){
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'');
+	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
 	var dataout = {}
 
 	// to have ability to prevent UI overload with nodes, we need to limit

@@ -48,7 +48,7 @@ function elastic_populate_timemap(id){
 
 function elastic_rawtoprocessed_timemap(id){
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'');
+	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
 	fields = []
 
 	

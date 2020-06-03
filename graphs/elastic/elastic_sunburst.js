@@ -144,7 +144,7 @@ function elastic_populate_sunburst(id){
 
 function elastic_rawtoprocessed_sunburst(id){
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'');
+	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
 	fields = []
 	
 	if(retrieveSquareParam(id,"Cs",true) !== undefined){

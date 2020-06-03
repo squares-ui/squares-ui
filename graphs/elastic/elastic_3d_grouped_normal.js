@@ -98,7 +98,7 @@ function elastic_populate_3dGroupedNormal(id){
 
 function elastic_rawtoprocessed_3dGroupedNormal(id){
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'');
+	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits'];
 
 	const firstBy = retrieveSquareParam(id,"Cs")['x_first']
     const secondBy = retrieveSquareParam(id,"Cs")['x_second']

@@ -264,8 +264,8 @@ textarea {
 }
 path {
   fill:none;
-  stroke: #121b2a;
-  stroke-width:4;
+  /* stroke: #121b2a; */
+  /* stroke-width:4; */
 }
 path.arc{
   fill: #121b2a;

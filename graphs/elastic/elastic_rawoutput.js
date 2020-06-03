@@ -55,7 +55,7 @@ function elastic_populate_rawoutput(id){
 
 function elastic_rawtoprocessed_rawoutput(id){
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'');
+	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
 
 	dataout = _.map(data, function(row){
 		return row._source
