@@ -2,7 +2,6 @@ graphs_functions_json.add_graphs_json({
 	"elastic":{
 		"Globe":{
 			"completeForm": "elastic_completeform_globe",
-			
 			"populate":"elastic_populate_globe",
 			"rawtoprocessed":"elastic_rawtoprocessed_globe",
 			"graph":"elastic_graph_globe",
@@ -213,7 +212,7 @@ function elastic_rawtoprocessed_globe(id){
 
 	// calculate highest lon/lat for scaling
 	highest = 0
-	qq(data2)
+	// qq(data2)
 	
 	_.each(data2, function(obj,key){
 		values = _.values(obj)
@@ -224,8 +223,8 @@ function elastic_rawtoprocessed_globe(id){
 			scaled=summed
 		}else if(scale == "log"){
 			scaled = Math.log(summed)+1
-			qq(summed)
-			qq(Math.log(summed))
+			// qq(summed)
+			// qq(Math.log(summed))
 		}else if(scale == "inverse"){
 			scaled = 1/summed
 		}
@@ -248,7 +247,6 @@ function elastic_rawtoprocessed_globe(id){
 
 function elastic_graph_globe(id){
 
-
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
@@ -269,7 +267,7 @@ function elastic_graph_globe(id){
 	// var nodes = retrieveSquareParam(id, 'processeddata')['nodes']
 	var highest = retrieveSquareParam(id, 'processeddata')['highest']
 
-	var globeRadius = 30;
+	var globeRadius = grid_size/3;
 	// var markerRadius = 0.5;
 	var markerFurther = 1.1;  //multiplier * globeRadius
 
@@ -277,23 +275,22 @@ function elastic_graph_globe(id){
 	scene.userData.id = id;
 
 	var camera = masterCamera.clone();
-	camera.position.x = 60;
-	camera.position.y = 60;
-	camera.position.z = 60;
 	scene.userData.camera = camera;
 
 	var controls = new THREE.OrbitControls( camera);
 	controls.enableDamping = true;
 	controls.dampingFactor = 0.25;
 	controls.panningMode = THREE.HorizontalPanning;
-	controls.minDistance = 50;
-	controls.maxDistance = 100;
+	// controls.minDistance = 50;
+	// controls.maxDistance = 100;
 	controls.maxPolarAngle = Math.PI / 2;
 	controls.autoRotate = true;
 	controls.autoRotateSpeed = 0.06;
 	controls.userRotate = true;
 	controls.userRotateSpeed = 0.01;
+	controls.target = new THREE.Vector3(grid_size/2,grid_size/3,grid_size/2);
 	scene.userData.controls = controls;
+
 
 	var myLight = masterAmbientLight.clone();
 	scene.add(myLight);
@@ -320,9 +317,9 @@ function elastic_graph_globe(id){
 			var sphereGeometry = new THREE.SphereGeometry(globeRadius, 30, 30);
 
 			var sphere = new THREE.Mesh(sphereGeometry, material);
-			sphere.position.x=0;
-			sphere.position.y=0;
-			sphere.position.z=0;
+			sphere.position.x=grid_size/2;
+			sphere.position.y=grid_size/3;
+			sphere.position.z=grid_size/2;
 
 		
 			var scene = threeScenes["square_"+id];
@@ -341,17 +338,33 @@ function elastic_graph_globe(id){
 	_.each(data, function(obj,latlon){
 		
 		myY = 0
-		heightOffset = 0
+		heightOffset = grid_size/4
+		topOfLine = (globeRadius * 1.2)+ heightOffset 
 
-		
 		lat = parseFloat(latlon.split("|")[0])
 		lon = parseFloat(latlon.split("|")[1])
 
 		phi   = (90-lat)*(Math.PI/180)
 		theta = (lon+180)*(Math.PI/180)
-		
-		qq("lat: "+lat+ ", lon:"+lon)
-		qq("phi: "+phi+", theta:"+theta)
+		// qq("lat: "+lat+ ", lon:"+lon)
+		// qq("phi: "+phi+", theta:"+theta)
+
+		x = -topOfLine * Math.sin(phi)*Math.cos(theta) + grid_size/2
+		z =  topOfLine * Math.sin(phi)*Math.sin(theta) + grid_size/2
+		y =  topOfLine * Math.cos(phi) + grid_size/3
+
+		// draw the cocktail stick
+		var points = [];
+		points.push( new THREE.Vector3( grid_size/2, grid_size/3, grid_size/2 ) );
+		points.push( new THREE.Vector3( x,y,z ) );
+		var material = new THREE.LineBasicMaterial({
+			color: 0xffffff,
+			transparent: true,
+			opacity: 0.3
+		});
+		var geometry = new THREE.BufferGeometry().setFromPoints( points );
+		var line = new THREE.Line( geometry, material );
+		scene.add( line );
 
 		_.each(obj, function(obj2,key2){
 
@@ -363,9 +376,9 @@ function elastic_graph_globe(id){
 			
 
 
-			x = -farOutness * Math.sin(phi)*Math.cos(theta)
-			z =  farOutness * Math.sin(phi)*Math.sin(theta)
-			y =  farOutness * Math.cos(phi)
+			x = -farOutness * Math.sin(phi)*Math.cos(theta) + grid_size/2
+			z =  farOutness * Math.sin(phi)*Math.sin(theta) + grid_size/2
+			y =  farOutness * Math.cos(phi) + grid_size/3
 
 			mySize = 0.3
 

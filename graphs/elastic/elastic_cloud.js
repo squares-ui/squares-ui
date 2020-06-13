@@ -72,7 +72,8 @@ function elastic_populate_cloud(id){
 
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
-	
+	var timesArray = [[from, to]]
+
 	Ds = clickObjectsToDataset(id)
 	
 	
@@ -80,11 +81,14 @@ function elastic_populate_cloud(id){
 	//var fields = ["@timestamp", "type", "client_ip", "method", "port", "server_response"];
 	var fields=[retrieveSquareParam(id,"Cs",true)['x_field']]
 
-	var limit = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'dft_limit');
-	limit = 10000
-	
+	var limit = 1;
+	var stats = false
+	var statField = null
+	var incTime = true
+	urlencode = false
 
-	var query = elastic_query_builder(id, from, to, Ds, fields, limit, true);
+
+	var query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode)
 
 	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
 }
@@ -93,56 +97,29 @@ function elastic_populate_cloud(id){
 
 function elastic_rawtoprocessed_cloud(id){
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
-	var totalrows = data.length
+	// count into [{"name":"bob", "size":1}. {}]
 
-	var field = retrieveSquareParam(id,"Cs")['x_field']
-	// count into {"first":1, "second":15}	
+	var data = retrieveSquareParam(id, 'rawdata_'+'')['aggregations']['time_ranges']['buckets'][0]['field']['buckets']
 
-
-	var data2 = _.countBy(data, function(obj){
-		return field.split('.').reduce(stringDotNotation, obj._source)
-		//return obj._source[field]
-	})
-
-	var max = _.max(_.each(data2, function(val, key){  return val }))
-	
-	var total = _.reduce(_.values(data2), function(memo, num){ return memo + num; }, 0);
-
-
-	// turn into array of objects
-	var data3 = []
 	var bigfontsize = 120 // biggest font for 20 chars?
 
-	_.each(data2, function(val, key){
-		//data3.push({"text":key, "size":(val/totalrows)*100})
-		
-		
-		
-		
-		data3.push({
-			"text":key.substring(0, 15), 
-			"size":Math.floor((val/max)*bigfontsize),
-			"fullText": key,
-			"count": val
-			
-		})
-		// qq(key+": "+val+"/"+total)
+
+	var max = _.max(data, function(obj){
+		return obj['doc_count']
+	})
+	
+	dataout = []
+	_.each(data, function(obj){
+		//miniobject
+		mo = {}
+		mo['text'] = obj['key']
+		mo['size'] = Math.floor((obj['doc_count']/max['doc_count'])*bigfontsize)
+		mo['fullText'] = obj['key']
+		mo['count'] = obj['doc_count']
+		dataout.push(mo)
 	})
 
-	data3 = _.sortBy(data3, function(o){
-		return o.size
-	}).reverse()
-
-	// cap at 100
-	limit = 100
-	
-	if(data3.length > limit){
-		addSquareStatus(id, "warning", "Too many nodes for id:"+id+", culling "+data3.length+"->"+limit)	
-		data3 = _.first(data3, limit)
-	}
-
-	saveProcessedData(id, '', data3);
+	saveProcessedData(id, '', dataout);
 
 }
 

@@ -59,6 +59,7 @@ function elastic_completeform_fieldvariance(id, targetDiv){
 
 
 function elastic_populate_fieldvariance(id){
+
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	
 	var to = calcGraphTime(id, 'We', 0)
@@ -99,6 +100,8 @@ function elastic_rawtoprocessed_fieldvariance(id){
 
 	var totalRows = _.size(data)
 
+	var mappings = connectors_json.getAttribute(retrieveSquareParam(id, 'CH'), "mappings")
+	// qq(mappings)
 
 	//populate every field from every record into one big array
 	_.each(data, function(obj,key){
@@ -144,6 +147,10 @@ function elastic_rawtoprocessed_fieldvariance(id){
 		}
 		dataOut[key].occurancePercentage = Math.ceil((_.size(obj) / totalRows ) * 100)
 		dataOut[key].occurance = Math.ceil(_.size(obj))
+		if(mappings.hasOwnProperty(key)){
+			dataOut[key].type = mappings[key]['type']
+		}	
+
 	})	
 
 
@@ -175,6 +182,10 @@ function elastic_rawtoprocessed_fieldvariance(id){
 	})
 
 
+
+	// this is a very noisy graphy type, delete raw data always
+	ww(id, " Clearing raw data for "+id);
+	Lockr.rm('squaredata_'+id+"_rawdata");
 
 
 	saveProcessedData(id, '', dataOut);
@@ -210,7 +221,7 @@ function elastic_graph_fieldvariance(id){
 	var header = table.append("thead").append("tr");
 	header
 		.selectAll("th")
-		.data(["Field", "Sample", "Occurance %", "Variance %"])
+		.data(["Field", "Type", "Sample", "Occurance %", "Variance %"])
 	.enter()
 		.append("th")
 		.classed("fontsize", true)
@@ -220,7 +231,7 @@ function elastic_graph_fieldvariance(id){
 	//$("#square_"+id+"_table").find('tbody').append("<tr><td>111</td><td>111</td><td>111</td></tr>");
 	_.each(data, function(obj,key){
 		
-		clickObject = {"y": 1000, "Gt":"Sunburst", "Cs":{"array":[key]}}
+		clickObject = {"y": 1000, "Gt":"PieChart", "Cs":{"array":[key]}}
 
 		if(obj.samples.length == 5){
 			obj.samples.push("[...]")
@@ -232,13 +243,13 @@ function elastic_graph_fieldvariance(id){
 		}
 		samplesHover = obj.samples.join(", ")
 
-		$("#square_"+id+"_table").find('tbody').append("<tr><td onclick='childFromClick("+retrieveSquareParam(id,"Pr",false)+", "+JSON.stringify(clickObject)+") ' >"+key+"</td><td title='"+samplesHover+"'>"+samples+"</td><td>"+obj['occurance']+" ("+obj['occurancePercentage']+"%)</td><td>"+obj['variance']+" ("+obj['variancePercentage']+"%)</td><tr>");
+		$("#square_"+id+"_table").find('tbody').append("<tr><td onclick='childFromClick("+retrieveSquareParam(id,"Pr",false)+", "+JSON.stringify(clickObject)+") ' >"+key+"</td0><td>"+obj['type']+"</td><td title='"+samplesHover+"'>"+samples+"</td><td>"+obj['occurance']+" ("+obj['occurancePercentage']+"%)</td><td>"+obj['variance']+" ("+obj['variancePercentage']+"%)</td><tr>");
 
 
 	})
 
 	$("#square_"+id+"_table").tablesorter({
-		sortList: [[2,1], [3,2]]
+		sortList: [[3,1], [4,2]]
 		
 	});
 

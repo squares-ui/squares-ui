@@ -115,6 +115,8 @@ function elastic_populate_treemapdimensions(id){
 	
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
+	var timesArray = [[from, to]]
+
 	Ds = clickObjectsToDataset(id)
 
 	fields = []
@@ -122,10 +124,15 @@ function elastic_populate_treemapdimensions(id){
 		fields.push(key)
 	})	
 
-	var limit = 10000;
-	var query = elastic_query_builder(id, from, to, Ds, fields, limit, true);
+	var limit = 1;
+	var stats = false
+	var statField = ""
+	var incTime = true
+	urlencode = false
 
-	
+
+	var query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode)
+
 
 	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
 }
@@ -136,7 +143,7 @@ function elastic_populate_treemapdimensions(id){
 
 function elastic_rawtoprocessed_treemapdimensions(id){
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
+	var data = retrieveSquareParam(id, 'rawdata_'+'')['aggregations']['time_ranges']['buckets'][0]['field']['buckets']
 	fields = []
 	
 	if(retrieveSquareParam(id,"Cs",true) !== undefined){
@@ -159,26 +166,8 @@ function elastic_rawtoprocessed_treemapdimensions(id){
 		}
 	}
 
-	data = _.map(data, function(row){
 
-		thisRow = []
-		_.each(fields, function(field){
-			//thisRow.push(row['_source'][field])
-			
-			result = field.split('.').reduce(stringDotNotation, row['_source'])
-			// qq("field for id:"+id+" "+field+" = "+result)
-
-			
-			thisRow.push(result)
-		})
-		return thisRow;
-	})
-
-
-	dataout = arrayOfArrayToFlareChildren(data, {"name":"", "children":[]}, scale)
-
-	saveProcessedData(id, '', dataout);
-
+	saveProcessedData(id, '', elasticToFlare(data, scale))
 }
 
 
@@ -203,17 +192,31 @@ function elastic_graph_treemapdimensions(id){
 	
 	const firstBy = retrieveSquareParam(id,"Cs")['x_first']
 	const secondBy = retrieveSquareParam(id,"Cs")['x_second']
-	var data = retrieveSquareParam(id, 'processeddata');
-
-
-	const treemap = d3.treemap()
-		.size([width, height])
-		.padding(1);
+	
+	// ['children'][0] is for the first bucket, timerange, so just load it
+	var data = retrieveSquareParam(id, 'processeddata')['children'][0]
 
 	color = d3.scaleOrdinal().range(d3.schemeCategory20c);
 
+	const treemap = d3.treemap()
+		.size([width, height])
+		.padding(1)
+		;
+
+	
+	// qq("#### data")
+	// _.each(data, function(obj,key){ qq(obj)})
+	// qq(data)
+
+	
 	const root = d3.hierarchy(data, (d) => d.children)
 		.sum((d) => d.size);
+
+	
+	// qq("#### root")
+	_.each(root, function(obj,key){ 
+		// qq(key+" "+simpleStringify(obj))
+	})
 
 	const tree = treemap(root);
 
@@ -244,16 +247,21 @@ function elastic_graph_treemapdimensions(id){
 			//clickObject = btoa('[{"term":{"'+firstBy+'":"'+d.parent.data.name+'"}}, {"term":{"'+secondBy+'":"'+d.data.name+'"}}]');
 			//childFromClick(id, {"y": 1000, "Ds": clickObject} );
 
+			qq("----------keys")
+			qq(retrieveSquareParam(id,"Cs",true)['array'])
+			qq(retrieveSquareParam(id,"Cs",true)['array'].length)
+
+			qq(d.ancestors().reverse().map(d => d.data.name))
+			qq(d.ancestors().reverse().map(d => d.data.name).length)
+			
+
+
 			if(retrieveSquareParam(id,"Cs",true) !== undefined){
 				if(retrieveSquareParam(id,"Cs",true)['array'] !== null ){
 
 					keys = retrieveSquareParam(id,"Cs",true)['array']
 					vals = d.ancestors().reverse().map(d => d.data.name)
-					vals.shift() // remove root val for the Flare
-
-					qq("keys and vals")
-					qq(keys)
-					qq(vals)
+					//vals.shift() // remove root val for the Flare
 
 					if(keys.length != vals.length){
 						ww(0, "Treemap, diff length found id:"+d.id)
@@ -270,8 +278,8 @@ function elastic_graph_treemapdimensions(id){
 						}else{
 							miniObj = {}
 							miniObj[keys[i]] = vals[i]
-							qq("pushing")
-							qq(miniObj)
+							// qq("pushing")
+							// qq(miniObj)
 							clickObject.compare.push(miniObj)
 						}
 					}

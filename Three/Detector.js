@@ -48,7 +48,7 @@ Detector = {
     parameters = parameters || {};
 
     parent = parameters.parent !== undefined ? parameters.parent : document.body;
-    id = parameters.id !== undefined ? parameters.id : 'oldie';
+    var id = parameters.id !== undefined ? parameters.id : 'oldie';
 
     domElement = Detector.getWebGLErrorMessage();
     domElement.id = id;

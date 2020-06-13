@@ -127,7 +127,7 @@ function elastic_populate_sankey(id){
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	Ds = clickObjectsToDataset(id)
 	
-	qq(Ds)
+	// qq(Ds)
 	
 	fields = []
 	_.each(retrieveSquareParam(id,"Cs",true)['array'], function(key,num){

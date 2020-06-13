@@ -14,69 +14,105 @@ graphs_functions_json.add_graphs_json({
 
 function elastic_completeform_tsnejs(id, targetDiv){
 	
-	const jsonform = {
-		"schema": {
-			"custom_first": {
-				"type": "string",
-				"title": "First", 
-				"enum": []
-			},
-			"custom_second": {
-				"type": "string",
-				"title": "Second", 
-				"enum": []
-			},
-			"custom_third": {
-				"type": "string",
-				"title": "Third", 
-				"enum": []
-			}
-		},
-		"form": [
-		  {
-				"key": "custom_first",
-		  },
-		  {
-				"key": "custom_second",
-		  },
-		  {
-				"key": "custom_third",
-		  }
-		]
-	}
-
 	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
 	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
 
 	elastic_get_fields(dst, connectionhandle, id)
 		.then(function(results){
 	
-			jsonform.schema.custom_first.enum = results
-			jsonform.schema.custom_second.enum = results
-			jsonform.schema.custom_third.enum = results
+			var dropdownFields = []
+			
+			// _.omit keys of data types we dont want, or _.pick the ones we do, i.e. omit "text", or pick "ip"
+			subResults = _.omit(results, "")
+			_.each(subResults, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
+			dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
+
+			const jsonform = {
+				"schema": {
+					"x_arr": {
+						"type":"array",
+						"maxItems": 4,
+						"minItems": 1,
+						"items":{
+							"type": "object",
+							"properties":{
+								"field":{
+									"title": "field",
+									"type": "string",
+									"enum": dropdownFields,
+								}
+							}	
+						}
+					}
+				},
+				"form": [
+					{
+				 		"type": "array",
+						 "notitle": true,
+						 "items": [{
+							"key": "x_arr[]",				 	  		
+						 
+						}], 
+				   	}
+				],
+				"value":{}
+			}	
+
+			if(retrieveSquareParam(id,"Cs",false) !== undefined){
+				if(retrieveSquareParam(id,"Cs",false)['array'] !== null ){
+					jsonform.value = {}
+					jsonform.value['x_arr'] = []
+					_.each(retrieveSquareParam(id,"Cs",false)['array'], function(key,num){
+						jsonform.value['x_arr'].push({"field": key})
+					})
+				}
+				
+				if(retrieveSquareParam(id,"Cs",false)[' x_null']){
+					jsonform.form[1]['value'] = 1
+				}
+
+				if(retrieveSquareParam(id,"Cs",false)['x_scale']){
+					jsonform.form[2]['value'] = retrieveSquareParam(id,"Cs",false)['x_scale']
+				}
+
+			}else{
+				//create default layout
+				jsonform.value['x_arr'] = []
+				jsonform.value['x_arr'].push({})
+				
+				jsonform.form[1]['value'] = 1
+
+				jsonform.form[2]['value'] = "log"
+
+
+			}
+
+
 			$(targetDiv).jsonForm(jsonform)
 
 		})
+
+
 }
 
 
 function elastic_populate_tsnejs(id){
-	
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
-	
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
-	var Ds = calcDs(id, []);
 	
+	Ds = clickObjectsToDataset(id)
 
-	firstBy = retrieveSquareParam(id,"Cs")['custom_first']
-	secondBy = retrieveSquareParam(id,"Cs")['custom_second']
-	thirdBy = retrieveSquareParam(id,"Cs")['custom_third']
-	var fields=[firstBy, secondBy, thirdBy]
-	
+	// fields = clickObjectsToDataset(id)
+	fields = []
+	_.each(retrieveSquareParam(id,"Cs",true)['array'], function(key,num){
+		fields.push(key)
+	})
+
 	var limit = 10000;
-	var query = elastic_query_builder(from, to, Ds, fields, limit, null);
+
+	var query = elastic_query_builder(id, from, to, Ds, fields, limit, true);
 
 	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
 }
@@ -84,57 +120,58 @@ function elastic_populate_tsnejs(id){
 
 function elastic_rawtoprocessed_tsnejs(id){
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'');
+	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
+	fields = []
+	var Cs = {}
+	var dataout = []
 
-	const firstBy = retrieveSquareParam(id,"Cs")['custom_first']
-	const secondBy = retrieveSquareParam(id,"Cs")['custom_second']
-	const thirdBy = retrieveSquareParam(id,"Cs")['custom_third']
+	if(retrieveSquareParam(id,"Cs",true) !== undefined){
+		Cs = retrieveSquareParam(id,"Cs",true)
 
-
-
-    // t-sne relies on scalar not nominal.  So for nominal I will count as % the rarity of user columns to find "odd" and place together?
-    
-    //// for each field from user, work out total count and % of rest
-	dataCount = {}
-	dataCount.first = {}
-	dataCount.second = {}
-	dataCount.third = {}
-	_.each(data, function(row){
-		if(dataCount.first[row._source[firstBy]] == undefined){
-			dataCount.first[row._source[firstBy]] = 0;
+		if(Cs['array'] !== null ){
+			fields = Cs['array']
 		}
-		dataCount.first[row._source[firstBy]]++
 
-		if(dataCount.second[row._source[secondBy]] == undefined){
-			dataCount.second[row._source[secondBy]] = 0;
+		incNull = false
+		if(Cs.hasOwnProperty('x_null')){
+			incNull = Cs.x_null
 		}
-		dataCount.second[row._source[secondBy]]++
-
-		if(dataCount.third[row._source[thirdBy]] == undefined){
-			dataCount.third[row._source[thirdBy]] = 0;
+		
+		scale = "log"
+		if(Cs.hasOwnProperty('x_scale')){
+			scale = Cs.x_scale
 		}
-		dataCount.third[row._source[thirdBy]]++
 
-	})
+
+	}
+
 
 	
-    // for (const [keyx, valuex] of Object.entries(dataCount)) {
-    //     for (const [keyy, valuey] of Object.entries(valuex)) {
-    //         for (const [keyz, valuez] of Object.entries(valuey)) {	
-				
 
 
-	// 		}
-	// 	}
-	// }
+	_.each(data, function(row){
+		qq("--")
+		qq(row)
+		
+		var miniArray = []
 
-	data3 = _.map(data, function(row){
-		return [dataCount.first[row._source[firstBy]] / data.length, dataCount.second[row._source[secondBy]] / data.length, dataCount.third[row._source[thirdBy]] / data.length ]
+		_.each(fields, function(field){
+			qq("field")
+			if(row['_source'][field] != null){
+				miniArray.push(  row['_source'][field] )
+				miniArray.push(  row['_source'][field] )
+				miniArray.push(  row['_source'][field] )
+			}
+		})
+		
+		if(miniArray.length > 0){
+			dataout.push(miniArray)
+		}
 
 	})
 
 	// nested_data = array, needs to be wrapped
-	saveProcessedData(id, '', data3);
+	saveProcessedData(id, '', dataout);
 
 }
 
@@ -164,7 +201,7 @@ function elastic_graph_tsnejs(id){
 	//data = [[1.0, 0.1, 0.2], [0.1, 1.0, 0.3], [0.2, 0.1, 1.0]];
 	//qq(data)
 
-	data = [[139.69171,35.6895,"Tokyo",38001.018,392],[77.21667,28.66667,"Delhi",25703.168,356],[77.21667,28.66667,"Delhi",25703.168,356]]
+	// data = [[139.69171,35.6895,"Tokyo",38001.018,392],[77.21667,28.66667,"Delhi",25703.168,356],[77.21667,28.66667,"Delhi",25703.168,356]]
 	
 	const firstBy = retrieveSquareParam(id,"Cs")['custom_first']
 	const secondBy = retrieveSquareParam(id,"Cs")['custom_second']
@@ -174,11 +211,11 @@ function elastic_graph_tsnejs(id){
 	var tsne = new tsnejs.tSNE({
 		dim: 2,
 		perplexity: 30,
-});
+	});
 
 	tsne.initDataDist(data)
 
-	for(var k = 0; k < 1; k++) {
+	for(var k = 0; k < 10; k++) {
 		qq("stepping")
 		tsne.step(); // every time you call this, solution gets better
 	}	

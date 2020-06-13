@@ -9,45 +9,90 @@
 	"dft_limit":10000,
 	"favourites":[
 		{	
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145c",
+			"printable": "Event by Capture",
+			"Gt": "PieChart",
+			"Cs":{"array":["syslog-host","event_type"],"x_scale":"log"}
+		},{	
 			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145b",
 			"printable": "Local Origin",
-			"Gt": "Sunburst",
-			"Cs":{"array":["local_orig"],"x_scale":"log", "x_null":true}
+			"Gt": "PieChart",
+			"Cs":{"array":["local_orig"],"x_scale":"log"}
 		},{	
-			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145c",
-			"printable": "Service -> Connection State",
-			"Gt": "Sankey",
-			"Cs":{"array":["service","connection_state_description"],"x_scale":"log", "x_null":true}
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145m",
+			"printable": "Trend of Event Types",
+			"Gt": "Trend",
+			"Cs":{"x_field":"event_type","x_windowSlide":"TheWindowSize","x_windows":"8"}
 		},{	
-			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145d",
-			"printable": "SourceIP->DestIP:Port",
-			"Gt": "Sankey",
-			"Cs":{"array":["source_ip","destination_ip","destination_port"],"x_scale":"log", "x_null":true}
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145n",
+			"printable": "Trend of Event Types (Daily)",
+			"Gt": "Trend",
+			"Cs":{"x_field":"event_type","x_windowSlide":"Daily","x_windows":"8"}
+		},{	
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145k",
+			"printable": "Hosts to Ports",
+			"Gt": "TreemapDimensions",
+			"Cs":{"array":["source_ip","destination_port"],"x_scale":"log"}
+		},{				
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145l",
+			"printable": "Bytes xFer/Port/Protocol",
+			"Gt": "TreemapCandles",
+			"Cs":{"array":["protocol","destination_port"],"x_candle":"total_bytes","x_scale":"log","x_null":true}
 		},{	
 			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145e",
-			"printable": "Event Type, Source, Dest",
-			"Gt": "Sunburst",
-			"Cs":{"array":["event_type","source_ip","destination_ip"],"x_scale":"log", "x_null":true}
+			"printable": "Connection States",
+			"Gt": "PieChart",
+			"Cs":{"array":["connection_state_description","destination_port"],"x_scale":"log"}
 		},{	
-			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145f",
-			"printable": "SSL/TLS",
-			"Gt": "Sunburst",
-			"Cs":{"array":["destination_port","version","validation_status"],"x_scale":"log", "x_null":true}
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145o",
+			"printable": "Trend DNS",
+			"Gt": "Trend",
+			"Cs":{"x_field":"query_type_name","x_windowSlide":"TheWindowSize","x_windows":"8"}
+		},{	
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145d",
+			"printable": "DNS Queries",
+			"Gt": "PieChart",
+			"Cs":{"array":["rejected","query_type_name","highest_registered_domain"],"x_scale":"linear"}
 		},{	
 			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145g",
 			"printable": "PKI Certs",
-			"Gt": "Sunburst",
-			"Cs":{"array":["certificate_signing_algorithm","issuer_organization","certificate_common_name"],"x_scale":"log", "x_null":true}
+			"Gt": "Sankey",
+			"Cs":{"array":["validation_status","certificate_key_algorithm","certificate_key_length"],"x_scale":"log","x_null":true}
+		},{	
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145p",
+			"printable": "Trend of SSL/TLS Connection",
+			"Gt": "Trend",
+			"Cs":{"x_field":"version","x_windowSlide":"TheWindowSize","x_windows":"8"}
 		},{	
 			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145h",
-			"printable": "Destination and Bytes",
-			"Gt": "Sunburst",
-			"Cs":{"array":["destination_geo.continent_code","destination_geo.country_code2","seen_bytes"],"x_scale":"log", "x_null":true}
+			"printable": "SSL/TLS Connections",
+			"Gt": "Sankey",
+			"Cs":{"array":["version","cipher","resumed"],"x_scale":"log"}
+		},{	
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145f",
+			"printable": "VHost by Country",
+			"Gt": "PieChart",
+			"Cs":{"array":["virtual_host","destination_geo.country_name"],"x_scale":"log"}
 		},{	
 			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145i",
-			"printable": "Method IP and Status",
-			"Gt": "Sunburst",
-			"Cs":{"array":["method","status","destination_ip","uri"],"x_scale":"log", "x_null":true}
+			"printable": "HTTP Response Codes",
+			"Gt": "Sankey",
+			"Cs":{"array":["method","status_code"],"x_scale":"linear"}
+		},{	
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145j",
+			"printable": "Files",
+			"Gt": "TreemapDimensions",
+			"Cs":{"array":["source","mimetype"],"x_scale":"log"}
+		},{	
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145q",
+			"printable": "Geo by Connection state",
+			"Gt": "Globe",
+			"Cs":{"x_lat":"destination_geo.latitude","x_lon":"destination_geo.longitude","x_track":"connection_state_description","x_scale":"log","x_null":true}
+		},{	
+			"uid": "elastic_a3dcb4d229de6fde0db5686dee47145r",
+			"printable": "Geo by Port",
+			"Gt": "Globe",
+			"Cs":{"x_lat":"destination_geo.latitude","x_lon":"destination_geo.longitude","x_track":"destination_port","x_scale":"log"}
 		}
 	]
 

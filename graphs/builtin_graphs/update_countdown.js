@@ -22,7 +22,7 @@ function completeform_updatecountdown(id, targetDiv){
 	elastic_get_fields(dst, connectionhandle, id)
 		.then(function(results){
 	
-			times = [10,30,120,300,900,3600,43200,86400]
+			var times = [10,30,120,300,900,3600,43200,86400]
 
 			jsonFormEnum = []
 			titleMap = {}
@@ -32,7 +32,7 @@ function completeform_updatecountdown(id, targetDiv){
 				titleMap[time] = countSeconds(time)
 			})
 
-			qq(titleMap)
+			// qq(titleMap)
 
 			const jsonform = {
 				"schema": {
@@ -157,7 +157,7 @@ function graph_updatecountdown(id){
 			    .transition()
 			      .each(fieldTransition);
 			
-			epoch = Math.floor(new Date().getTime() / 1000);
+			var epoch = Math.floor(new Date().getTime() / 1000);
 
 			if( newPercentage < oldPercentage){
 				// into next cycle

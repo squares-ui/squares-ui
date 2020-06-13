@@ -13,20 +13,46 @@ graphs_functions_json.add_graphs_json({
 
 function elastic_completeform_rawoutput(id, targetDiv){
 
-	const jsonform = {}
-
 	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
 	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
 
-	// elastic_get_fields(dst, connectionhandle, id)
-	// 	.then(function(results){
+	elastic_get_fields(dst, connectionhandle, id)
+		.then(function(results){
 	
-	// 		jsonform.schema.x_field.enum = results
-	// 		$(targetDiv).jsonForm(jsonform)
+			const jsonform = {
+				"schema": {
+					"x_count":{
+						"type": "integer",
+						"title": "Rows",
+						"default": 4,
+						"minimum": 2,
+						"maximum": 6
+					}
+				},
+				"form": [
+				  {
+					"key": "x_count"
+			
+				  }
+				],
+				"value":{
+				}
+                
+			}
 
-	// 	})
+			if(retrieveSquareParam(id,"Cs",false) !== undefined){
+				if(retrieveSquareParam(id,"Cs",false)['x_count'] !== undefined){
+					jsonform.value.x_count = retrieveSquareParam(id,"Cs",false)['x_count']
+				}else{
+					jsonform.value.x_count = 5
+				}
+			}else{
+				jsonform.value.x_count = 5
+			}
 
+			$(targetDiv).jsonForm(jsonform)
 
+		})
 
 
 }
@@ -43,8 +69,12 @@ function elastic_populate_rawoutput(id){
 	var fields = [];  // use this to see all fields in raw output
 	//var fields = ["@timestamp", "type", "client_ip", "method", "port", "server_response"];
 	
-
-	var limit = 100;
+	var limit = 5;
+	if(retrieveSquareParam(id,"Cs",false) !== undefined){
+		if(retrieveSquareParam(id,"Cs",false)['x_count'] !== undefined){
+			tlimit = retrieveSquareParam(id,"Cs",false)['x_count']
+		}
+	}
 
 	var query = elastic_query_builder(id, from, to, Ds, fields, limit, null);
 

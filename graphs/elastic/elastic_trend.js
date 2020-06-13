@@ -11,7 +11,7 @@ graphs_functions_json.add_graphs_json({
 	}
 });
 
-sankeyLinksLimit = 180
+
 
 function elastic_completeform_trend(id, targetDiv){
 
@@ -102,15 +102,9 @@ function elastic_populate_trend(id){
 	
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
-	
-	Ds = clickObjectsToDataset(id)
-	qq(Ds)
-
-
 	var timesArray = []
 	var windowSlide = retrieveSquareParam(id,"Cs",true)['x_windowSlide']
 	var windowSize = 0;
-
 	if(windowSlide == "TheWindowSize"){
 		windowSize = (to-from)
 	}else if(windowSlide == "Daily"){
@@ -120,20 +114,23 @@ function elastic_populate_trend(id){
 	}else if(windowSlide == "Monthly"){
 		windowSize = 60*60*24*7*28
 	}
-
 	for (var i = 0 ; i < retrieveSquareParam(id,"Cs",true)['x_windows'] ; i++){
-
-		//timesArray.push([from - (i*windowSize), to - (i*windowSize)])
-
-		timesArray.push([moment.unix(from - (i*windowSize)).format(), moment.unix(to - (i*windowSize)).format()])
-
+		timesArray.push([from - (i*windowSize), to - (i*windowSize)])
 	}
-		
-	var limit = 0;
-	var fields = []
-	var thenBy=retrieveSquareParam(id,"Cs",true)['x_field']
-	
-	var query = elastic_2d_aggregate(id, timesArray, thenBy, Ds, fields, limit, incTime = true, incNull = true)
+
+	Ds = clickObjectsToDataset(id)
+	// qq(Ds)
+
+	var fields = [retrieveSquareParam(id,"Cs",true)['x_field']]
+	var limit = 1;
+	var stats = false
+	var statField = ""
+	var incTime = true
+	var urlencode = false
+
+
+	var query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode)
+
 
 	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
 
@@ -142,23 +139,53 @@ function elastic_populate_trend(id){
 
 function elastic_rawtoprocessed_trend(id){
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'')
-	var dataout = []
+	var data = retrieveSquareParam(id, 'rawdata_'+'')['aggregations']['time_ranges']['buckets']
+	var dataMid = {}
+	scale = "linear"
 
-	_.each(data['aggregations']['x_field']['buckets'], function(result){
 
-		miniObj = {"name": result['key'], "data":[]}
-		var miniArray = []
+	_.each(data, function(timerange){
 
-		_.each(result['time_ranges']['buckets'], function(bucket){
-			miniArray.push(   {"from_as_string":bucket['from_as_string'], "count":bucket['doc_count']  }   )
+		// miniObj = {"name": result['key'], "data":[]}
+		// var miniArray = []
+
+		_.each(timerange['field']['buckets'], function(results){
+			// miniArray.push(   {"from_as_string":bucket['from_as_string'], "count":bucket['doc_count']  }   )
+		
+			if(!dataMid.hasOwnProperty(results['key'])){
+				dataMid[results['key']] = {}
+			}
+			dataMid[results['key']][timerange['from_as_string']] = results['doc_count']
+		
+		
 		})
 
-		miniObj['data'] = miniArray
-		dataout.push(miniObj)
+		// miniObj['data'] = miniArray
+		// dataout.push(miniObj)
+	})
+	// qq(dataMid)
+
+
+	dataOut = []
+	_.each(dataMid, function(values,field){
+		// mini array
+		
+		tmpArr = []
+		_.each(values, function(v, k){
+			var mo = {}
+			mo['from_as_string'] = k
+			mo['count'] = v
+			tmpArr.push(mo)	
+		})
+		dataOut.push({"name":field, "data":tmpArr})
+
 	})
 
-	saveProcessedData(id, '', dataout);
+
+	// qq(dataOut)
+	saveProcessedData(id, '', dataOut);
+
+
 
 }
 

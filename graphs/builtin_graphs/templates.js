@@ -242,7 +242,7 @@ function graph_templates(id){
 		favourites = connectors_json.handletox(retrieveSquareParam(id, "CH"), "favourites");
 		_.each(favourites, function(favourite){
 			mySelectt.append(
-				$('<option></option>').val(favourite.uid).html(favourite.printable)
+				$('<option></option>').val(favourite.uid).html(favourite.printable+" ("+favourite.Gt+")")
 			);	
 		})
 

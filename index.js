@@ -212,7 +212,7 @@ var connectors_json = {
 		return toreturn;
 	},
 	getAttribute: function(handle, key){
-		var toreturn
+		var toreturn = null
 		$.each(this.local_json, function(k, v){
 			if(String(v['handle']) == String(handle)){
 				if(v.hasOwnProperty(key)){
@@ -883,8 +883,8 @@ function drawSquares(idlist) {
 	
 	
 	for (var i in idlist){
-		id = idlist[i]
-		graphLoading(id);
+		
+		graphLoading(idlist[i]);
 
 	}
 
@@ -967,24 +967,27 @@ function renderSquareStatus(id){
 
 
 
-function addPageStatus(id, status, tooltip){
+function addPageStatus(status, tooltip){
+	// status = critical, warning
+
+
 	errorStatus['page'][status] = _.reject(errorStatus['page'][status], function(singleTooltip){
 		return tooltip == singleTooltip
 	})
 	errorStatus['page'][status].push(tooltip)
 
-	renderPageStatus(id, status)
+	renderPageStatus(status)
 }
-function removePageStatus(id, status, tooltip){
+function removePageStatus(status, tooltip){
 	
 	// cycle through all statuses, and remove where string match
 	errorStatus['page'][status] = _.reject(errorStatus['page'][status], function(singleTooltip){
 		return tooltip == singleTooltip
 	})
-	renderPageStatus(id, status)
+	renderPageStatus(status)
 }
 
-function renderPageStatus(id){
+function renderPageStatus(){
 
 	$('#pageStatus').removeClass("svg__colour__critical");
 	$('#pageStatus').removeClass("svg__colour__warning");
@@ -1130,8 +1133,23 @@ function drawinBoxes(ids){
 
 		}else if( thisWe !=null || thisWs !=null || retrieveSquareParam(ids[i], "Gt") !=null || retrieveSquareParam(ids[i], "Ds") !=null ){	
 			// I have no data and I differ, time to get my data created
-			ww(6, "drawInBoxes() populating #"+ids[i]+": "+ connectors_json.handletotype( retrieveSquareParam(ids[i], 'CH')) +" "+retrieveSquareParam(ids[i], "Gt"));
-			window[graphs_functions_json.retrieveGraphParam(connectors_json.handletotype( retrieveSquareParam(ids[i], 'CH')), retrieveSquareParam(ids[i], "Gt") , "populate") ](ids[i]);
+			
+			// for non "builtin" graphs, 'mappings' is needed to construct the query
+			mappings = connectors_json.getAttribute(retrieveSquareParam(ids[i], 'CH'), "mappings")
+			
+			if(graphs_functions_json.get_graphs_json()['builtin_graphs'].hasOwnProperty(retrieveSquareParam(ids[i], "Gt"))   ||   mappings != null){
+				ww(6, "drawInBoxes() populating #"+ids[i]+": "+ connectors_json.handletotype( retrieveSquareParam(ids[i], 'CH')) +" "+retrieveSquareParam(ids[i], "Gt"));
+				window[graphs_functions_json.retrieveGraphParam(connectors_json.handletotype( retrieveSquareParam(ids[i], 'CH')), retrieveSquareParam(ids[i], "Gt") , "populate") ](ids[i]);
+			}else{
+				let unchangableI = ids[i]
+				let timeout = 200
+				ww(6, "drawInBoxes() had no mappings for id:"+ids[i]+", trying again in "+timeout+"ms");
+				setTimeout(function(){ 
+					drawinBoxes([unchangableI])
+				}, timeout);
+
+			}
+
 
 		}else if(classOf(retrieveSquareParam(ids[i], "processeddata")) == "Object" 
 		|| classOf(retrieveSquareParam(ids[i], "processeddata")) == "Array" ){
@@ -2255,6 +2273,10 @@ function editNewConnector(id){
 	}
 	// recreate data for children squares
 
+	// do it here on load, also do it during new square creation
+	handle = retrieveSquareParam(id, 'CH')
+	elastic_prep_mappings(handle)	
+
 	drawLines(everyID(), false);  //line colours have changed
 	drawSquares(updateDataList);
 	drawinBoxes(updateDataList);
@@ -2288,9 +2310,7 @@ function addGraphConnector(){
 	drawLines(everyID(), false);  //line colours have changed
 	updateurl();
 
-	// do it here on load, also do it during new square creation
-	handle = retrieveSquareParam([newID], 'CH')
-	elastic_prep_mappings(handle)
+
 
 }
 
@@ -2775,7 +2795,7 @@ function initialLoad(){
 	drawinBoxes(everyID());
 
 	for(var i in tmpEveryID){
-		id = tmpEveryID[i]
+		var id = tmpEveryID[i]
 		
 		if(retrieveSquareParam(id, 'Pr') == 0){
 			// I'm a root, ensure my database "mappings" are prepared for speed
@@ -2918,15 +2938,23 @@ $( document ).ready(function() {
  		$.getScript('https://threejs.org/build/three.js', function() { 
 			 
 			// qq("three.js loaded, loading further libraries") 
-			$.getScript('./lib/stats.js', function() { qq("stats.js loaded") });
-			$.getScript('./lib/threex.rendererstats.js', function() { qq("renderstats.js loaded") });
+			$.getScript('./lib/stats.js', function() { 
+				//qq("stats.js loaded") 
+			});
+			$.getScript('./lib/threex.rendererstats.js', function() { 
+				//qq("renderstats.js loaded")
+			});
 			
-			$.getScript('./Three/dat.gui.js', function() { qq("dat.gui.js loaded") });
-			$.getScript('./Three/OrbitControls.js', function() { qq("OrbitControls.js loaded") });
+			$.getScript('./Three/dat.gui.js', function() {
+				//qq("dat.gui.js loaded")
+			});
+			$.getScript('./Three/OrbitControls.js', function() { 
+				//qq("OrbitControls.js loaded") 
+			});
 			
 			$.getScript('./myThree.js', function() { 
 				
-				qq("myThree.js loaded") 
+				//qq("myThree.js loaded") 
 			
 				if(GLB.threejs.realTimeRender == true){
 					// set off real time rendering
@@ -3039,7 +3067,28 @@ $( document ).ready(function() {
 
 
 
+	// document.addEventListener("visibilitychange", function() {
+	// 	var today = new Date();
+	// 	var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+	// 	var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+	// 	var dateTime = date+' '+time;
+		
+	// 	if (document.visibilityState === 'visible') {
+	// 		ww(1, "visible at :"+dateTime)
+	// 	} else {
+	// 		ww(1, "hidden  at :"+dateTime)
+	// 	}
+	// });
 
+	// setInterval(function(){
+	// 	var today = new Date();
+	// 	var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+	// 	var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+	// 	var dateTime = date+' '+time;
+	
+	// 	ww(1, "checkin at :"+dateTime)
+
+	// }, 10000);
 
 
 

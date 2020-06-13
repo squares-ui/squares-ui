@@ -6,15 +6,24 @@ var stats0 = new Stats();
 var stats1 = new Stats();
 var stats2 = new Stats();
 
-
-//https://raw.githubusercontent.com/mrdoob/three.js/master/examples/webgl_interactive_cubes.html
-var masterAmbientLight = new THREE.AmbientLight( 0xffffff );
-var masterCamera = new THREE.PerspectiveCamera(45, 1, 1, 1000);
-
-var grid_size = 200;
+var grid_size = 2000;
 var grid_cuts = 10;
 var gridCenterLine = 0x45656;
 var gridLines = 0x45656;
+
+//https://raw.githubusercontent.com/mrdoob/three.js/master/examples/webgl_interactive_cubes.html
+var masterAmbientLight = new THREE.AmbientLight( 0xffffff );
+
+var masterCamera = new THREE.PerspectiveCamera(45, 1, 1, 15000);
+cameraDist = 1.4
+masterCamera.position.x = grid_size*cameraDist;
+masterCamera.position.y = grid_size*cameraDist;
+masterCamera.position.z = grid_size*cameraDist;
+//masterCamera.lookAt(new THREE.Vector3(grid_size/2,grid_size/3,grid_size/2))
+
+
+
+
 
 var masterGridXY = new THREE.GridHelper(grid_size, grid_cuts, gridCenterLine, gridLines);
 masterGridXY.rotation.x = Math.PI/2;

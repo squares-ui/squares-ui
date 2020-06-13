@@ -1,18 +1,18 @@
 graphs_functions_json.add_graphs_json({
 	"elastic":{
-		"Sunburst":{
-			"completeForm": "elastic_completeform_sunburst",			
-			"processForm": "elastic_processform_sunburst",			
-			"populate": "elastic_populate_sunburst",
-			"rawtoprocessed":"elastic_rawtoprocessed_sunburst",
-			"graph":"elastic_graph_sunburst",
-			"about": "Sunburst hits by field.",
+		"PieChart":{
+			"completeForm": "elastic_completeform_piechart",			
+			"processForm": "elastic_processform_piechart",			
+			"populate": "elastic_populate_piechart",
+			"rawtoprocessed":"elastic_rawtoprocessed_piechart",
+			"graph":"elastic_graph_piechart",
+			"about": "PieChart hits by field.",
 		}
 	}
 });
 
 
-function elastic_completeform_sunburst(id, targetDiv){
+function elastic_completeform_piechart(id, targetDiv){
 
 	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
 	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
@@ -67,7 +67,7 @@ function elastic_completeform_sunburst(id, targetDiv){
 				   	},
 					{
 						"key":"x_null",
-						"inlinetitle": "Include null/undefined ?",
+						"inlinetitle": "Include all null results ?",
 						"notitle": true,
 					},
 					{
@@ -118,12 +118,13 @@ function elastic_completeform_sunburst(id, targetDiv){
 }
 
 
-function elastic_populate_sunburst(id){
+function elastic_populate_piechart(id){
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
-	
+	var timesArray = [[from, to]]
+
 	Ds = clickObjectsToDataset(id)
 
 	// fields = clickObjectsToDataset(id)
@@ -132,9 +133,14 @@ function elastic_populate_sunburst(id){
 		fields.push(key)
 	})
 
-	var limit = 10000;
+	var limit = 1;
+	var stats = false
+	var statField = null
+	var incTime = true
+	urlencode = false
 
-	var query = elastic_query_builder(id, from, to, Ds, fields, limit, true);
+
+	var query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode)
 
 	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
 
@@ -142,9 +148,11 @@ function elastic_populate_sunburst(id){
 
 
 
-function elastic_rawtoprocessed_sunburst(id){
+function elastic_rawtoprocessed_piechart(id){
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
+	retrieveSquareParam(id, 'rawdata_'+'')['aggregations']
+
+	var data = retrieveSquareParam(id, 'rawdata_'+'')['aggregations']['time_ranges']['buckets'][0]['field']['buckets']
 	fields = []
 	
 	if(retrieveSquareParam(id,"Cs",true) !== undefined){
@@ -167,49 +175,13 @@ function elastic_rawtoprocessed_sunburst(id){
 
 	}
 
-	data = _.map(data, function(row){
-		thisRow = []
-		
-		// 
 
-		_.each(fields, function(field){
-			// qq("------field:"+field+"------")
-			// qq(row['_source'])
-			
-			if(incNull){
-				//thisRow.push(JSON.stringify(row['_source'][field]))
-				thisRow.push( field.split('.').reduce(stringDotNotation, row['_source']) )
-				// qq("incNull = true, so add this row")
-				
-			}else if(field.split('.').reduce(stringDotNotation, row['_source']) != "null"){
-				result = field.split('.').reduce(stringDotNotation, row['_source'])
-				thisRow.push(result)
-				// qq("stringdotnotation : field contains "+field)
-				// qq(result)
-
-			}else if(row['_source'].hasOwnProperty(field)){
-				thisRow.push(JSON.stringify(row['_source'][field]))
-				// qq("adding because row contains "+field)
-				// qq(row['_source'])
-
-			}else{
-				// qq("skipping this row incNull:"+incNull+" source....")
-				// qq(field)
-				// qq(row['_source'])
-			}
-		})
-		
-		return thisRow;
+	saveProcessedData(id, '', elasticToFlare(data, scale))
 	
-	})
-
-
-	dataout = arrayOfArrayToFlareChildren(_.sortBy(data), {"name":"", "children":[]}, scale)
-	saveProcessedData(id, '', dataout);
 }
 
 
-function elastic_graph_sunburst(id){
+function elastic_graph_piechart(id){
 	
 	
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
