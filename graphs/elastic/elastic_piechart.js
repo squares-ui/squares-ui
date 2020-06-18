@@ -119,16 +119,16 @@ function elastic_completeform_piechart(id, targetDiv){
 
 
 function elastic_populate_piechart(id){
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var timesArray = [[from, to]]
 
-	Ds = clickObjectsToDataset(id)
+	var Ds = clickObjectsToDataset(id)
 
 	// fields = clickObjectsToDataset(id)
-	fields = []
+	var fields = []
 	_.each(retrieveSquareParam(id,"Cs",true)['array'], function(key,num){
 		fields.push(key)
 	})
@@ -137,7 +137,7 @@ function elastic_populate_piechart(id){
 	var stats = false
 	var statField = null
 	var incTime = true
-	urlencode = false
+	var urlencode = false
 
 
 	var query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode)
@@ -184,7 +184,7 @@ function elastic_rawtoprocessed_piechart(id){
 function elastic_graph_piechart(id){
 	
 	
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	// http://bl.ocks.org/bbest/2de0e25d4840c68f2db1
 
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)

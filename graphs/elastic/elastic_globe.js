@@ -94,13 +94,13 @@ function elastic_completeform_globe(id, targetDiv){
 
 
 function elastic_populate_globe(id){
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
-	Ds = clickObjectsToDataset(id)
+	var Ds = clickObjectsToDataset(id)
 	
-	fields = []
+	var fields = []
 	if(retrieveSquareParam(id,"Cs",false) !== undefined){
 		if(retrieveSquareParam(id,"Cs",false)['x_track'] !== undefined){
 			fields.push(retrieveSquareParam(id,"Cs",false)['x_track'])
@@ -123,13 +123,13 @@ function elastic_populate_globe(id){
 
 
 function elastic_rawtoprocessed_globe(id){
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
 	
 	
-	incNull = false
-	scale = "log"
+	var incNull = false
+	var scale = "log"
 	if(retrieveSquareParam(id,"Cs",true) !== undefined){
 		if(retrieveSquareParam(id,"Cs",true).hasOwnProperty('x_null')){
 			incNull = retrieveSquareParam(id,"Cs",true).x_null
@@ -142,21 +142,21 @@ function elastic_rawtoprocessed_globe(id){
 	
 	var dataCount = {}
 
-	csTrack = retrieveSquareParam(id,"Cs",true)['x_track']
-	csLat = retrieveSquareParam(id,"Cs",true)['x_lat']
-	csLon = retrieveSquareParam(id,"Cs",true)['x_lon']
+	var csTrack = retrieveSquareParam(id,"Cs",true)['x_track']
+	var csLat = retrieveSquareParam(id,"Cs",true)['x_lat']
+	var csLon = retrieveSquareParam(id,"Cs",true)['x_lon']
 	
 	// track unique found vars
-	nodes = {}
-	data2 = {}
+	var nodes = {}
+	var data2 = {}
 	
 
 	// loop through results aggregating sums
 	_.each(data, function(obj,i){
 
-		lat = csLat.split('.').reduce(stringDotNotation, obj._source)
-		lon = csLon.split('.').reduce(stringDotNotation, obj._source)
-		track = csTrack.split('.').reduce(stringDotNotation, obj._source)
+		var lat = csLat.split('.').reduce(stringDotNotation, obj._source)
+		var lon = csLon.split('.').reduce(stringDotNotation, obj._source)
+		var track = csTrack.split('.').reduce(stringDotNotation, obj._source)
 
 
 		// bad record?
@@ -206,17 +206,18 @@ function elastic_rawtoprocessed_globe(id){
 
 
 	// set nodes
-	nodes = _.keys(nodes)
+	var nodes = _.keys(nodes)
 
 
 
 	// calculate highest lon/lat for scaling
-	highest = 0
+	var highest = 0
+	var scaled
 	// qq(data2)
 	
 	_.each(data2, function(obj,key){
-		values = _.values(obj)
-		summed = _.reduce(values, function(memo, num){ return memo + num; }, 0);
+		var values = _.values(obj)
+		var summed = _.reduce(values, function(memo, num){ return memo + num; }, 0);
 		
 
 		if(scale == "linear"){
@@ -237,7 +238,7 @@ function elastic_rawtoprocessed_globe(id){
 	// qq("scale was:"+scale+" highest: "+highest)
 
 
-	dataOut = {}
+	var dataOut = {}
 	dataOut.data = data2
 	dataOut.nodes = nodes
 	dataOut.highest = highest
@@ -247,7 +248,7 @@ function elastic_rawtoprocessed_globe(id){
 
 function elastic_graph_globe(id){
 
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
@@ -349,9 +350,9 @@ function elastic_graph_globe(id){
 		// qq("lat: "+lat+ ", lon:"+lon)
 		// qq("phi: "+phi+", theta:"+theta)
 
-		x = -topOfLine * Math.sin(phi)*Math.cos(theta) + grid_size/2
-		z =  topOfLine * Math.sin(phi)*Math.sin(theta) + grid_size/2
-		y =  topOfLine * Math.cos(phi) + grid_size/3
+		var x = -topOfLine * Math.sin(phi)*Math.cos(theta) + grid_size/2
+		var z =  topOfLine * Math.sin(phi)*Math.sin(theta) + grid_size/2
+		var y =  topOfLine * Math.cos(phi) + grid_size/3
 
 		// draw the cocktail stick
 		var points = [];
@@ -401,7 +402,7 @@ function elastic_graph_globe(id){
 			let clickObject = {"compare":[]}
 			miniObj = {}
 
-			key = retrieveSquareParam(id, 'Cs', true)['x_lat']
+			var key = retrieveSquareParam(id, 'Cs', true)['x_lat']
 			miniobj = {}
 			miniobj[key] = lat
 			clickObject.compare.push(miniobj)

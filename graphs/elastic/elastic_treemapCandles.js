@@ -13,8 +13,8 @@ graphs_functions_json.add_graphs_json({
 
 function elastic_completeform_treemapCandle(id, targetDiv){
 	
-	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
+	var dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
+	var connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
 
 	elastic_get_fields(dst, connectionhandle, id)
 		.then(function(results){
@@ -23,13 +23,13 @@ function elastic_completeform_treemapCandle(id, targetDiv){
 			var dropdownNumbers = []
 			
 			// _.omit keys of data types we dont want, or _.pick the ones we do, i.e. omit "text", or pick "ip"
-			subResults = _.omit(results, "")
+			var subResults = _.omit(results, "")
 			_.each(subResults, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
-			dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
+			var dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
 
-			numberDropDown = _.pick(results, "long")
+			var numberDropDown = _.pick(results, "long")
 			_.each(numberDropDown, function(val, key){  _.each(val, function(val2){  dropdownNumbers.push(val2)  })}) 
-			dropdownFieldsNumber = _.sortBy(dropdownNumbers, function(element){ return element})
+			var dropdownFieldsNumber = _.sortBy(dropdownNumbers, function(element){ return element})
 
 			const jsonform = {
 				"schema": {
@@ -128,16 +128,16 @@ function elastic_completeform_treemapCandle(id, targetDiv){
 
 function elastic_populate_treemapCandle(id){
 	
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var timesArray = [[from, to]]
 
-	Ds = clickObjectsToDataset(id)
+	var Ds = clickObjectsToDataset(id)
 
-	fields = []
+	var fields = []
 	_.each(retrieveSquareParam(id,"Cs",true)['array'], function(key,num){
 		fields.push(key)
 	})	
@@ -162,11 +162,11 @@ function elastic_populate_treemapCandle(id){
 function elastic_rawtoprocessed_treemapCandle(id){
 
 	var data = retrieveSquareParam(id, 'rawdata_'+'')['aggregations']['time_ranges']['buckets'][0]['field']['buckets']
-	fields = []
+	var fields = []
 	
 	if(retrieveSquareParam(id,"Cs",true) !== undefined){
 		
-		Cs = retrieveSquareParam(id,"Cs",true)
+		var Cs = retrieveSquareParam(id,"Cs",true)
 
 		if(Cs['array'] !== null ){
 			fields = Cs['array']
@@ -192,7 +192,7 @@ function elastic_rawtoprocessed_treemapCandle(id){
 
 function elastic_graph_treemapCandle(id){
 	
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	// https://bl.ocks.org/ganezasan/52fced34d2182483995f0ca3960fe228
 
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
@@ -261,7 +261,7 @@ function elastic_graph_treemapCandle(id){
 	// var greyish = 0xcccccc;
 
 	
-	flatCords = treeToFlat(id, tree)
+	var flatCords = treeToFlat(id, tree)
 	// qq("....")
 	// qq(flatCords)
 

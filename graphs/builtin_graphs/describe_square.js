@@ -48,13 +48,13 @@ function graph_describesquare(id){
 	}
 	
 
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(id)+") aConnector="+aConnector);
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(id)+") aConnector="+aConnector);
 
 	// Connector
-	clusterSection = square.append("div")
+	var clusterSection = square.append("div")
 		.classed("square_cluster_section", true)
 
-	clusterDiv = clusterSection.append("div")
+	var clusterDiv = clusterSection.append("div")
 		.classed("fleft", true)
 
 	if(aConnector == true){	
@@ -142,9 +142,9 @@ function graph_describesquare(id){
 	
 
 	// We Ws
-	clusterSection = square.append("div")
+	var clusterSection = square.append("div")
 		.classed("square_cluster_section", true)
-	clusterDiv = clusterSection.append("div")
+	var clusterDiv = clusterSection.append("div")
 		.classed("fleft", true);
 	clusterDiv.append("img")
 		.classed("square_cluster_image", true)
@@ -155,7 +155,7 @@ function graph_describesquare(id){
 		.classed("fleft", true);
 
 	var stringFormat = "YYYY-MM-DD, HH:mm:ss"
-	prettyString = moment(retrieveSquareParam(id, "We"), "X").format(stringFormat);
+	var prettyString = moment(retrieveSquareParam(id, "We"), "X").format(stringFormat);
 
 	clusterDiv.append("div")
 			.classed("fontsize", true)

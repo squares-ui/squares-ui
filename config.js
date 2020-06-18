@@ -16,6 +16,7 @@ GLB.zoomLevels=[0.75, 1, 1.2, 1.5, 2];
 GLB.qqLogging = 7;
 GLB.hidesquaremenus = false;
 GLB.clearRawData = false;  // when a square has processed it's data, clear the raw data.  Good for testing, but fills local storage very quickly !! 
+GLB.useStrict = false;  // global strictness
 
 //govern the definitions of a visual square
 GLB.square = Object ();
@@ -39,8 +40,8 @@ GLB.color = d3.scaleOrdinal().range(['#3F6833', '#967302', '#2F575E', '#99440A',
 
 // determine how we treat global vars for ThreeJS handling
 GLB.threejs = Object();
-GLB.threejs.enabled = true;  // whether to load ThreeJS libraries
-GLB.threejs.realTimeRender = true; // true = performance, false renders on setTimeout of interval below.  better for CPU
+GLB.threejs.enabled = false;  // whether to load ThreeJS libraries
+GLB.threejs.realTimeRender = false; // true = performance, false renders on setTimeout of interval below.  better for CPU
 GLB.threejs.notRealTimeRenderFrequency = 500; // measured in ms
 GLB.threejs.showperformance = false;
 GLB.threejs.fps_TimeOut = 1000/60;  // bigger number is long delay = lower fps for low power machines.  1000=1fps,  16=60fps

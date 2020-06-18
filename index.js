@@ -1,3 +1,6 @@
+if(GLB.useStrict){
+	"use strict";
+}
 // SQUARES attributes 
 // SQUARES attributes 
 // Pr = Integer defining Pr square ID
@@ -91,7 +94,7 @@ var graphs_functions_json = {
 	retrieveGraphParam: function(type, graphshort, value){
 		// IN : type of connector, <short> name of the graph, the type of field you want back
 		// OUT : name of function to call
-		//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"['"+type+"']['"+graphshort+"']['"+value+"']");
+		////ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"['"+type+"']['"+graphshort+"']['"+value+"']");
 
 
 		if(graphshort==null || this.local_json["builtin_graphs"] == undefined){
@@ -242,10 +245,10 @@ var connectors_json = {
 
 
 function updateurl(){
-	// ee(" -> "+arguments.callee.name);
+	// //ee(" -> "+arguments.callee.name);
 	
-	existingUrl = window.location
-	newUrl = existingUrl.protocol + "//" + existingUrl.hostname + ":" + existingUrl.port + existingUrl.pathname + "#" + btoa(JSON.stringify(url))
+	var existingUrl = window.location
+	var newUrl = existingUrl.protocol + "//" + existingUrl.hostname + ":" + existingUrl.port + existingUrl.pathname + "#" + btoa(JSON.stringify(url))
 
 	window.history.pushState("object or string", "Title", newUrl);
 	// // $('#mailto').attr("href", "mailto:?subject=SQUARES-UI Link"+"&body="+newurl);
@@ -253,14 +256,14 @@ function updateurl(){
 }	
 	
 function updaterefresh(){
-	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(url)+")");
+	// //ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(url)+")");
 	var newurl = window.location.href.replace(/\/#.*$/, "/#"+btoa(JSON.stringify(url)));
 	//location.replace(newurl);
 	window.history.pushState("object or string", "Title", newurl);
 }
 
 function wipereset(){
-	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(url)+")");
+	// //ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(url)+")");
 	Lockr.flush();
 
 	// currentLocation = window.location
@@ -311,7 +314,7 @@ errorStatus['squares'] = {} // {1: {"critical":[], "warning":[]}, 2:{}}
 
 
 ///// Do we already have an object to build from?
-hash = window.location.hash.substring(1)
+var hash = window.location.hash.substring(1)
 
 if(hash
 	&& re_str.test(hash)
@@ -322,7 +325,7 @@ if(hash
 	){
 		// URL is compliant
 		ww(5, "Valid URL found");
-		url = JSON.parse(atob(hash));
+		var url = JSON.parse(atob(hash));
 
 }else{
 	// No compliant URL at all, let's build our own object
@@ -387,12 +390,12 @@ function dragged(d) {
 	// event.dx isn't the total move dist, it's the move per frame/step
 
 	if(Math.abs(d3.event.dx) > GLB.square.dragSensitivity || Math.abs(d3.event.dy) > GLB.square.dragSensitivity){
-		wasMoved = true;
+		var wasMoved = true;
 
 		deleteLines();
 
 		// the X/Y are positions on the monitors X/Y, but also relative to the parent coords, which is relative to the d3 translation, which is affected by the zooom/scale	
-		newcoords = d3.mouse(d3.select('#squaregroup').node());
+		var newcoords = d3.mouse(d3.select('#squaregroup').node());
 		d3.select(this.parentNode.parentNode.parentNode.parentNode)
 			.attr("x", function(d,i){
 				var strippedName = parseInt(this.id.replace(/^square_main_/g,""));
@@ -429,7 +432,7 @@ function dragged(d) {
 function dragended(d) {
 
 	// could trim this to just children squares? 
-	squaresToUpdate = findAllChildren(d.id);
+	var squaresToUpdate = findAllChildren(d.id);
 	squaresToUpdate.push(d.id);
 	drawLines(squaresToUpdate, false);
 	drawSquares(squaresToUpdate);
@@ -445,7 +448,7 @@ function dragended(d) {
 // Display the Template Overlay
 function showTemplateDiv(id){
 	// IN : square ID
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	clearSquareBody(id);
 	window[graphs_functions_json.retrieveGraphParam("builtin_graphs", "Templates", "graph") ](id);
@@ -470,16 +473,8 @@ function duplicateSquare(id, newObject){
 	delete clone.Ds;
 	delete clone.Cs;
 
-	// set some default
-	clone.id=(parseInt(highestSquareID())+1);
-	clone.x = 100;
-	clone.y = 100; // remember, x is relative to parent
 	clone.Pr = id;
 		
-	//if(url.squares[squarearraysearch(id)].Pr == null || url.squares[squarearraysearch(id)].Pr == 0){
-	//	clone.Gt="EditSquare";
-	//}
-	
 	// merge in the custom fields
 	if(newObject.constructor === Object && Object.keys(newObject).length !== 0 ){
 		// clone, and make the newObject take priority if a clash? is this wise?
@@ -488,20 +483,90 @@ function duplicateSquare(id, newObject){
 
 	}
 
-
-	url.squares.push(clone);
-	
-	var ids = [clone.id];
-	drawLines(ids, false);
-	drawSquares(ids);	
-	drawinBoxes(ids);
-	udpateScreenLog("#"+clone.id+" Created");
-
-
+	newSquare(clone);
 	return clone.id;
+
 }
 	
+
+function addGraphConnector(handle){
+	// handle : optional, "CH" from the connector json
+
+	// in UTC
+	var thisEpoch = Math.floor(new Date().getTime() / 1000); // UTC
+	var lastBlockEnd = thisEpoch - (thisEpoch % GLB.square.blocksize)-1; 
+
+	var mo = {
+		
+		"Pr":0,
+		"Gt":"EditSquare",
+		"Gp": null,
+		"Wi": [lastBlockEnd,-900,0],
+	}
+
+	if(handle){
+		mo['CH'] = handle
+	}
+
+	newSquare(mo);
+
+
+}
 	
+function newSquare(obj){
+	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(obj)+")");
+
+	var newID = highestSquareID()+1
+	obj['id'] = newID
+	
+	relX = 1000
+	relY = 1000
+
+	var validCoords = false
+	
+	for (var i = 0; i <= 100; i++){
+		
+		if(isRelativePosTaken(obj['Pr'], relX, relY) == true){
+			relX += 100
+			relY += 100
+		}else{
+			i = 101
+		}
+
+	}
+	obj['x'] = relX
+	obj['y'] = relY
+
+	url.squares.push(obj)
+
+	udpateScreenLog("#"+newID+" Connector has been created");
+	drawSquares([newID]);
+	drawLines([newID], false);
+	drawinBoxes([newID]);
+	drawLines(everyID(), false);  //line colours have changed
+	udpateScreenLog("#"+clone.id+" Created");
+	updateurl();
+}
+
+function isRelativePosTaken(parentId, x, y){
+	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+parentId+" "+x+" "+y+")");
+
+	var clash = false
+
+	for (var id in url.squares){
+		var loopX = calcCord(url.squares[id].id, 'x', 0)
+		var loopY = calcCord(url.squares[id].id, 'y', 0)
+		var newX = calcCord(parentId, 'x', x)
+		var newY = calcCord(parentId, 'y', y)
+		if(loopX == newX || loopY == newY ){
+			qq("new square location used")
+			clash = true
+		}
+	}	
+
+	return clash
+}
+
 //******************************************************************
 //******************************************************************
 //*********   Main workflow 
@@ -530,7 +595,7 @@ function futureHalfWidth(id){
 function drawLines(ids, drawBezier){
 	
 	// IN : Array of integers
-	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
+	////ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
 
 	deleteLines();
 	
@@ -624,7 +689,7 @@ function drawLines(ids, drawBezier){
 		linesfodiv.append("div")
 			.style("text-align", "center")
 			.text(function(d){ 
-				text = retrieveSquareParam(d.id, 'Ds', false)
+				var text = retrieveSquareParam(d.id, 'Ds', false)
 				if(text !== undefined){
 					
 					out = []
@@ -665,7 +730,7 @@ function squareMouseOut(d, i){
 // Draw the *container* for each Square
 function drawSquares(idlist) {
 	// IN : Array of integers
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(idlist)+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(idlist)+")");
 
 	
 	for (var i in idlist){
@@ -719,7 +784,7 @@ function drawSquares(idlist) {
 				.classed("square_menu_icon", true)
 				.classed("square_menu_icon_clone", true)
 				.on("click", function(d){ 
-					newId = duplicateSquare(d.id, {"x": 1000}); 
+					var newId = duplicateSquare(d.id, {"x": 1000}); 
 					// editMe(newId); 
 				})
 				.on("mousedown", function() { d3.event.stopPropagation(); })
@@ -927,7 +992,7 @@ function removeSquareStatus(id, status, tooltip){
 }
 function wipeSquareStatus(ids){
 	
-	
+	qq(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(url)+")");
 	
 	if(!ids.isArray){
 		ids = [ids]
@@ -948,6 +1013,7 @@ function renderSquareStatus(id){
 		$('#square_status_img_'+id).removeClass("svg__colour__warning");
 		$('#square_status_img_'+id).removeClass("svg__colour__nofilter");
 
+		var cssClass = ''
 		if(errorStatus['squares'][id].hasOwnProperty('critical') && errorStatus['squares'][id]['critical'].length > 0){
 			cssClass = "svg__colour__critical"
 		}else if(errorStatus['squares'][id].hasOwnProperty('warning') && errorStatus['squares'][id]['warning'].length > 0){
@@ -958,7 +1024,7 @@ function renderSquareStatus(id){
 		
 		$('#square_status_img_'+id).addClass(cssClass)
 
-		tooltip = [errorStatus['squares'][id]['critical'].join(", "), errorStatus['squares'][id]['warning'].join(", ")].join(" | ")
+		var tooltip = [errorStatus['squares'][id]['critical'].join(", "), errorStatus['squares'][id]['warning'].join(", ")].join(" | ")
 		$('#square_status_img_'+id).prop('title', tooltip)
 	}
 	
@@ -1017,12 +1083,12 @@ function renderPageStatus(){
 
 function setHoverInfo(id, data){
 
-	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+data+")");
+	////ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+data+")");
 
 	$("#square_info_"+id).html(data)
 	$("#square_info_"+id).css('display', 'block')
 
-	localTimeout = GLB.square.hoverfade;
+	var localTimeout = GLB.square.hoverfade;
 	setTimeout(
 		function(localTimeout){
 			$("#square_info_"+id).css('display', 'none')
@@ -1056,7 +1122,7 @@ function moveToBottom(id){
 
 function scaleSquare(id){
 
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	// start with a default
 	var currentScale = GLB.zoomLevels[0];
 	
@@ -1068,7 +1134,7 @@ function scaleSquare(id){
 		ww(6, "Scale found for id:"+id+" as "+currentScale);
 	}
 
-	newScale =  GLB.zoomLevels[GLB.zoomLevels.indexOf(currentScale)+1];
+	var newScale =  GLB.zoomLevels[GLB.zoomLevels.indexOf(currentScale)+1];
 	ww(6, "Scale for id:"+id+" now "+newScale); 
 
 	url.squares[squarearraysearch(id)].Sc = newScale;
@@ -1082,8 +1148,8 @@ function scaleSquare(id){
 // User has Loaded page/Dragged a box/Duplicated a box/Edited a square/other
 function drawinBoxes(ids){
 	// IN : Array of Integers
+	////ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
 	
 	// update the status icon
 	// setSquareStatus(id, "normal")
@@ -1107,6 +1173,7 @@ function drawinBoxes(ids){
 		
 		// draw the time frames at the bottom of the box
 		
+		var momentFormat = ''
 		if(Math.abs(thisWe) > 21600 || thisWs > 21600 || Math.floor(thisEpoch / sInDay) > Math.floor(thisWe / sInDay)  ){
 			// if a big window, or before today
 			momentFormat = 'MMM ddd Do, HH:mm:ss';
@@ -1135,7 +1202,7 @@ function drawinBoxes(ids){
 			// I have no data and I differ, time to get my data created
 			
 			// for non "builtin" graphs, 'mappings' is needed to construct the query
-			mappings = connectors_json.getAttribute(retrieveSquareParam(ids[i], 'CH'), "mappings")
+			var mappings = connectors_json.getAttribute(retrieveSquareParam(ids[i], 'CH'), "mappings")
 			
 			if(graphs_functions_json.get_graphs_json()['builtin_graphs'].hasOwnProperty(retrieveSquareParam(ids[i], "Gt"))   ||   mappings != null){
 				ww(6, "drawInBoxes() populating #"+ids[i]+": "+ connectors_json.handletotype( retrieveSquareParam(ids[i], 'CH')) +" "+retrieveSquareParam(ids[i], "Gt"));
@@ -1177,7 +1244,7 @@ function graph_ajax_fin(id){
 function saveRawData(id, validdata, name, data){
 	// IN : Integer ID, "raw|processed", Array|Object
 	// Raw data is handled by the graph, this can be messy and have different titles
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+validdata+", "+name+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+validdata+", "+name+")");
 
 	udpateScreenLog("#"+id+" raw data saved");
 	
@@ -1202,7 +1269,7 @@ function saveRawData(id, validdata, name, data){
 
 function graphLoading(id){
 
-	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	////ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	// remove the "loading" div in a square
 	clearSquareBody(id);
 
@@ -1354,7 +1421,7 @@ function saveProcessedData(id, name, data){
 	// IN : Integer ID, string, Array|Object
 	// Procesed data is needed by the main script, so it has to be "squaredata_x_processeddata"
 	
-	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+","+name+")");
+	////ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+","+name+")");
 
 	var myHash = String(CryptoJS.MD5(JSON.stringify(url.squares[squarearraysearch(id)])));
 	Lockr.set('squaredata_'+id+'_hash', myHash);	
@@ -1387,7 +1454,7 @@ function checkSavedDataIsMine(id){
 // Some data is ready, call the 'drawing function'
 function callTheGraph(id, nudgeChildren){
 	// IN: Integer, Binary (whether to chase down all children and draw them too)
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+nudgeChildren+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+nudgeChildren+")");
 	clearSquareBody(id);
 
 
@@ -1451,7 +1518,7 @@ function cloneTemplate(caller, target){
 	// Copy config from "dst_id" and copy to "src_id"
 	/// IN : INT source ID, INT dest ID
 	
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+caller+", "+target+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+caller+", "+target+")");
 
 	// make caller = the full JSON of the square
 	var caller =url.squares[squarearraysearch(caller)];
@@ -1490,7 +1557,7 @@ function cloneChildren(caller, target){
 	// Copy config from "dst_id" and copy to "src_id"
 	// IN : INT source ID, INT dest ID
 	// OUT : na
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+caller+", "+target+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+caller+", "+target+")");
 
 	// for the calling square, remove existing children first?
 	// if(removeChildren == true){
@@ -1546,12 +1613,12 @@ function cloneChildren(caller, target){
 
 function importSquareFavourite(id, uid){
 		
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+uid+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+uid+")");
 
-	favourites = connectors_json.handletox(retrieveSquareParam(id, "CH"), "favourites");
+	var favourites = connectors_json.handletox(retrieveSquareParam(id, "CH"), "favourites");
 
 	// need to pass in uid and id
-	favourite = _.where(favourites, {"uid": uid})[0]
+	var favourite = _.where(favourites, {"uid": uid})[0]
 	
 	// make caller = the full JSON of the square
 	var square = url.squares[squarearraysearch(id)];
@@ -1582,57 +1649,57 @@ function importSquareFavourite(id, uid){
 
 
 // push a template to the screen
-function pushTemplate(square, template){
-	// IN : integer (ID of square to sprout from),  integer (id of master_templates array)
+// function pushTemplate(square, template){
+// 	// IN : integer (ID of square to sprout from),  integer (id of master_templates array)
 	
-	// remove existing children
-	var deleteList = new Array();
-	deleteList.push(square);
-	var loop = true;
-	while(loop==true){
-		var newList = findChildren(deleteList);
-		$.merge(deleteList, newList);
-		if(newList.length<1){
-			loop=false;
-		}
-	}		
-	for(var j in deleteList){
-		// XXX improve this, don't add source in first place?
-		if(deleteList[j] != square){
-			ww(6, "deleting id:"+deleteList[j]);
-			url.squares.splice(squarearraysearch(deleteList[j]), 1);
-			workspaceDiv.select("#square_main_"+deleteList[j]).remove();
-			deleteData(deleteList[j]);
-		}
-	}
+// 	// remove existing children
+// 	var deleteList = new Array();
+// 	deleteList.push(square);
+// 	var loop = true;
+// 	while(loop==true){
+// 		var newList = findChildren(deleteList);
+// 		$.merge(deleteList, newList);
+// 		if(newList.length<1){
+// 			loop=false;
+// 		}
+// 	}		
+// 	for(var j in deleteList){
+// 		// XXX improve this, don't add source in first place?
+// 		if(deleteList[j] != square){
+// 			ww(6, "deleting id:"+deleteList[j]);
+// 			url.squares.splice(squarearraysearch(deleteList[j]), 1);
+// 			workspaceDiv.select("#square_main_"+deleteList[j]).remove();
+// 			deleteData(deleteList[j]);
+// 		}
+// 	}
 	
-	// copy the prebuilt template, add highestID to each square so it can sit with existing squaers
-	highestID = highestSquareID();
-	tweakableJSON = new Object;
-	$.extend(tweakableJSON, master_templates[template]["structure"]);
+// 	// copy the prebuilt template, add highestID to each square so it can sit with existing squaers
+// 	highestID = highestSquareID();
+// 	tweakableJSON = new Object;
+// 	$.extend(tweakableJSON, master_templates[template]["structure"]);
 
 
-	$.each(tweakableJSON, function(i, obj) {
-		obj['id']+=highestID;
-		if(obj['Pr'] == 1){
-			// this it the linking square, point it to it's new master
-			obj['Pr']=square;
-		}else{	
-			obj['Pr']+=highestID;
-		}
-		url.squares.push(obj);
-	});
+// 	$.each(tweakableJSON, function(i, obj) {
+// 		obj['id']+=highestID;
+// 		if(obj['Pr'] == 1){
+// 			// this it the linking square, point it to it's new master
+// 			obj['Pr']=square;
+// 		}else{	
+// 			obj['Pr']+=highestID;
+// 		}
+// 		url.squares.push(obj);
+// 	});
 
-	// merge Primary square with the new Template
-//	url.squares = $.merge(url.squares, tweakableJSON);
+// 	// merge Primary square with the new Template
+// //	url.squares = $.merge(url.squares, tweakableJSON);
 	
-	// draw 
-	drawLines(everyID(), false);
-	drawSquares(everyID());	
-	drawinBoxes(everyID());
-	updateurl();
+// 	// draw 
+// 	drawLines(everyID(), false);
+// 	drawSquares(everyID());	
+// 	drawinBoxes(everyID());
+// 	updateurl();
 	
-}
+// }
 
 
 function childFromClick(id, childCustomObject){
@@ -1720,12 +1787,12 @@ function subSet(ids){
 function reloadData(ids){
 	// IN : Integer
 
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
+	qq(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
 	
 	wipeSquareStatus(ids)
 
 	for (var i in ids){
-		ww(6, "Reloading / refreshing data for id:"+ids[i]+" as instructd by "+arguments.callee.caller.name);
+		//ww(6, "Reloading / refreshing data for id:"+ids[i]+" as instructd by "+arguments.callee.caller.name);
 		if(GLB.square.reshowLoadingIcon == true){
 			graphLoading(ids[i])	
 		}
@@ -1741,7 +1808,7 @@ function reloadData(ids){
 function deleteData(id){
 	// IN : Integer
 	
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	// //ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	Lockr.rm('squaredata_'+id+"_hash");
 	Lockr.rm('squaredata_'+id+"_rawdata");
@@ -1758,10 +1825,10 @@ function deleteData(id){
 function deleteChain(id, deleteID){
 	// IN : Integer of ID to look at.  BOOL whether to delete this ID (true), or just it's children (false)
 	
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")"); 
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")"); 
 	
 	// delete the children
-	deleteList = findAllChildren(id);
+	var deleteList = findAllChildren(id);
 	for (var i = 0; i < deleteList.length ; i++){
 		deleteChildSquare(deleteList[i]);
 	}
@@ -1777,7 +1844,7 @@ function deleteChain(id, deleteID){
 }
 
 function deleteChildSquare(id){
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")"); 
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")"); 
 
 	ww(4, "deleting id="+id);
 
@@ -1795,7 +1862,7 @@ function deleteChildSquare(id){
 function findParents(id){
 	// IN : int
 	// OUT : array of parents
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")"); 
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")"); 
 
 	var currentID = id;
 	var newParent=0;
@@ -1820,7 +1887,7 @@ function findParents(id){
 function findChildren(findList){
 	// IN : Array of Integers (IDs)
 	// OUT : Array of Integers (combined children IDs)
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(findList)+")"); 
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(findList)+")"); 
 	var children = new Array()
 	for (var i in url.squares){
 		// check if not looking at myself
@@ -1843,7 +1910,7 @@ function findAllChildren(id){
 	// IN : single ID
 	// OUT : Array of Integers (combined children IDs), originating ID *NOT* in the return
 
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(id)+")"); 
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(id)+")"); 
 	var returnList = new Array();
 	returnList.push(id);
 
@@ -1887,7 +1954,7 @@ function setSquareParam(id, key, value, redraw){
 function retrieveSquareParam(id, key, recursive){
 	// IN : Integer, string (what attribute)
 	// OUT : value
-	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+key+", "+recursive+")");
+	// //ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+key+", "+recursive+")");
 
 	if(recursive == null || recursive == undefined){
 		recursive = true;
@@ -2078,7 +2145,7 @@ function retrieveSquareParam(id, key, recursive){
 	}
 	
 	//nothing left to return, throw error
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"(ERROR "+id+", "+key+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"(ERROR "+id+", "+key+")");
 	return null
 
 }
@@ -2089,19 +2156,19 @@ function calcGraphTime(id){
 	// IN : Integer
 	// OUT : Integer
 
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	// array of all parents (original reverses, I want this unreversed) and add my own ID for me to count
 	var parents = findParents(id).reverse()
 	parents.unshift(id)
 	
 
-	totalWe = 0;
-	sInAYear = 60*60*24*265;
+	var totalWe = 0;
+	var sInAYear = 60*60*24*265;
 
 	for(var i = 0 ; i < parents.length ; i++){
 		
-		thisWe = retrieveSquareParam(parents[i], "We", false)
+		var thisWe = retrieveSquareParam(parents[i], "We", false)
 		// qq("Calctime for id:"+id+" adding thisWe:"+thisWe+" from:"+parents[i]+" totalWe:"+totalWe )
 
 		if(!ISNAN(thisWe) && thisWe <= sInAYear){
@@ -2134,7 +2201,7 @@ function calcGraphTime(id){
 function calcGraphTime___old(id, key, cumulative){
 	// IN : Integer, String (which time value), Integer of current relative time
 	// OUT : Integer
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+key+", "+cumulative+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+key+", "+cumulative+")");
 	
 	// We = negative.  Time is relative to the parent (which may also be relative..)
 	// We = null. No change to parent
@@ -2172,7 +2239,7 @@ function calcGraphTime___old(id, key, cumulative){
 // calculate cumulitive x or Y coordinate looking at parents position
 function calcCord(id, xory, cumulative){
 
-	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+xory+", "+cumulative+")");
+	////ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+xory+", "+cumulative+")");
 	// IN : Integer, String (which x or y value), Integer of current relative cord
 	// OUT : Integer
 
@@ -2191,7 +2258,7 @@ function calcDs(id, cumulative){
 	// OUT: array DataSet
 	
 	
-	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+classOf(cumulative)+" "+JSON.stringify(cumulative)+")");
+	////ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+classOf(cumulative)+" "+JSON.stringify(cumulative)+")");
 
 	var thisDs;
 	// if asking about id==0 you reached the top, no more to calculate.
@@ -2233,11 +2300,10 @@ function highestSquareID(){
 
 function editNewConnector(id){
 
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+" ("+typeof(id)+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+" ("+typeof(id)+")");
 	ww(7, "Connected #"+id+" changed");
 
 	var item = url.squares[squarearraysearch(id)];
-
 	item.Pr = 0;
 	
 	if(!$("#square_connector_dropdown_"+id).val() == ''){
@@ -2264,7 +2330,7 @@ function editNewConnector(id){
 
 
 	// if we've edited the square, every square beneath us needs redrawing with inherited atributes
-	updateDataList = new Array();
+	var updateDataList = new Array();
 	updateDataList = findAllChildren(id);
 	// add originating ID back in
 	updateDataList.push(id);	
@@ -2274,7 +2340,7 @@ function editNewConnector(id){
 	// recreate data for children squares
 
 	// do it here on load, also do it during new square creation
-	handle = retrieveSquareParam(id, 'CH')
+	var handle = retrieveSquareParam(id, 'CH')
 	elastic_prep_mappings(handle)	
 
 	drawLines(everyID(), false);  //line colours have changed
@@ -2286,38 +2352,12 @@ function editNewConnector(id){
 
 }
 
-function addGraphConnector(){
-	
-	var newID = highestSquareID()+1
 
-	// in UTC
-	var thisEpoch = Math.floor(new Date().getTime() / 1000); // UTC
-	lastBlockEnd = thisEpoch - (thisEpoch % GLB.square.blocksize)-1; 
-
-
-	url.squares.push({
-			"id": newID ,
-			"Pr":0,
-			"Gt":"EditSquare",
-			"Gp": null,
-			"Wi": [lastBlockEnd,-900,0],
-	});
-
-	udpateScreenLog("#"+newID+" Connector has been created");
-	drawSquares([newID]);
-	drawLines([newID], false);
-	drawinBoxes([newID]);
-	drawLines(everyID(), false);  //line colours have changed
-	updateurl();
-
-
-
-}
 
 
 function editMe(id){
 
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	clearSquareBody(id);
 	window[graphs_functions_json.retrieveGraphParam("builtin_graphs", "EditSquare", "graph") ](id);
@@ -2337,7 +2377,7 @@ function editMe(id){
 function editSquare(id){
 	// IN : String (which attribute to modify)
 	// OUT : na (but calls other functions
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	var item = url.squares[squarearraysearch(id)];
 
@@ -2422,7 +2462,7 @@ function editSquare(id){
 
 
 	// if we've edited the square, every square beneath us needs redrawing with inherited atributes
-	updateDataList = new Array();
+	var updateDataList = new Array();
 	updateDataList = findAllChildren(id);
 	// add originating ID back in
 	updateDataList.push(id);	
@@ -2463,7 +2503,7 @@ function editSquare(id){
 function everyID(){
 	// OUT : Array of Integers
 	
-	idlist = [];
+	var idlist = [];
 	for (var id in url.squares){
 		idlist.push(url.squares[id].id);
 	}	
@@ -2520,27 +2560,28 @@ function downloadAsImage() {
 function pivotToX(id){
 	// IN : Integer
 
+	var index = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
+
+
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	
 	var stringFormat = "YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]"
-	kibanaTo   = moment(to, "X").utc().format(stringFormat);
-	kibanaFrom = moment( from , "X").utc().format(stringFormat);
+	var kibanaTo   = moment(to, "X").utc().format(stringFormat);
+	var kibanaFrom = moment( from , "X").utc().format(stringFormat);
 
 	// var Ds = calcDs(id, []);
-	Ds = clickObjectsToDataset(id)
+	// var Ds = clickObjectsToDataset(id)
 
 	var fields=["*"]
 	var limit = 10000;
 
-	var elasticQuery = elastic_query_builder(id, from, to, Ds, fields, limit, false, null, true)['query'];
-
-	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
+	var dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
 	// XXX remove port number, in config we should split that out as two fields? (or have a new field for the pivot address separate?)
-	elasticIP = dst.split(":")[0]
+	var elasticIP = dst.split(":")[0]
 
-	path = "https://"+elasticIP+"/app/kibana#/discover?"
-	urlStruct = "_g=" + rison.encode({
+	var path = "https://"+elasticIP+"/app/kibana#/discover?"
+	var urlStruct = "_g=" + rison.encode({
 		//"filters":[],
 		"refreshInterval":{
 			"pause":true,
@@ -2553,30 +2594,10 @@ function pivotToX(id){
 		}
 	})
 
-	// qq(elasticQuery)
-	// qq(JSON.stringify(elasticQuery))
-	// qq( encodeURI(JSON.stringify(elasticQuery)))
-	// qq(encodeURIComponent(JSON.stringify(elasticQuery)))
-
-	urlStructJSON = {
-		//"columns": ["_source"],
-		"filters": [{
-				"$state": {
-					"store": "appState"
-				},
-				"meta": {
-					"alias": null,
-					"disabled": false,
-					"index": "*:logstash-*",
-					"key": "query",
-					"negate": false,
-					"type": "custom",
-					"value": JSON.stringify(elasticQuery)
-				},
-				"query": elasticQuery
-				
-			}
-		],
+	// basic structure
+	var urlStructJSON = {
+		"columns": ["_source"],
+		"filters": [],
 		"index": "*:logstash-*",
 		"interval": "auto",
 		"query": {
@@ -2585,10 +2606,75 @@ function pivotToX(id){
 		},
 		"sort": ["@timestamp", "desc"]
 	}
-	thisQuery = "&_a=" + rison.encode(urlStructJSON)
+	
+	// push basic "index" filter
+	urlStructJSON['filters'].push(
+		{
+            "$state": {
+                "store": "appState"
+            },
+            "match": {
+                "_index": {
+                    "query": index,
+                    "type": "phrase"
+                }
+            },
+            "meta": {
+                "alias": null,
+                "disabled": false,
+                "index": "*:logstash-*",
+                "key": "match",
+                "negate": false,
+                "type": "custom",
+                "value": "%7B%22_index%22:%7B%22query%22:%22*bro*%22,%22type%22:%22phrase%22%7D%7D"
+            }
+        }
+	)
+	
+
+	//var elasticQuery = elastic_query_builder(id, from, to, Ds, fields, limit, false, null, true)['query'];
+	// build array of all valid Ds fields for parents with a Ds
+	var elasticQuery = []
+	var familyTree = findParents(id)
+	familyTree.push(id)
+	_.each(familyTree, function(eachId){
+		var Ds = retrieveSquareParam(eachId, "Ds", false)
+		if(Ds  != null){
+			Ds = JSON.parse(atob(Ds))
+			var query = elastic_query_builder(eachId, from, to, Ds, fields, limit, false, null, true)['query']
+
+			urlStructJSON['filters'].push(
+				{
+					"$state": {
+						"store": "appState"
+					},
+					"meta": {
+						"alias": null,
+						"disabled": false,
+						"index": "*:logstash-*",
+						"key": "bool",
+						"negate": false,
+						"type": "custom",
+						"value": JSON.stringify(query['bool'])
+					},
+					"bool": query['bool']
+				}
+			)
+
+
+		}
+	})
+
+
+	var thisQuery = "&_a=" + rison.encode(urlStructJSON)
 
 	var kibanaQuery = path + urlStruct + thisQuery
 
+	// qq(urlStructJSON)
+	// qq(elasticQuery)
+	// qq(JSON.stringify(elasticQuery))
+	// qq( encodeURI(JSON.stringify(elasticQuery)))
+	// qq(encodeURIComponent(JSON.stringify(elasticQuery)))
 	// qq(kibanaQuery)
 
 	window.open(kibanaQuery);
@@ -2703,12 +2789,12 @@ function bookmarks(){
 }
 
 // populate the Template overlay
-function doTemplates(){
-	for (var j in master_templates){
-		$("#templateshere").append("<div class='fleft twist'><input type='button' value='Apply' onClick='pushTemplate(1, "+j+")' /></div><div class='fleft twist'>"+master_templates[j]["Desc"]+"</div><div class='clr'></div>");
+// function doTemplates(){
+// 	for (var j in master_templates){
+// 		$("#templateshere").append("<div class='fleft twist'><input type='button' value='Apply' onClick='pushTemplate(1, "+j+")' /></div><div class='fleft twist'>"+master_templates[j]["Desc"]+"</div><div class='clr'></div>");
 		
-	}		
-}
+// 	}		
+// }
 
 
 // Display the Template Overlay
@@ -2726,12 +2812,12 @@ function compileGraphs(){
 	$.get( "./compile_graphs.php", function( data ) {
 		// results are needed elsewhere, so store them outside this function
 		$.each(data, function(k, v) {
-			existing_json = graphs_jsfiles_json.get_graphs_json();
+			var existing_json = graphs_jsfiles_json.get_graphs_json();
 			existing_json[k] = v;
 			graphs_jsfiles_json.set_graphs_json(existing_json);
 		})
 		// read the results back and load JS
-		jsStilltoLoad = 0;
+		var jsStilltoLoad = 0;
 		
 		$.each(graphs_jsfiles_json.get_graphs_json(), function(k, v){
 			$.each(v, function(i, val){
@@ -2762,7 +2848,7 @@ function compileConnectors(){
 	// get all connectors and add to the overlay
 	$.get( "./compile_connectors.php", function( data ) {
 		$.each(data, function(k, v) {
-			existing_connectors = connectors_json.get_connectors_json();
+			var existing_connectors = connectors_json.get_connectors_json();
 			existing_connectors[k] = v;
 			connectors_json.set_connectors_json(existing_connectors);
 			
@@ -2801,7 +2887,7 @@ function initialLoad(){
 			// I'm a root, ensure my database "mappings" are prepared for speed
 			if(connectors_json.handletotype( retrieveSquareParam(id, 'CH')) == "elastic"){
 				
-				handle = retrieveSquareParam(id, 'CH')
+				var handle = retrieveSquareParam(id, 'CH')
 				
 				// do it here on load, also do it during new square creation
 				elastic_prep_mappings(handle)
@@ -2874,15 +2960,15 @@ $( document ).ready(function() {
 			// squaregroup.attr("transform")			
 			// translate(543.0557806151778,629.5716410660139) scale(0.43527531847787715)
 
-			roundingZero = 1
-			roundingTwo = 100
+			var roundingZero = 1
+			var roundingTwo = 100
 
-			zoomString = squaregroup.attr("transform")	
-			zoomRegex = /[0-9\.]+/g
-			zoomMatches = zoomString.match(zoomRegex)
+			var zoomString = squaregroup.attr("transform")	
+			var zoomRegex = /[0-9\.]+/g
+			var zoomMatches = zoomString.match(zoomRegex)
 			
 			
-			newZoomString = "translate(" + Math.round((zoomMatches[0]) * roundingZero) / roundingZero + "," + Math.round((zoomMatches[1]) * roundingZero) / roundingZero + ") scale("+Math.round((zoomMatches[2]) * roundingTwo) / roundingTwo+")"
+			var newZoomString = "translate(" + Math.round((zoomMatches[0]) * roundingZero) / roundingZero + "," + Math.round((zoomMatches[1]) * roundingZero) / roundingZero + ") scale("+Math.round((zoomMatches[2]) * roundingTwo) / roundingTwo+")"
 
 			// save this zoom/transform base64 into the URL for pageload/bookmarks etc
 			url.Zt = newZoomString;
@@ -2910,7 +2996,7 @@ $( document ).ready(function() {
 	}
 
 	// used to store all the lines connecting squares		
-	linesgroup = d3.select("#squaregroup")
+	var linesgroup = d3.select("#squaregroup")
 		.append("g")
 		.attr("id", "linegroup");	
 	
@@ -2958,17 +3044,17 @@ $( document ).ready(function() {
 			
 				if(GLB.threejs.realTimeRender == true){
 					// set off real time rendering
-					animate_Three();
+					animate_Thr//ee();
 				}else{
 					// setTimeout for slower refresh, but better on low spec machines
-					setTimeoutThree(GLB.threejs.notRealTimeRenderFrequency);
+					setTimeoutThr//ee(GLB.threejs.notRealTimeRenderFrequency);
 				}
 				
 				compileGraphs();
 
 			});
 
-			threeRenderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+			var threeRenderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
 			// // XXX goes crazy if OS fonts are 125%... needs reviewing!!!
 			// //threeRenderer.setPixelRatio(window.devicePixelRatio);
 
@@ -3067,28 +3153,28 @@ $( document ).ready(function() {
 
 
 
-	// document.addEventListener("visibilitychange", function() {
-	// 	var today = new Date();
-	// 	var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
-	// 	var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-	// 	var dateTime = date+' '+time;
+	document.addEventListener("visibilitychange", function() {
+		var today = new Date();
+		var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+		var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+		var dateTime = date+' '+time;
 		
-	// 	if (document.visibilityState === 'visible') {
-	// 		ww(1, "visible at :"+dateTime)
-	// 	} else {
-	// 		ww(1, "hidden  at :"+dateTime)
-	// 	}
-	// });
+		if (document.visibilityState === 'visible') {
+			ww(1, "visible at :"+dateTime)
+		} else {
+			ww(1, "hidden  at :"+dateTime)
+		}
+	});
 
-	// setInterval(function(){
-	// 	var today = new Date();
-	// 	var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
-	// 	var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-	// 	var dateTime = date+' '+time;
+	setInterval(function(){
+		var today = new Date();
+		var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+		var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+		var dateTime = date+' '+time;
 	
-	// 	ww(1, "checkin at :"+dateTime)
+		ww(1, "checkin at :"+dateTime)
 
-	// }, 10000);
+	}, 10000);
 
 
 

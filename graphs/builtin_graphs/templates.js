@@ -24,7 +24,7 @@ function process_templates(id){
 }
 
 function graph_templates(id){
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(id)+") aConnector="+aConnector);
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(id)+") aConnector="+aConnector);
 
 
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
@@ -51,9 +51,9 @@ function graph_templates(id){
 
 
 	// Apply Template
-	clusterSection = square.append("div")
+	var clusterSection = square.append("div")
 		.classed("square_cluster_section", true)
-	clusterDiv = clusterSection.append("div")
+	var clusterDiv = clusterSection.append("div")
 		.classed("fleft", true)
 	clusterDiv.append("img")
 		.classed("square_cluster_image", true)

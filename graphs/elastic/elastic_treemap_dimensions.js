@@ -13,8 +13,8 @@ graphs_functions_json.add_graphs_json({
 
 function elastic_completeform_treemapdimensions(id, targetDiv){
 	
-	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
+	var dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
+	var connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
 
 	elastic_get_fields(dst, connectionhandle, id)
 		.then(function(results){
@@ -22,9 +22,9 @@ function elastic_completeform_treemapdimensions(id, targetDiv){
 			var dropdownFields = []
 			
 			// _.omit keys of data types we dont want, or _.pick the ones we do, i.e. omit "text", or pick "ip"
-			subResults = _.omit(results, "")
+			var subResults = _.omit(results, "")
 			_.each(subResults, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
-			dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
+			var dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
 
 			const jsonform = {
 				"schema": {
@@ -110,16 +110,16 @@ function elastic_completeform_treemapdimensions(id, targetDiv){
 
 function elastic_populate_treemapdimensions(id){
 	
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var timesArray = [[from, to]]
 
-	Ds = clickObjectsToDataset(id)
+	var Ds = clickObjectsToDataset(id)
 
-	fields = []
+	var fields = []
 	_.each(retrieveSquareParam(id,"Cs",true)['array'], function(key,num){
 		fields.push(key)
 	})	
@@ -128,7 +128,7 @@ function elastic_populate_treemapdimensions(id){
 	var stats = false
 	var statField = ""
 	var incTime = true
-	urlencode = false
+	var urlencode = false
 
 
 	var query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode)
@@ -144,11 +144,11 @@ function elastic_populate_treemapdimensions(id){
 function elastic_rawtoprocessed_treemapdimensions(id){
 
 	var data = retrieveSquareParam(id, 'rawdata_'+'')['aggregations']['time_ranges']['buckets'][0]['field']['buckets']
-	fields = []
+	var fields = []
 	
 	if(retrieveSquareParam(id,"Cs",true) !== undefined){
 		
-		Cs = retrieveSquareParam(id,"Cs",true)
+		var Cs = retrieveSquareParam(id,"Cs",true)
 
 		if(Cs['array'] !== null ){
 			fields = Cs['array']
@@ -174,7 +174,7 @@ function elastic_rawtoprocessed_treemapdimensions(id){
 
 function elastic_graph_treemapdimensions(id){
 	
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	// https://bl.ocks.org/ganezasan/52fced34d2182483995f0ca3960fe228
 
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
@@ -196,7 +196,7 @@ function elastic_graph_treemapdimensions(id){
 	// ['children'][0] is for the first bucket, timerange, so just load it
 	var data = retrieveSquareParam(id, 'processeddata')['children'][0]
 
-	color = d3.scaleOrdinal().range(d3.schemeCategory20c);
+	var color = d3.scaleOrdinal().range(d3.schemeCategory20c);
 
 	const treemap = d3.treemap()
 		.size([width, height])
@@ -259,17 +259,17 @@ function elastic_graph_treemapdimensions(id){
 			if(retrieveSquareParam(id,"Cs",true) !== undefined){
 				if(retrieveSquareParam(id,"Cs",true)['array'] !== null ){
 
-					keys = retrieveSquareParam(id,"Cs",true)['array']
-					vals = d.ancestors().reverse().map(d => d.data.name)
+					var keys = retrieveSquareParam(id,"Cs",true)['array']
+					var vals = d.ancestors().reverse().map(d => d.data.name)
 					//vals.shift() // remove root val for the Flare
 
 					if(keys.length != vals.length){
 						ww(0, "Treemap, diff length found id:"+d.id)
 					}
-					clickObject = {"compare":[], "notexist":[], "timerange":[]}
+					var clickObject = {"compare":[], "notexist":[], "timerange":[]}
 				
-					equals = []
-					notexist = []
+					var equals = []
+					var notexist = []
 										
 					for(var i=0;i<vals.length;i++){
 						

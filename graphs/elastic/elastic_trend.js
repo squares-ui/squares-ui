@@ -15,8 +15,8 @@ graphs_functions_json.add_graphs_json({
 
 function elastic_completeform_trend(id, targetDiv){
 
-	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
+	var dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
+	var connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
 
 	elastic_get_fields(dst, connectionhandle, id)
 		.then(function(results){
@@ -24,9 +24,9 @@ function elastic_completeform_trend(id, targetDiv){
 			var dropdownFields = []
 
 			// _.omit keys of data types we dont want, or _.pick the ones we do, i.e. omit "text", or pick "ip"
-			subResults = _.omit(results, "")
+			var subResults = _.omit(results, "")
 			_.each(subResults, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
-			dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
+			var dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
 
 			const jsonform = {
 				"schema": {
@@ -98,7 +98,7 @@ function elastic_completeform_trend(id, targetDiv){
 
 function elastic_populate_trend(id){
 
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
@@ -118,7 +118,7 @@ function elastic_populate_trend(id){
 		timesArray.push([from - (i*windowSize), to - (i*windowSize)])
 	}
 
-	Ds = clickObjectsToDataset(id)
+	var Ds = clickObjectsToDataset(id)
 	// qq(Ds)
 
 	var fields = [retrieveSquareParam(id,"Cs",true)['x_field']]
@@ -141,7 +141,7 @@ function elastic_rawtoprocessed_trend(id){
 
 	var data = retrieveSquareParam(id, 'rawdata_'+'')['aggregations']['time_ranges']['buckets']
 	var dataMid = {}
-	scale = "linear"
+	var scale = "linear"
 
 
 	_.each(data, function(timerange){
@@ -166,11 +166,11 @@ function elastic_rawtoprocessed_trend(id){
 	// qq(dataMid)
 
 
-	dataOut = []
+	var dataOut = []
 	_.each(dataMid, function(values,field){
 		// mini array
 		
-		tmpArr = []
+		var tmpArr = []
 		_.each(values, function(v, k){
 			var mo = {}
 			mo['from_as_string'] = k
@@ -193,7 +193,7 @@ function elastic_rawtoprocessed_trend(id){
 function elastic_graph_trend(id){
 	
 
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	//https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030
 
 
@@ -212,7 +212,7 @@ function elastic_graph_trend(id){
 	var height = document.getElementById("square_"+id).clientHeight - margin.top - margin.bottom
 	var width  = document.getElementById("square_"+id).clientWidth - margin.left - margin.right
 	
-	g = square.append("g")
+	var g = square.append("g")
     .attr("transform",
           "translate(" + margin.left + "," + margin.top + ")");
 
@@ -227,15 +227,23 @@ function elastic_graph_trend(id){
 	_.each(data, function(obj, i){
 		dataCount.push( _.pluck(obj['data'], 'count')  )
 		_.each(obj['data'], function(obj, j){
-			tickValues.push( new Date(obj['from_as_string']))
+
+			// push as strings, easier to do "if exist"
+			if(_.indexOf(tickValues, obj['from_as_string']) == -1){
+				tickValues.push( obj['from_as_string'])
+			}
 			refWindows.push(-1*j)
 		})
 
 	})
 	dataCount = _.flatten(dataCount)
-
-
-
+	
+	// make each tickValue a date object
+	_.each(tickValues, function(tick, i){
+		tickValues[i] = new Date(tick)
+	})
+	// qq(tickValues)
+	
 	// // Scale of "-1 Widow" across the top
 	// const xAxisTop= d3.axisTop(xTop)
 	// 	.tickValues(refWindows)
@@ -252,15 +260,13 @@ function elastic_graph_trend(id){
 
 
 
-
-
-
 	// scale for dates
 	var xBottom = d3.scaleTime()
 		.domain(  
 			d3.extent(_.map(data[0]['data'], function(obj){ return new Date(obj['from_as_string']) }))
 		)
 		.range([0, width - margin.right])
+
 	// Scale of dates across the bottom
 	const xAxisBottom = d3.axisBottom(xBottom)
 		.tickFormat(d3.timeFormat("%b %d %H:%m"))
@@ -269,13 +275,6 @@ function elastic_graph_trend(id){
 		.attr('transform', 'translate(0,' + height + ')')
 		.attr("class", "xaxis")
 		.call(xAxisBottom)
-
-
-
-
-
-
-
 
 
 
@@ -354,9 +353,9 @@ function elastic_graph_trend(id){
 			return GLB.color(d.name)
 		})
 		.on("click", function(d){ 
-			clickObject = {"compare":[]}
-			key = retrieveSquareParam(id, 'Cs', true)['x_field']
-			miniobj = {}
+			var clickObject = {"compare":[]}
+			var key = retrieveSquareParam(id, 'Cs', true)['x_field']
+			var miniobj = {}
 			
 			miniobj[key] = d.name
 			
@@ -370,10 +369,10 @@ function elastic_graph_trend(id){
 	// xaxis ticks clickability
 	d3.selectAll(".xaxis .tick text")
 		.on('click', function(value,index){
-			clickObject = {"compare":[]}
+			var clickObject = {"compare":[]}
 			
-			key = retrieveSquareParam(id, 'Cs', true)['x_field']
-			miniobj = {}
+			var key = retrieveSquareParam(id, 'Cs', true)['x_field']
+			var miniobj = {}
 			miniobj[key] = this['__data__']
 			clickObject.compare.push(miniobj)	
 	

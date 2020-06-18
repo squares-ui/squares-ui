@@ -13,8 +13,8 @@ graphs_functions_json.add_graphs_json({
 
 function elastic_completeform_rawoutput(id, targetDiv){
 
-	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
+	var dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
+	var connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
 
 	elastic_get_fields(dst, connectionhandle, id)
 		.then(function(results){
@@ -59,12 +59,12 @@ function elastic_completeform_rawoutput(id, targetDiv){
 
 
 function elastic_populate_rawoutput(id){
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 
-	Ds = clickObjectsToDataset(id)
+	var Ds = clickObjectsToDataset(id)
 	
 	var fields = [];  // use this to see all fields in raw output
 	//var fields = ["@timestamp", "type", "client_ip", "method", "port", "server_response"];
@@ -87,7 +87,7 @@ function elastic_rawtoprocessed_rawoutput(id){
 
 	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
 
-	dataout = _.map(data, function(row){
+	var dataout = _.map(data, function(row){
 		return row._source
 	})
 
@@ -99,7 +99,7 @@ function elastic_rawtoprocessed_rawoutput(id){
 
 function elastic_graph_rawoutput(id){
 	
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	// http://bl.ocks.org/bbest/2de0e25d4840c68f2db1
 
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)

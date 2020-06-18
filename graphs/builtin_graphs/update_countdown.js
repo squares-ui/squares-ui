@@ -16,16 +16,16 @@ var tickObject = new Object();
 
 function completeform_updatecountdown(id, targetDiv){
 
-	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
+	var dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
+	var connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
 
 	elastic_get_fields(dst, connectionhandle, id)
 		.then(function(results){
 	
 			var times = [10,30,120,300,900,3600,43200,86400]
 
-			jsonFormEnum = []
-			titleMap = {}
+			var jsonFormEnum = []
+			var titleMap = {}
 
 			_.each(times, function(time, i){
 				jsonFormEnum.push(time)
@@ -83,7 +83,7 @@ function process_updatecountdown(id){
 
 function graph_updatecountdown(id){
 
-	qq(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	
 	$("#square_"+id).height( height ); 
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)

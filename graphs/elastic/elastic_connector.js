@@ -1,278 +1,15 @@
 
-// function elastic_query_buildera(from, to, filter, fields, limit, incTime = true, incNull = true){
 
+//////////////////////////////////////////
+//////////////////////////////////////////
+/// supporing functions
+//////////////////////////////////////////
+//////////////////////////////////////////
 
-// 	// loop through fields[], creating object to search with
-// 	let theFilter = [];
-	
-// 	// add arrays from square
-// 	_.each(filter, function(element){ 
-// 		theFilter = theFilter.concat(JSON.parse(element))
-// 		qq("##"+element)
-// 	})
-	
-// 	// for Pivot to Kibana, timeframe not needed in query
-// 	if( incTime == true){
-// 		//format works in Elastic and Kibana
-// 		var stringFormat = "YYYY-MM-DD[T]HH:mm:ss[.]SSS"
-// 		to   = moment(to, "X").format(stringFormat);
-// 		from = moment( from , "X").format(stringFormat);
-
-// 		// set the time
-// 		var timeRange = [{"range":{
-// 				"@timestamp" : { "gte" : from, "lt" :  to }
-// 			}
-// 		}]	
-// 		// add the time
-// 		theFilter = theFilter.concat(timeRange)
-// 	}
-
-// 	// remove any potential duplicates if square have the same condition by accident
-// 	theFilter = _.uniq(theFilter)
-
-
-
-// 	// Has Square asked to not see Null entries?
-// 	// if(retrieveSquareParam(id,"Cs",false) != null){
-// 	// 	if(retrieveSquareParam(id,"Cs",false)['x_null'] != true){
-// 	// 		qq("Filtering out "+fields[0])
-// 	// 		theFilter.push({"exists" : { "field" : fields[0] }})
-			
-// 	// 	}
-// 	// }
-
-
-// 	//
-// 	queryBody = {
-// 		"query": {
-// 			"bool": {
-// 				//"must": theFilter,
-// 				"filter": theFilter,
-// 			}
-// 		},
-		
-// 		"size": limit,
-// 		"_source": fields
-// 	}
-
-// 	return queryBody;
-// }
-
-
-function clickObjectsToDataset(id, compare, notexist){
-	// input array of compare/notexist from square and all parents
-	// return a nice object
-
-	prettyObject = {}
-	prettyObject['compare'] = []
-	prettyObject['notexist'] = []
-
-	//qq(retrieveSquareParam(id,"Cs",true))
-	
-	
-	
-	cumulative = calcDs(id, [])
-	
-	
-	// loop each square's dataset
-	_.each(cumulative, function(obj, i){
-		
-		// each square can have multi dimensional compare
-		_.each(obj['compare'], function(obj2,key2){
-			prettyObject['compare'].push(obj2)
-		})
-
-		// each square can have multi dimensional compare
-		_.each(obj['notexist'], function(obj2,key2){
-			prettyObject['notexist'].push(obj2)
-		})
-
-	})
-
-	return prettyObject
-
-}
-
-
-
-
-
-
-function elastic_query_builder(id, from, to, dataset, fields, limit, incTime = true, incNull = true, urlEncode){
-
-	// examples of data
-	// dataset = {"compare:[], "notexist":[]}
-	// fields = ["message", "source_ip"]
-	// for pivot to Kibana we don't use time in the query, to incTime exists
-	// incNull is a preference on each square, so incNull exists
-
-	// //for reference
-	// query = {
-	// 	"query": {
-	// 	  	"bool": {
-	// 			"must":[
-	// 				{
-	// 					"term": {
-	// 						"<field>": "<value>"
-	// 					}
-	// 				},{
-	// 					"term": {
-	// 						"<field>.keyword": "<value>"
-	// 					}
-	// 				},{
-	// 					"range": {
-	// 						"@timestamp": {
-	// 						"gte": "2020-05-01T00:00:00+00:00",
-	// 						"lt": "2020-05-01T10:59:59+00:00"
-	// 						}
-	// 					}
-	// 				}
-	// 			]
-	// 		},{
-	// 		"must_not": [
-	// 				{
-	// 					"exists": {
-	// 						"field": "<field_name>"
-	// 					}
-	// 				}
-	// 			]
-	// 		}
-	// 	},
-	// 	"size": 100,
-	// 	"_source": [
-	// 	]
-	// }
-
-
-	query = {
-		"query": {
-		  	"bool": {
-				"must":[],
-				"must_not": []
-			}
-		},
-		"size": limit,
-		"_source": fields
-	}
-
-	handle = retrieveSquareParam(id, 'CH')
-	mappings = connectors_json.getAttribute(handle, "mappings")
-	// qq(mappings)
-
-	if(incTime == true){
-		// Pivot from workspacecontainer to Elastic uses time separate, so in that instance, donm't include time in overall API request
-		var stringFormat = "YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]"
-		
-		
-		// to   = moment(to, "X").utc().format(stringFormat);
-		// from = moment(from , "X").utc().format(stringFormat);
-
-		query['query']['bool']['must'].push({
-			"range": {
-				"@timestamp": {
-					"gte": moment.unix(from).format(),
-					"lt": moment.unix(to).format()
-				}
-			}
-		})
-	}
-
-	if(dataset['compare']){
-
-		// Compile all the Must, as in "Must exist" or "must compare"
-		// "Must" means a match of key value pairs
-		_.each(dataset['compare'], function(comp){
-			//filter.must.push({"term": equal})
-	
-
-
-			key = _.keys(comp)[0]
-			val = _.values(comp)[0]
- 
-			// qq(">>>>>>>>>>>>>")
-			// qq(comp)
-			// qq(key)
-			// // qq(mappings)
-
-
-			if(mappings){
-				
-				// if the key is 1d (e.g. sourceip) We just get the value
-				// if the key is 2d (e.g. destination_ip.countrycode2) we need to check index Mappings if it has the .keyword, which means going deep
-				key2 = key.split(".").join(".properties.").split('.').reduce(stringDotNotation, mappings)
-				
-				// if(mappings && mappings[key] && mappings[key]['fields'] && mappings[key]['fields']['keyword'] && mappings[key]['fields']['keyword']['type'] && mappings[key]['fields']['keyword']['type'] == "keyword"){
-				// 	miniObj = {}
-				// 	miniObj[key+".keyword"] = val
-				// 	miniObj = {"term": miniObj}
-				// 	query['query']['bool']['must'].push(miniObj)
-				// 	qq("using .keyword for non 2dimensional object")
-								
-				if (key2['fields'] && key2['fields']['keyword'] && key2['fields']['keyword']['type'] && key2['fields']['keyword']['type'] == "keyword" ){
-
-					miniObj = {}
-					
-					if(urlEncode == true){
-						miniObj[key+".keyword"] = risonEncode(val)
-					}else{
-						miniObj[key+".keyword"] = val
-					}
-					
-					
-					
-					miniObj = {"term": miniObj}
-					query['query']['bool']['must'].push(miniObj)
-					// qq("2d object using .keyword")
-
-
-				}else{
-					miniObj = {}
-					
-					if(urlEncode == true){
-						miniObj[key] = risonEncode(val)
-					}else{
-						miniObj[key] = val
-					}
-					
-					miniObj = {"term": miniObj}
-					query['query']['bool']['must'].push(miniObj)
-					// qq("NOT using .keyword")
-					
-				}	
-				
-				// qq(miniObj)
-			}else{
-				ww(0, "No Mappings for id:"+id+", cannot build up Elastic Query, results will be wrong")
-			}
-		})
-
-	}
-
-
-
-	if(dataset['notexist']){
-
-		// Compile "Mustnot" as in "must not exist" (or null)
-		//
-		_.each(dataset['notexist'], function(notex){
-			query['query']['bool']['must_not'].push({"exists": {"field": notex}})
-		})
-	
-	}
-
-	// qq("final query..............")
-	// qq(query)
-
-	return query
-
-	
-
-
-}
 
 function elastic_connector(dst, index, id, query){
 
-	queryBodyJSON = JSON.stringify(query);
+	var queryBodyJSON = JSON.stringify(query);
 	
 	$.ajax({
 		type: "POST",
@@ -284,7 +21,7 @@ function elastic_connector(dst, index, id, query){
 		success: function (response) {
 				
 				// is data valid?  404/fail/timeout/
-					validdata = true;
+					var validdata = true;
 				//}
 				
 				// get this data saved... code continues in here
@@ -308,6 +45,42 @@ function elastic_connector(dst, index, id, query){
 			}
 		}
         });
+}
+
+
+
+function clickObjectsToDataset(id, compare, notexist){
+	// input array of compare/notexist from square and all parents
+	// return a nice object
+
+	var prettyObject = {}
+	prettyObject['compare'] = []
+	prettyObject['notexist'] = []
+
+	//qq(retrieveSquareParam(id,"Cs",true))
+	
+	
+	
+	var cumulative = calcDs(id, [])
+	
+	
+	// loop each square's dataset
+	_.each(cumulative, function(obj, i){
+		
+		// each square can have multi dimensional compare
+		_.each(obj['compare'], function(obj2,key2){
+			prettyObject['compare'].push(obj2)
+		})
+
+		// each square can have multi dimensional compare
+		_.each(obj['notexist'], function(obj2,key2){
+			prettyObject['notexist'].push(obj2)
+		})
+
+	})
+
+	return prettyObject
+
 }
 
 
@@ -372,7 +145,7 @@ function elastic_get_fields(dst, index, id){
 
 				// create an allfields
 				//allFields = _.sortBy(_.union(_.flatten(_.values(fields))), function(thingy){ return thingy; });
-				fieldNames = _.keys(fields)
+				var fieldNames = _.keys(fields)
 				// keep separated so they dont interfere with each other
 				//fields['allfields'] = allFields
 				fields['fields'] = fieldNames
@@ -408,34 +181,12 @@ function elastic_get_fields(dst, index, id){
 
 
 
-
-
-
-function elasticMustMustNot(must, mustnot, timerange){
-	
-	// must = [{"field":"value"},{...}]
-	// mustnot = ["field1"","field2"]
-	// timerange = [epoch,epoch]
-
-	//output is 
-	
-
-
-
-}
-
-
-
-
-
-
-
 function elastic_prep_mappings(handle){
 	// Connectors need their mapping understood in SQUARES
 	// this function checks if the mapping is cached upon page load
 	// if found, do nothing.  If not found, initiate elastic_return_mappings
-	dst = connectors_json.handletodst(handle)
-	index = connectors_json.handletox(handle, 'index')
+	var dst = connectors_json.handletodst(handle)
+	var index = connectors_json.handletox(handle, 'index')
 
 	// has the connector been populated with it's mappings?
 	if(connectors_json.getAttribute(handle, "mappings") == null){
@@ -472,8 +223,8 @@ function elastic_return_mappings(dst, index){
 			
 				// JSON are not always in the right order, but I'm going to use it anyway
 				// XXX - improvement, parse each Key, string->data, compare epoch, find newest (or oldest) config
-				theChosen = {}
-				theKey = ""
+				var theChosen = {}
+				var theKey = ""
 				_.each(data, function(obj,key){
 					theChosen = obj
 					theKey = key
@@ -481,7 +232,7 @@ function elastic_return_mappings(dst, index){
 				
 				// qq("using "+theKey)
 				
-				mappings = theChosen['mappings']['doc']['properties']
+				var mappings = theChosen['mappings']['doc']['properties']
 				//qq(mappings)
 				
 				resolve(mappings)
@@ -510,12 +261,12 @@ function elastic_return_mappings(dst, index){
 }
 
 
-function elastic_test_connector(dst, index){
+function elastic_test_connector(id, dst, index){
 	// query for 0 records, but see if we can connect, used for health testing
 
 	var query = {"size":0, "_source":[]}
 
-	queryBodyJSON = JSON.stringify(query);
+	var queryBodyJSON = JSON.stringify(query);
 	
 	$.ajax({
 		type: "POST",
@@ -527,7 +278,7 @@ function elastic_test_connector(dst, index){
 		success: function (response) {
 				
 				// is data valid?  404/fail/timeout/
-					validdata = true;
+					var validdata = true;
 				//}
 				
 				// get this data saved... code continues in here
@@ -552,6 +303,384 @@ function elastic_test_connector(dst, index){
 		}
         });
 }
+
+
+
+
+function elasticToFlare(data, scale){
+	// in = elastic response
+	// out = d3 flare {"data": {"name": "", "children": [..]}
+
+	// for graphs that only use 1 time range, just enter it straight away
+	dataout = {"name": "", "children":[]}
+	
+	dataout['children'] = elasticToFlareLoop(data, dataout['children'], scale)
+	return dataout
+
+}
+function elasticToFlareLoop(data, dataout, scale){
+
+	for ( var i = 0 ; i < data.length; i++){
+	
+		if(data[i].hasOwnProperty("field")){
+
+			var mo = {}
+			mo['name'] = data[i]['key']
+			mo['children'] = []
+			dataout.push(mo)
+			
+			elasticToFlareLoop(data[i]['field']['buckets'], dataout[dataout.length-1]['children'])
+
+		}else{
+					
+			for ( var i = 0 ; i < data.length; i++){
+
+				var mo = {}
+				mo['name'] = data[i]['key']
+				mo['realSize'] = data[i]['doc_count']
+				
+				if(scale == "log"){
+					// cheating but log(0) causes UI problems
+					// At this rate it's not longer a "count" more of a representation, so until an alternative I'm happy with it
+					mo['size'] = Math.log(data[i]['doc_count']) + 1
+				}else if(scale == "inverse"){
+					mo['size'] = 1 / data[i]['doc_count']
+				}else{
+					// default to linear
+					mo['size'] = data[i]['doc_count']
+				}
+
+				// if stats are present
+				if(data[i].hasOwnProperty('stats')){
+					mo['stats'] = _.clone(data[i]['stats'])
+					
+
+				}
+
+
+
+
+				dataout.push(mo)			
+			}
+		}
+	}
+	return dataout
+}
+
+
+function hasFieldKeyword(handle, field){
+	// some fields must have their keyword specified as "<field>.keyword"
+	var mappings = connectors_json.getAttribute(handle, "mappings")
+	
+	if(mappings){
+		key2 = field.split(".").join(".properties.").split('.').reduce(stringDotNotation, mappings)
+		if (key2['fields'] && key2['fields']['keyword'] && key2['fields']['keyword']['type'] && key2['fields']['keyword']['type'] == "keyword" ){
+			return true
+		}else{
+			return false
+		}
+	}else{	
+		ww("0", "hasFieldKeyword had no Mappings, handle:"+handle+" field:"+field)
+		
+		addPageStatus("warning", "Mappings for "+handle+" not loaded.")
+
+		return false
+	}
+}
+
+
+
+
+//////////////////////////////////////////
+//////////////////////////////////////////
+/// query builder supporing
+//////////////////////////////////////////
+//////////////////////////////////////////
+
+
+
+
+function elastic_must_add(query, dataset, mappings){
+
+	// Compile all the Must, as in "Must exist" or "must compare"
+	// "Must" means a match of key value pairs
+	_.each(dataset['compare'], function(comp){
+		//filter.must.push({"term": equal})
+
+		var key = _.keys(comp)[0]
+		var val = _.values(comp)[0]
+
+		// qq(">>>>>>>>>>>>>")
+		// qq(comp)
+		// qq(key)
+		// // qq(mappings)
+
+		if(mappings){
+			
+			// if the key is 1d (e.g. sourceip) We just get the value
+			// if the key is 2d (e.g. destination_ip.countrycode2) we need to check index Mappings if it has the .keyword, which means going deep
+			var key2 = key.split(".").join(".properties.").split('.').reduce(stringDotNotation, mappings)
+			
+			var miniObj = {}
+
+			if (key2['fields'] && key2['fields']['keyword'] && key2['fields']['keyword']['type'] && key2['fields']['keyword']['type'] == "keyword" ){
+
+
+				miniObj[key+".keyword"] = val
+				
+				miniObj = {"term": miniObj}
+				query['query']['bool']['must'].push(miniObj)
+				// qq("2d object using .keyword")
+
+			}else{
+
+				miniObj[key] = val
+				
+				miniObj = {"term": miniObj}
+				query['query']['bool']['must'].push(miniObj)
+				// qq("NOT using .keyword")
+				
+			}	
+			
+			// qq(miniObj)
+		}else{
+			ww(0, "No Mappings for id:"+id+", cannot build up Elastic Query, results will be wrong")
+		}
+	})
+
+	return query;
+}
+
+function elastic_mustNot_add(query, dataset){
+	
+	// Compile "Mustnot" as in "must not exist" (or null)
+	//
+	_.each(dataset['notexist'], function(notex){
+		query['query']['bool']['must_not'].push({"exists": {"field": notex}})
+	})
+
+	return query
+}
+
+
+
+function elasticMustMustNot(must, mustnot, timerange){
+	
+	// must = [{"field":"value"},{...}]
+	// mustnot = ["field1"","field2"]
+	// timerange = [epoch,epoch]
+
+	//output is 
+	
+
+
+
+}
+
+
+
+
+
+
+
+
+
+//////////////////////////////////////////
+//////////////////////////////////////////
+/// query builders
+//////////////////////////////////////////
+//////////////////////////////////////////
+
+
+
+
+
+
+function elastic_query_builder(id, from, to, dataset, fields, limit, incTime = true, incNull = true, urlEncode){
+
+	// examples of data
+	// dataset = {"compare:[], "notexist":[]}
+	// fields = ["message", "source_ip"]
+	// for pivot to Kibana we don't use time in the query, to incTime exists
+	// incNull is a preference on each square, so incNull exists
+
+	// //for reference
+	// query = {
+	// 	"query": {
+	// 	  	"bool": {
+	// 			"must":[
+	// 				{
+	// 					"term": {
+	// 						"<field>": "<value>"
+	// 					}
+	// 				},{
+	// 					"term": {
+	// 						"<field>.keyword": "<value>"
+	// 					}
+	// 				},{
+	// 					"range": {
+	// 						"@timestamp": {
+	// 						"gte": "2020-05-01T00:00:00+00:00",
+	// 						"lt": "2020-05-01T10:59:59+00:00"
+	// 						}
+	// 					}
+	// 				}
+	// 			]
+	// 		},{
+	// 		"must_not": [
+	// 				{
+	// 					"exists": {
+	// 						"field": "<field_name>"
+	// 					}
+	// 				}
+	// 			]
+	// 		}
+	// 	},
+	// 	"size": 100,
+	// 	"_source": [
+	// 	]
+	// }
+
+
+	var query = {
+		"query": {
+		  	"bool": {
+				"must":[],
+				"must_not": []
+			}
+		},
+		"size": limit,
+		"_source": fields
+	}
+
+	var handle = retrieveSquareParam(id, 'CH')
+	var mappings = connectors_json.getAttribute(handle, "mappings")
+	// qq(mappings)
+
+	if(incTime == true){
+		// Pivot from workspacecontainer to Elastic uses time separate, so in that instance, donm't include time in overall API request
+		var stringFormat = "YYYY-MM-DD[T]HH:mm:ss[.]SSS[Z]"
+		
+		
+		// to   = moment(to, "X").utc().format(stringFormat);
+		// from = moment(from , "X").utc().format(stringFormat);
+
+		query['query']['bool']['must'].push({
+			"range": {
+				"@timestamp": {
+					"gte": moment.unix(from).format(),
+					"lt": moment.unix(to).format()
+				}
+			}
+		})
+	}
+
+	if(dataset['compare']){
+
+		// Compile all the Must, as in "Must exist" or "must compare"
+		// "Must" means a match of key value pairs
+		_.each(dataset['compare'], function(comp){
+			//filter.must.push({"term": equal})
+	
+
+
+			var key = _.keys(comp)[0]
+			var val = _.values(comp)[0]
+ 
+			// qq(">>>>>>>>>>>>>")
+			// qq(comp)
+			// qq(key)
+			// // qq(mappings)
+
+
+			if(mappings){
+				
+				// if the key is 1d (e.g. sourceip) We just get the value
+				// if the key is 2d (e.g. destination_ip.countrycode2) we need to check index Mappings if it has the .keyword, which means going deep
+				var key2 = key.split(".").join(".properties.").split('.').reduce(stringDotNotation, mappings)
+				
+				// if(mappings && mappings[key] && mappings[key]['fields'] && mappings[key]['fields']['keyword'] && mappings[key]['fields']['keyword']['type'] && mappings[key]['fields']['keyword']['type'] == "keyword"){
+				// 	miniObj = {}
+				// 	miniObj[key+".keyword"] = val
+				// 	miniObj = {"term": miniObj}
+				// 	query['query']['bool']['must'].push(miniObj)
+				// 	qq("using .keyword for non 2dimensional object")
+								
+				if (key2['fields'] && key2['fields']['keyword'] && key2['fields']['keyword']['type'] && key2['fields']['keyword']['type'] == "keyword" ){
+
+					var miniObj = {}
+					
+					if(urlEncode == true){
+						miniObj[key+".keyword"] = risonEncode(val)
+					}else{
+						miniObj[key+".keyword"] = val
+					}
+					
+					
+					
+					miniObj = {"term": miniObj}
+					query['query']['bool']['must'].push(miniObj)
+					// qq("2d object using .keyword")
+
+
+				}else{
+					miniObj = {}
+					
+					if(urlEncode == true){
+						miniObj[key] = risonEncode(val)
+					}else{
+						miniObj[key] = val
+					}
+					
+					miniObj = {"term": miniObj}
+					query['query']['bool']['must'].push(miniObj)
+					// qq("NOT using .keyword")
+					
+				}	
+				
+				// qq(miniObj)
+			}else{
+				ww(0, "No Mappings for id:"+id+", cannot build up Elastic Query, results will be wrong")
+			}
+		})
+
+	}
+
+
+
+	if(dataset['notexist']){
+
+		// Compile "Mustnot" as in "must not exist" (or null)
+		//
+		_.each(dataset['notexist'], function(notex){
+			query['query']['bool']['must_not'].push({"exists": {"field": notex}})
+		})
+	
+	}
+
+	// qq("final query..............")
+	// qq(query)
+
+	return query
+
+	
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -641,9 +770,8 @@ function elastic_2d_aggregate(id, timesArray, thenBy, dataset, fields, limit, in
 		"_source": fields
 	  }
 
-	  handle = retrieveSquareParam(id, 'CH')
-
-	  mappings = connectors_json.getAttribute(handle, "mappings")
+	  var handle = retrieveSquareParam(id, 'CH')
+	  var mappings = connectors_json.getAttribute(handle, "mappings")
 
 
 
@@ -689,8 +817,8 @@ function elastic_2d_aggregate(id, timesArray, thenBy, dataset, fields, limit, in
 	
 
 
-			key = _.keys(comp)[0]
-			val = _.values(comp)[0]
+			var key = _.keys(comp)[0]
+			var val = _.values(comp)[0]
  
 			// qq(">>>>>>>>>>>>>")
 			// qq(comp)
@@ -713,12 +841,9 @@ function elastic_2d_aggregate(id, timesArray, thenBy, dataset, fields, limit, in
 								
 				if (key2['fields'] && key2['fields']['keyword'] && key2['fields']['keyword']['type'] && key2['fields']['keyword']['type'] == "keyword" ){
 
-					miniObj = {}
+					var miniObj = {}
 					
-
-						miniObj[key+".keyword"] = val
-					
-					
+					miniObj[key+".keyword"] = val
 					
 					miniObj = {"term": miniObj}
 					query['query']['bool']['must'].push(miniObj)
@@ -726,10 +851,9 @@ function elastic_2d_aggregate(id, timesArray, thenBy, dataset, fields, limit, in
 
 
 				}else{
-					miniObj = {}
+					var miniObj = {}
 		
 					miniObj[key] = val
-					
 					
 					miniObj = {"term": miniObj}
 					query['query']['bool']['must'].push(miniObj)
@@ -763,26 +887,6 @@ function elastic_2d_aggregate(id, timesArray, thenBy, dataset, fields, limit, in
 
 }
 
-
-function hasFieldKeyword(handle, field){
-	// some fields must have their keyword specified as "<field>.keyword"
-	mappings = connectors_json.getAttribute(handle, "mappings")
-	
-	if(mappings){
-		key2 = field.split(".").join(".properties.").split('.').reduce(stringDotNotation, mappings)
-		if (key2['fields'] && key2['fields']['keyword'] && key2['fields']['keyword']['type'] && key2['fields']['keyword']['type'] == "keyword" ){
-			return true
-		}else{
-			return false
-		}
-	}else{	
-		ww("0", "hasFieldKeyword had no Mappings, handle:"+handle+" field:"+field)
-		
-		addPageStatus("warning", "Mappings for "+handle+" not loaded.")
-
-		return false
-	}
-}
 
 
 
@@ -845,8 +949,8 @@ function elasticDeepAggsWithStags(id, from, to, dataset, fields, statField, limi
 	}
 
 
-	handle = retrieveSquareParam(id, 'CH')
-	mappings = connectors_json.getAttribute(handle, "mappings")
+	var handle = retrieveSquareParam(id, 'CH')
+	var mappings = connectors_json.getAttribute(handle, "mappings")
 	// qq(mappings)
 
 	if(true || incTime == true){
@@ -860,91 +964,24 @@ function elasticDeepAggsWithStags(id, from, to, dataset, fields, statField, limi
 		})
 	}
 
-
+	////////////////////////////////
+	// MUST
+	////////////////////////////////
 	if(dataset['compare']){
-
-		
-
-
-		// Compile all the Must, as in "Must exist" or "must compare"
-		// "Must" means a match of key value pairs
-		_.each(dataset['compare'], function(comp){
-			//filter.must.push({"term": equal})
-	
-
-
-			key = _.keys(comp)[0]
-			val = _.values(comp)[0]
- 
-			// qq(">>>>>>>>>>>>>")
-			// qq(comp)
-			// qq(key)
-			// // qq(mappings)
-
-
-			if(mappings){
-				
-				// if the key is 1d (e.g. sourceip) We just get the value
-				// if the key is 2d (e.g. destination_ip.countrycode2) we need to check index Mappings if it has the .keyword, which means going deep
-				key2 = key.split(".").join(".properties.").split('.').reduce(stringDotNotation, mappings)
-				
-				// if(mappings && mappings[key] && mappings[key]['fields'] && mappings[key]['fields']['keyword'] && mappings[key]['fields']['keyword']['type'] && mappings[key]['fields']['keyword']['type'] == "keyword"){
-				// 	miniObj = {}
-				// 	miniObj[key+".keyword"] = val
-				// 	miniObj = {"term": miniObj}
-				// 	query['query']['bool']['must'].push(miniObj)
-				// 	qq("using .keyword for non 2dimensional object")
-								
-				if (key2['fields'] && key2['fields']['keyword'] && key2['fields']['keyword']['type'] && key2['fields']['keyword']['type'] == "keyword" ){
-
-					miniObj = {}
-					
-
-					miniObj[key+".keyword"] = val
-				
-					
-					
-					miniObj = {"term": miniObj}
-					query['query']['bool']['must'].push(miniObj)
-					// qq("2d object using .keyword")
-
-
-				}else{
-					miniObj = {}
-					miniObj[key] = val
-					
-					miniObj = {"term": miniObj}
-					query['query']['bool']['must'].push(miniObj)
-					// qq("NOT using .keyword")
-					
-				}	
-				
-				// qq(miniObj)
-			}else{
-				ww(0, "No Mappings for id:"+id+", cannot build up Elastic Query, results will be wrong")
-			}
-		})
-
+		query = elastic_must_add(query, dataset, mappings)
 	}
 
-
+	
+	////////////////////////////////
+	// MUST_NOT
+	////////////////////////////////
 	if(dataset['notexist']){
-		// Compile "Mustnot" as in "must not exist" (or null)
-
-		query['query']['bool']['must_not'] = []
-
-		_.each(dataset['notexist'], function(notex){
-			query['query']['bool']['must_not'].push({"exists": {"field": notex}})
-		})
-	
+		query = elastic_mustNot_add(query, dataset)
 	}
-	// qq("final query..............")
-	// qq(query)
-
 
 	// loop through the multi layer fields for aggs
-	agg = {}
-	node = agg
+	var agg = {}
+	var node = agg
 	//_.each(fields, function(field, i){
 	for(var i = 0 ; i < fields.length ; i++){
 
@@ -1031,7 +1068,7 @@ function elasticQueryBuildderToRuleThemAll(id, timesArray, dataset, fields, limi
 		"size": limit
 	}
 	
-	mappings = connectors_json.getAttribute(retrieveSquareParam(id, 'CH'), "mappings")
+	var mappings = connectors_json.getAttribute(retrieveSquareParam(id, 'CH'), "mappings")
 
 
 	////////////////////////////////
@@ -1059,88 +1096,20 @@ function elasticQueryBuildderToRuleThemAll(id, timesArray, dataset, fields, limi
 
 	})
 
-
 	////////////////////////////////
 	// MUST
 	////////////////////////////////
 	if(dataset['compare']){
-
-		// Compile all the Must, as in "Must exist" or "must compare"
-		// "Must" means a match of key value pairs
-		_.each(dataset['compare'], function(comp){
-			//filter.must.push({"term": equal})
-	
-
-
-			key = _.keys(comp)[0]
-			val = _.values(comp)[0]
- 
-			// qq(">>>>>>>>>>>>>")
-			// qq(comp)
-			// qq(key)
-			// // qq(mappings)
-
-
-			if(mappings){
-				
-				// if the key is 1d (e.g. sourceip) We just get the value
-				// if the key is 2d (e.g. destination_ip.countrycode2) we need to check index Mappings if it has the .keyword, which means going deep
-				key2 = key.split(".").join(".properties.").split('.').reduce(stringDotNotation, mappings)
-				
-				// if(mappings && mappings[key] && mappings[key]['fields'] && mappings[key]['fields']['keyword'] && mappings[key]['fields']['keyword']['type'] && mappings[key]['fields']['keyword']['type'] == "keyword"){
-				// 	miniObj = {}
-				// 	miniObj[key+".keyword"] = val
-				// 	miniObj = {"term": miniObj}
-				// 	query['query']['bool']['must'].push(miniObj)
-				// 	qq("using .keyword for non 2dimensional object")
-								
-				if (key2['fields'] && key2['fields']['keyword'] && key2['fields']['keyword']['type'] && key2['fields']['keyword']['type'] == "keyword" ){
-
-					miniObj = {}
-					
-
-						miniObj[key+".keyword"] = val
-					
-					
-					
-					miniObj = {"term": miniObj}
-					query['query']['bool']['must'].push(miniObj)
-					// qq("2d object using .keyword")
-
-
-				}else{
-					miniObj = {}
-		
-					miniObj[key] = val
-					
-					
-					miniObj = {"term": miniObj}
-					query['query']['bool']['must'].push(miniObj)
-					// qq("NOT using .keyword")
-					
-				}	
-				
-				// qq(miniObj)
-			}else{
-				ww(0, "No Mappings for id:"+id+", cannot build up Elastic Query, results will be wrong")
-			}
-		})
-
+		query = elastic_must_add(query, dataset, mappings)
 	}
 
-
+	
 	////////////////////////////////
 	// MUST_NOT
 	////////////////////////////////
 	if(dataset['notexist']){
-		// Compile "Mustnot" as in "must not exist" (or null)
-		//
-		_.each(dataset['notexist'], function(notex){
-			query['query']['bool']['must_not'].push({"exists": {"field": notex}})
-		})
-	
+		query = elastic_mustNot_add(query, dataset)
 	}
-
 
 
 	////////////////////////////////
@@ -1275,64 +1244,125 @@ function elasticQueryBuildderToRuleThemAll(id, timesArray, dataset, fields, limi
 }
 
 
-function elasticToFlare(data, scale){
-	// in = elastic response
-	// out = d3 flare {"data": {"name": "", "children": [..]}
-
-	// for graphs that only use 1 time range, just enter it straight away
-	dataout = {"name": "", "children":[]}
-	
-	dataout['children'] = elasticToFlareLoop(data, dataout['children'], scale)
-	return dataout
-
-}
-function elasticToFlareLoop(data, dataout, scale){
-
-	for ( var i = 0 ; i < data.length; i++){
-	
-		if(data[i].hasOwnProperty("field")){
-
-			var mo = {}
-			mo['name'] = data[i]['key']
-			mo['children'] = []
-			dataout.push(mo)
-			
-			elasticToFlareLoop(data[i]['field']['buckets'], dataout[dataout.length-1]['children'])
-
-		}else{
-					
-			for ( var i = 0 ; i < data.length; i++){
-
-				var mo = {}
-				mo['name'] = data[i]['key']
-				mo['realSize'] = data[i]['doc_count']
-				
-				if(scale == "log"){
-					// cheating but log(0) causes UI problems
-					// At this rate it's not longer a "count" more of a representation, so until an alternative I'm happy with it
-					mo['size'] = Math.log(data[i]['doc_count']) + 1
-				}else if(scale == "inverse"){
-					mo['size'] = 1 / data[i]['doc_count']
-				}else{
-					// default to linear
-					mo['size'] = data[i]['doc_count']
-				}
-
-				// if stats are present
-				if(data[i].hasOwnProperty('stats')){
-					mo['stats'] = _.clone(data[i]['stats'])
-					
-
-				}
 
 
 
 
-				dataout.push(mo)			
+
+function elasticQueryBuildderAggScriptDayHour(id, timesArray, dataset, fields, limit, stats, statField, incTime, urlencode, aggTimeScriptNames, maxAccuracy){
+	// timesArray = [["2020-05-30T14:00:00+01:00", "2020-05-30T14:00:59+01:00"], [...], ], 
+	// dataset = compare, not match, etc
+	// fields = ["field1", ].   Multiple fields for stacked aggs,
+	// limit = 1, though we are doing aggs, still output 1 real entry?
+	// stats = boolean, whether to include extended_stats (avg, mean, std_Dev)
+	// statfield = "field1", the field on which to do stats
+	// incTime = boolean, pivot to Elastic interface does need time.  Move this usecase out of here?
+	// urlenccode = boolean, pivot to Elastic interface does need time.  Move this usecase out of here?
+	// aggTimeScriptNames = java functions ["", ""]
+	// maxAccuracy = boolean, whether to use max(Int) size, or not
+
+	var query = {
+		"query": {
+			"bool": {
+				"should": [
+					// array of time range 
+				],
+				"minimum_should_match": 1,
+				"must": [
+					// array of must (/match)
+				],
+				"must_not": [
+					// array of fields that should not be present
+				]
 			}
-		}
+		},
+		"aggs": {
+			"time": {
+				"terms": {
+					"script": {
+						"source": "doc['@timestamp'].value."+aggTimeScriptNames[0]
+					}
+				},
+				"aggs": {
+					"time": {
+						"terms": {
+							
+							"script": {
+								"source": "doc['@timestamp'].value."+aggTimeScriptNames[1]
+							}
+						}
+						// "aggs": {
+						// 	"field": {
+						// 		"terms": {
+						// 			"field": fields,
+						// 			"size": 2,
+						// 			"order": {
+						// 				"_count": "desc"
+						// 			}
+						// 		}
+						// 	}
+						// }
+					}
+				}
+			}
+		},
+		"size": limit
 	}
-	return dataout
-}
+	
+	var mappings = connectors_json.getAttribute(retrieveSquareParam(id, 'CH'), "mappings")
 
+	////////////////////////////////
+	// max accuracy
+	////////////////////////////////
+	if(maxAccuracy){
+		query['aggs']['time']['terms']['size'] = 2147483647
+		query['aggs']['time']['aggs']['time']['terms']['size'] = 2147483647
+	}else{
+		// do nothing, if size not declared it defaults
+	}
+
+
+
+	////////////////////////////////
+	// build range of times, 1+
+	////////////////////////////////
+
+	_.each(timesArray, function(timeRange){
+
+		var from = moment.unix(timeRange[0]).format()
+		var to = moment.unix(timeRange[1]).format()
+
+
+		// "gte": moment.unix(from).format(),
+		// "lt": moment.unix(to).format()
+
+		// Add time ranges to the SHOULD
+		var shouldObj = {"range":{"@timestamp":{}}}
+		shouldObj['range']['@timestamp']['gte'] = from
+		shouldObj['range']['@timestamp']['lt'] = to
+		query['query']['bool']['should'].push(shouldObj)
+
+
+	})
+
+
+	////////////////////////////////
+	// MUST
+	////////////////////////////////
+	if(dataset['compare']){
+		query = elastic_must_add(query, dataset, mappings)
+	}
+
+
+	////////////////////////////////
+	// MUST_NOT
+	////////////////////////////////
+	if(dataset['notexist']){
+		query = elastic_mustNot_add(query, dataset)
+	}
+
+	return query;
+
+
+}
 

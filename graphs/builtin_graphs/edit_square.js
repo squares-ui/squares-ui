@@ -24,11 +24,11 @@ function process_editsquare(id){
 function graph_editsquare(id){
 
 	
-	aConnector = false
+	var aConnector = false
 	if(retrieveSquareParam(id, "Pr")==0){
 		aConnector = true;
 	}
-	qq(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(id)+") aConnector="+aConnector);
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(id)+") aConnector="+aConnector);
 
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
@@ -61,7 +61,7 @@ function graph_editsquare(id){
 
 
 	// Connector
-	clusterSection = thisForm.append("div")
+	var clusterSection = thisForm.append("div")
 		.classed("square_cluster_section", true)
 
 	clusterDiv = clusterSection.append("div")
@@ -197,9 +197,9 @@ function graph_editsquare(id){
 	
 
 	// We Ws
-	clusterSection = thisForm.append("div")
+	var clusterSection = thisForm.append("div")
 		.classed("square_cluster_section", true)
-	clusterDiv = clusterSection.append("div")
+	var clusterDiv = clusterSection.append("div")
 		.classed("fleft", true);
 	clusterDiv.append("img")
 		.classed("square_cluster_image", true)
@@ -258,7 +258,7 @@ function graph_editsquare(id){
 				pairing.append("div")
 						.classed("clr", true)
 		var stringFormat = "YYYY-MM-DD[T]HH:mm:ss"
-		thisWe = retrieveSquareParam(id, "We", true)
+		var thisWe = retrieveSquareParam(id, "We", true)
 		if(thisWe !== null && thisWe != 0){	
 			thisString = moment(thisWe, "X").format(stringFormat);
 			$("#square_We_text_"+id).val(thisString);
@@ -345,10 +345,10 @@ function graph_editsquare(id){
 
 
 	// Data Subset
-	clusterSection = thisForm.append("div")
+	var clusterSection = thisForm.append("div")
 		.classed("square_cluster_section", true)
 		
-		clusterDiv = clusterSection.append("div")
+		var clusterDiv = clusterSection.append("div")
 			.classed("fleft", true);
 			
 			clusterDiv.append("img")
@@ -425,9 +425,9 @@ function graph_editsquare(id){
 
 
 	// Submit button
-	clusterSection = thisForm.append("div")
+	var clusterSection = thisForm.append("div")
 		.classed("square_cluster_section", true)
-	clusterDiv = clusterSection.append("div")
+	var clusterDiv = clusterSection.append("div")
 		.classed("fleft", true);
 	clusterDiv.append("img")
 		.classed("square_cluster_image", true)

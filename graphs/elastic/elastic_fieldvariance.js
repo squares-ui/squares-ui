@@ -14,8 +14,8 @@ graphs_functions_json.add_graphs_json({
 function elastic_completeform_fieldvariance(id, targetDiv){
 
 
-	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
+	var dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
+	var connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
 
 	elastic_get_fields(dst, connectionhandle, id)
 		.then(function(results){
@@ -60,11 +60,11 @@ function elastic_completeform_fieldvariance(id, targetDiv){
 
 function elastic_populate_fieldvariance(id){
 
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
-	Ds = clickObjectsToDataset(id)
+	var Ds = clickObjectsToDataset(id)
 	
 	//var fields = [];  // use this to see all fields in raw output
 	//var fields = ["@timestamp", "type", "client_ip", "method", "port", "server_response"];
@@ -156,7 +156,7 @@ function elastic_rawtoprocessed_fieldvariance(id){
 
 
 	// now flatten/sort/uniq each key to find uniqueness
-	dataMid2 = {}
+	var dataMid2 = {}
 	_.each(dataMid,function(obj,key){
 		dataMid2[key] = _.uniq(_.sortBy(_.flatten(dataMid[key], function(num){ return num}  )  ))
 
@@ -194,7 +194,7 @@ function elastic_rawtoprocessed_fieldvariance(id){
 
 function elastic_graph_fieldvariance(id){
 	
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer

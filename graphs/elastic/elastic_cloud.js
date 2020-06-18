@@ -29,9 +29,9 @@ function elastic_completeform_cloud(id, targetDiv){
 			
 			var dropdownFields = []
 			// _.omit keys of data types we dont want, or _.pick the ones we do, i.e. omit "text", or pick "ip"
-			subResults = _.omit(results, "")
+			var subResults = _.omit(results, "")
 			_.each(subResults, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
-			dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
+			var dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
 			
 			const jsonform = {
 				"schema": {
@@ -68,13 +68,13 @@ function elastic_completeform_cloud(id, targetDiv){
 
 function elastic_populate_cloud(id){
 	
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var timesArray = [[from, to]]
 
-	Ds = clickObjectsToDataset(id)
+	var Ds = clickObjectsToDataset(id)
 	
 	
 	//var fields = [];  // use this to see all fields in raw output
@@ -85,7 +85,7 @@ function elastic_populate_cloud(id){
 	var stats = false
 	var statField = null
 	var incTime = true
-	urlencode = false
+	var urlencode = false
 
 
 	var query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode)
@@ -108,7 +108,7 @@ function elastic_rawtoprocessed_cloud(id){
 		return obj['doc_count']
 	})
 	
-	dataout = []
+	var dataout = []
 	_.each(data, function(obj){
 		//miniobject
 		mo = {}
@@ -127,7 +127,7 @@ function elastic_rawtoprocessed_cloud(id){
 function elastic_graph_cloud(id){
 	
 	
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	// http://bl.ocks.org/bbest/2de0e25d4840c68f2db1
 
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)

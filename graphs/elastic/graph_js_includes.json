@@ -9,7 +9,8 @@
 		"./elastic/elastic_fieldvariance.js",
 		"./elastic/elastic_piechart.js",
 		"./elastic/elastic_globe.js",
-		"./elastic/elastic_trend.js"
+		"./elastic/elastic_trend.js",
+		"./elastic/elastic_calendarHeatmap.js"
 		
 
 	],

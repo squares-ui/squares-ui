@@ -15,8 +15,8 @@ sankeyLinksLimit = 180
 
 function elastic_completeform_sankey(id, targetDiv){
 
-	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
+	var dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
+	var connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
 
 	elastic_get_fields(dst, connectionhandle, id)
 		.then(function(results){
@@ -24,9 +24,9 @@ function elastic_completeform_sankey(id, targetDiv){
 			var dropdownFields = []
 
 			// _.omit keys of data types we dont want, or _.pick the ones we do, i.e. omit "text", or pick "ip"
-			subResults = _.omit(results, "")
+			var subResults = _.omit(results, "")
 			_.each(subResults, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
-			dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
+			var dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
 
 			const jsonform = {
 				"schema": {
@@ -121,15 +121,15 @@ function elastic_completeform_sankey(id, targetDiv){
 
 function elastic_populate_sankey(id){
 
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
-	Ds = clickObjectsToDataset(id)
+	var Ds = clickObjectsToDataset(id)
 	
 	// qq(Ds)
 	
-	fields = []
+	var fields = []
 	_.each(retrieveSquareParam(id,"Cs",true)['array'], function(key,num){
 		fields.push(key)
 	})
@@ -152,10 +152,10 @@ function elastic_rawtoprocessed_sankey(id){
 	// then calulate nodes
 	// then retro fit links with node locations
 
-	Cs = retrieveSquareParam(id,"Cs",true)['array']
+	var Cs = retrieveSquareParam(id,"Cs",true)['array']
 
-	incNull = false
-	scale = "log"
+	var incNull = false
+	var scale = "log"
 	if(retrieveSquareParam(id,"Cs",true) !== undefined){
 		if(retrieveSquareParam(id,"Cs",true).hasOwnProperty('x_null')){
 			incNull = retrieveSquareParam(id,"Cs",true).x_null
@@ -170,14 +170,14 @@ function elastic_rawtoprocessed_sankey(id){
 	//############################
 	// generate data2, which is later used to generate links
 	//############################
-	rawLinks = {}
+	var rawLinks = {}
 	_.each(data, function(obj, i){
 
 		for(var j = 0; j < Cs.length-1; j++ ){
-			deepSource = Cs[j].split('.').reduce(stringDotNotation, obj._source)
-			sources = []
+			var deepSource = Cs[j].split('.').reduce(stringDotNotation, obj._source)
+			var sources = []
 			if( deepSource != "null" ){
-				key = deepSource
+				var key = deepSource
 				if(key.constructor.name !== "Array") {
 					key = [key]
 				}
@@ -189,10 +189,12 @@ function elastic_rawtoprocessed_sankey(id){
 			}
 
 
-			deepDest = Cs[j+1].split('.').reduce(stringDotNotation, obj._source)
-			destinations = []
+
+			var deepDest = Cs[j+1].split('.').reduce(stringDotNotation, obj._source)
+			var destinations = []
+			
 			if(deepDest != "null" ){
-				key = deepDest
+				var key = deepDest
 				if(key.constructor.name !== "Array") {
 					key = [key]
 				}
@@ -235,7 +237,7 @@ function elastic_rawtoprocessed_sankey(id){
 
 	
 	// convert from   "28726":{"bro_http":1}   ->> [{"source":192,"target":104,"value":2},{...}]
-	tmpLinks = []
+	var tmpLinks = []
 	_.each(rawLinks, function(obj, key){
 		_.each(obj, function(obj2, key2){
 			if(key2 != "sF" && key2 != "tF"){
@@ -261,14 +263,14 @@ function elastic_rawtoprocessed_sankey(id){
 	}
 	if(tmpLinks.length > sankeyLinksLimit){
 		ww(3,"Sankey has too many nodes ("+tmpLinks.length+") culling to "+sankeyLinksLimit)
-		tmpLinks = _.first(tmpLinks, sankeyLinksLimit)
+		var tmpLinks = _.first(tmpLinks, sankeyLinksLimit)
 	}
 
 
 	//############################
 	// extract the needed nodes
 	//############################
-	nodes = []
+	var nodes = []
 	_.each(tmpLinks, function(link){
 		nodes.push(link.source)
 		nodes.push(link.target)
@@ -293,9 +295,9 @@ function elastic_rawtoprocessed_sankey(id){
 	dataout.links = []
 	_.each(tmpLinks, function(tmpLink, i){
 		
-		reverseClash = ""
-
-		reverseFound = false
+		var reverseClash = ""
+		var reverseFound = false
+		
 		// check reverse link doesn't exist, this breaks graph
 		_.each(tmpLinks, function(tmpLink2, i2){
 			if(tmpLink.source == tmpLink2.target && tmpLink.target == tmpLink2.source){
@@ -306,7 +308,7 @@ function elastic_rawtoprocessed_sankey(id){
 		})
 
 		if(reverseFound == false){
-			linkOut = {}
+			var linkOut = {}
 			linkOut.source = _.where(dataout.nodes, {"name":tmpLink.source})[0].node
 			linkOut.target = _.where(dataout.nodes, {"name":tmpLink.target})[0].node
 			linkOut.sF = tmpLink['sF']
@@ -376,9 +378,7 @@ function elastic_rawtoprocessed_sankey(id){
 
 function elastic_graph_sankey(id){
 	
-	
-
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	//https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030
 
 
@@ -467,7 +467,7 @@ function elastic_graph_sankey(id){
 	  .on("click", function(d){ 
 			// attributes are : "target", 	"sourceField", 		"targetField", 		"value", 		"dy",		"ty", 		 "sy",  "source"
 
-			clickObject = {"compare":[], "notexist":[], "timerange":[]}
+			var clickObject = {"compare":[], "notexist":[], "timerange":[]}
 
 			if(d.source.name == d.sF+"_null"){
 				clickObject.notexist.push(d.sF)

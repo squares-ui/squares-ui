@@ -32,7 +32,7 @@ function populate_intro(id){
 				var dst = obj['dst']
 				var index = obj['index']
 
-				elastic_test_connector(dst, index);
+				elastic_test_connector(id, dst, index);
 			})
 		}
 	}
@@ -43,33 +43,41 @@ function populate_intro(id){
 
 function process_intro(id){
 	
-	qq("----------")
+	//qq(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(id)+")");
+	// this function runs once per connector installed, each time updating with latest info
+
 	if(id==3){
 
-		data = []
+		var data = [] 
 
 		// combine all "rawdata_" -> array
-		connectors = connectors_json.get_connectors_json()
+		var connectors = connectors_json.get_connectors_json()
+		// {"0": {"handle": "Elastic_7b",}, "1":{"handle":...}}
+
+
 		if(_.keys(connectors).length > 0){
 
-			_.each(connectors, function(obj, i){
+
+			_.each(connectors, function(obj, key){
+				
+				
 
 				var index = obj['index']
 				var key = "rawdata_"+index
-
-				found = retrieveSquareParam(id, key, false)
-				miniObj = {}
+				var found = retrieveSquareParam(id, key, false)
+				var miniObj = {}
 
 				if(found != null){
-					miniObj[obj['index']] = {found}
+					miniObj[obj['handle']] = {found}
 
 				}else{
-					miniObj[obj['index']] = {}
+					miniObj[obj['handle']] = {}
 				}
 				data.push(miniObj)
 
 			})
 		}
+		qq(data)
 		//[{"<index>": {"found": {}},{...}]
 
 
@@ -77,8 +85,8 @@ function process_intro(id){
 		dataout = []
 		_.each(data, function(obj, i){
 			
-			key = _.keys(obj)[0]
-			val = _.values(obj)[0]
+			var key = _.keys(obj)[0]
+			var val = _.values(obj)[0]
 
 			miniObj = {}
 			miniObj['desc'] = key
@@ -88,6 +96,7 @@ function process_intro(id){
 			if(val.hasOwnProperty('found') ){
 				miniObj['timed_out'] = obj[key]['found']['timed_out']
 				miniObj['hits'] = obj[key]['found']['hits']['total']
+				miniObj['CH'] = key
 			}else{
 				miniObj['timed_out'] = true
 				miniObj['hits'] = 0
@@ -111,7 +120,7 @@ function process_intro(id){
 function graph_intro(id){
 
 
-	qq(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(id)+")");
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(id)+")");
 
 	var data = retrieveSquareParam(id, 'processeddata');
 
@@ -217,7 +226,7 @@ function graph_intro(id){
 		var header = table.append("thead").append("tr");
 		header
 			.selectAll("th")
-			.data(["Desc", "Connected", "Data"])
+			.data(["Desc", "Connected", "Data", "NewSquare"])
 			.enter()
 			.append("th")
 			.text(function(d) { return d; });
@@ -239,9 +248,9 @@ function graph_intro(id){
 				hits = "False"
 			}
 
+			var img = "<img style='width:32px; margin-left:32px' class='squaresmenuslot fleft squaresmenu_addconnector' onclick='addGraphConnector(\""+obj['CH']+"\")' alt='showConnectors' title='Create new Connector' />"
 
-
-			$("#square_"+id+"_table").find('tbody').append("<tr><td>"+name+"</td><td>"+connected+"</td><td>"+hits+"</td><tr>");
+			$("#square_"+id+"_table").find('tbody').append("<tr><td>"+name+"</td><td>"+connected+"</td><td>"+hits+"</td><td>"+img+"</td><tr>");
 
 		})
 
