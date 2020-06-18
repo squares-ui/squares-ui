@@ -30,13 +30,14 @@ This entire dashboard can be built in minutes, using only the mouse allowing ana
 These instructions are for a new clean CentOS build.  
 Instructions on other Linux distro may vary.
 
-Ensure that Apache (httpd), PHP, and Git are installed through Yum, Apt or other.
+Ensure that Apache2 (httpd), PHP, and Git are installed through Yum, Apt or other.
+
 
 ```
 cd /var/www/html
-git clone https://github.com/squares-ui-ui/squares-ui-ui/
-curl http://<IP_of_box>/squares-ui-ui/hello.txt
-cd squares-ui-ui/connectors/
+git clone https://github.com/squares-ui/squares-ui/
+curl http://<IP_of_box>/squares-ui/hello.txt
+cd squares-ui/connectors/
 cp -a blank elasticSecurityOnionBro.conf
 vim elasticSecurityOnionBro.conf
 ```

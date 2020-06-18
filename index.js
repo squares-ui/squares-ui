@@ -305,6 +305,7 @@ var screenLog = [];
 var container;
 
 var mouse;
+var threeRenderer
 
 // error status is a state, not a config, so store it here, and not in URL square definition
 var errorStatus = {}
@@ -2808,8 +2809,11 @@ function showConnectorDiv(id){
 }
 
 function compileGraphs(){
+	
 	// get all graphs and add to the overlay
 	$.get( "./compile_graphs.php", function( data ) {
+		
+	
 		// results are needed elsewhere, so store them outside this function
 		$.each(data, function(k, v) {
 			var existing_json = graphs_jsfiles_json.get_graphs_json();
@@ -3019,17 +3023,41 @@ $( document ).ready(function() {
 		// go straight to render
 		// otherwise wait until threeJS is loaded
 		compileGraphs();
+
 	}else{
 
- 		$.getScript('https://threejs.org/build/three.js', function() { 
+		qq("loading Three components")
+ 		$.getScript('./Three/three.js', function() { 
 			 
-			// qq("three.js loaded, loading further libraries") 
+			// // qq("three.js loaded, loading further libraries") 
 			$.getScript('./lib/stats.js', function() { 
 				//qq("stats.js loaded") 
+				$.getScript('./lib/threex.rendererstats.js', function() { 
+					//qq("renderstats.js loaded")
+				
+				
+					$.getScript('./myThree.js', function() { 
+					
+						//qq("myThree.js loaded") 
+					
+						if(GLB.threejs.realTimeRender == true){
+							// set off real time rendering
+							animate_Three();
+						}else{
+							// setTimeout for slower refresh, but better on low spec machines
+							setTimeoutThree(GLB.threejs.notRealTimeRenderFrequency);
+						}
+						
+						compileGraphs();
+		
+					});				
+				
+				
+				
+				});
+		
 			});
-			$.getScript('./lib/threex.rendererstats.js', function() { 
-				//qq("renderstats.js loaded")
-			});
+
 			
 			$.getScript('./Three/dat.gui.js', function() {
 				//qq("dat.gui.js loaded")
@@ -3037,24 +3065,12 @@ $( document ).ready(function() {
 			$.getScript('./Three/OrbitControls.js', function() { 
 				//qq("OrbitControls.js loaded") 
 			});
-			
-			$.getScript('./myThree.js', function() { 
-				
-				//qq("myThree.js loaded") 
-			
-				if(GLB.threejs.realTimeRender == true){
-					// set off real time rendering
-					animate_Thr//ee();
-				}else{
-					// setTimeout for slower refresh, but better on low spec machines
-					setTimeoutThr//ee(GLB.threejs.notRealTimeRenderFrequency);
-				}
-				
-				compileGraphs();
 
-			});
 
-			var threeRenderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+
+
+
+			threeRenderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
 			// // XXX goes crazy if OS fonts are 125%... needs reviewing!!!
 			// //threeRenderer.setPixelRatio(window.devicePixelRatio);
 
@@ -3146,35 +3162,37 @@ $( document ).ready(function() {
 				document.body.appendChild( stats2.dom );
 			}
 		
+			
 
 
-		});	
+
+		 });	
 	}
 
 
-
-	document.addEventListener("visibilitychange", function() {
-		var today = new Date();
-		var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
-		var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-		var dateTime = date+' '+time;
-		
-		if (document.visibilityState === 'visible') {
-			ww(1, "visible at :"+dateTime)
-		} else {
-			ww(1, "hidden  at :"+dateTime)
-		}
-	});
-
-	setInterval(function(){
-		var today = new Date();
-		var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
-		var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-		var dateTime = date+' '+time;
 	
-		ww(1, "checkin at :"+dateTime)
+	// document.addEventListener("visibilitychange", function() {
+	// 	var today = new Date();
+	// 	var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+	// 	var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+	// 	var dateTime = date+' '+time;
+		
+	// 	if (document.visibilityState === 'visible') {
+	// 		ww(1, "visible at :"+dateTime)
+	// 	} else {
+	// 		ww(1, "hidden  at :"+dateTime)
+	// 	}
+	// });
 
-	}, 10000);
+	// setInterval(function(){
+	// 	var today = new Date();
+	// 	var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+	// 	var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+	// 	var dateTime = date+' '+time;
+	
+	// 	ww(1, "checkin at :"+dateTime)
+
+	// }, 10000);
 
 
 
