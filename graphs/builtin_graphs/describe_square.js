@@ -11,20 +11,40 @@ graphs_functions_json.add_graphs_json({
 	}
 });
 
-function populate_describesquare(id){
+async function populate_describesquare(id){
 
-	// no back end data to fetch, but tell the system we're ready
-	//ww(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+","+name+")");
-	connector_bypass(id);
+	var to = calcGraphTime(id, 'We', 0)
+	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
+	var timesArray = [[from, to]]
 
-}
-function process_describesquare(id){
+	var Ds = clickObjectsToDataset(id)
+
+	var fields = []
+
+	var limit = 1;
+	var stats = false
+	var statField = null
+	var incTime = true
+	var urlencode = false
+	var filter = retrieveSquareParam(id,"Fi",true)
+
+	var promises = []
+	var handle = retrieveSquareParam(id, 'CH')
+
+	query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, filter)
+	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "all") )
 	
-	saveProcessedData(id, '', "");
+	return Promise.all(promises)
+
+}
+function process_describesquare(id, data){
+	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+
+	return data = data[0]['data']['hits']['total']['value']
+	
 }
 
-function graph_describesquare(id){
-
+function graph_describesquare(id, data){
 
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
@@ -34,7 +54,7 @@ function graph_describesquare(id){
 			.classed("box_binding", true)
 			.classed("square_body", true)
 			.classed("square_xhtml", true)
-			.classed("y_overflow", true)
+			// .classed("y_overflow", true)
 		.on("mousedown", function() { d3.event.stopPropagation(); });
 
 	var height = document.getElementById("square_"+id).clientHeight;
@@ -76,10 +96,10 @@ function graph_describesquare(id){
 				.classed("square_cluster_text", true)
 				.append("div")
 					.classed("fontsize", true)
-					.text(retrieveSquareParam(id, "CH"));
+					.text(connectors.handletox(retrieveSquareParam(id, "CH"), 'indexDesc'));
 
 
-
+					
 
 	}else{
 
@@ -93,43 +113,31 @@ function graph_describesquare(id){
 		clusterDiv = clusterSection.append("div")
 			.classed("square_cluster_text", true)
 			.classed("fleft", true);
-		clusterDiv.append("div")
-			.classed("fleft", true)
-				.classed("fontsize", true)
-				.text("Graph Type:")
-			.append("div")
-				.text(retrieveSquareParam(id, "Gt"));
-				// .append("div")
-			// .append("select")
+
+		clusterDiv
+			// .append("div")
+			// 	.classed("fleft", true)
 			// 	.classed("fontsize", true)
-			// 	.attr("id", function(d){ return "square_graph_dropdown_"+d.id })
-			// 	.attr("name", function(d){ return "square_graph_dropdown_"+d.id })
-		// var mySelect = $('#square_graph_dropdown_'+id);
-		// mySelect.append(
-		// 	$('<option></option>').val(null).html("--System Graphs--")
-		// );
-		// $.each(graphs_functions_json.typeToShortnameList("builtin_graphs"), function(i, v){
-		// 	mySelect.append(
-		// 		$('<option></option>').val(v).html(v)
-		// 	);
-		// });
-		// mySelect.append(
-		// 	$('<option></option>').val("-").html("--Connector Graphs--")
-		// );
-		// connector_type = connectors_json.handletotype( retrieveSquareParam(id, 'CH') );
-		// //qq("connector_type for "+id+" found as:"+connector_type+" toshortnamelist:"+graphs_functions_json.typeToShortnameList(connector_type));
-		// $.each(graphs_functions_json.typeToShortnameList(connector_type), function(i, v){
-		// 	mySelect.append(
-		// 		$('<option></option>').val(v).html(v)
-		// 	);
+			// 	.text("Connector Handle:")
+			.append("div")
+				.classed("fontsize", true)
+				.text(retrieveSquareParam(id, "CH"));
+				
+		clusterDiv.append("div")
+			.classed("clr", true)
 			
-		// });
-		// clusterSection.append("div")
-		// 	.classed("square_cluster_text", true)
-		// 	.classed("fleft", true)
-		// 	.attr("id", function(d){ return "square_saveGt_"+d.id })
-		// $("#square_saveGt_"+id).append("<input type='button' value='Save Graph Type' onclick='editSquare("+id+", \"Gt\")' />");
-		
+		clusterDiv
+			// .append("div")
+			// .classed("fleft", true)
+			// 	.classed("fontsize", true)
+			// 	.text("Graph Type:")
+			.append("div")
+				.classed("fontsize", true)
+				.text(retrieveSquareParam(id, "Gt"));
+
+
+
+
 
 		clusterDiv.append("div")
 			.classed("clr", true)
@@ -181,6 +189,33 @@ function graph_describesquare(id){
                 .classed("clr", true)
 
 
+
+	// Hit Count
+	clusterSection = square.append("div")
+		.classed("square_cluster_section", true)
+	clusterDiv = clusterSection.append("div")
+		.classed("fleft", true);
+	clusterDiv.append("img")
+		.classed("square_cluster_image", true)
+		.classed("fleft", true)
+		.attr("src", "./images/061_b.png")
+
+	clusterDiv = clusterSection.append("div")
+		.classed("square_cluster_text", true)
+		.classed("fleft", true);
+
+		clusterDiv.append("div")
+			.classed("square_cluster_text", true)
+			.append("div")
+				.classed("fontsize", true)
+				.html("Hits found: ")
+
+	clusterDiv.append("div")
+		clusterDiv.append("div")
+			.classed("square_cluster_text", true)
+			.append("div")
+				.classed("fontsize", true)
+				.text(data);
 
 
 

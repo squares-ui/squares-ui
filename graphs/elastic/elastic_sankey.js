@@ -13,109 +13,104 @@ graphs_functions_json.add_graphs_json({
 
 sankeyLinksLimit = 180
 
-function elastic_completeform_sankey(id, targetDiv){
+async function elastic_completeform_sankey(id, targetDiv){
 
-	var dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	var connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
+	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
+	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
+	var thisMappings = await getSavedMappings(dst, indexPattern)
 
-	elastic_get_fields(dst, connectionhandle, id)
-		.then(function(results){
-			
-			var dropdownFields = []
 
-			// _.omit keys of data types we dont want, or _.pick the ones we do, i.e. omit "text", or pick "ip"
-			var subResults = _.omit(results, "")
-			_.each(subResults, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
-			var dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
+	var dropdownFields = []
+	
+	_.each(thisMappings, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
+	dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
 
-			const jsonform = {
-				"schema": {
-					"x_arr": {
-						"type":"array",
-						"maxItems": 4,
-						"minItems": 2,
-						"items":{
-							"type": "object",
-							"properties":{
-								"field":{
-									"title": "Field",
-									"type": "string",
-									"enum": dropdownFields				
-								}
-							}	
+
+	const jsonform = {
+		"schema": {
+			"x_arr": {
+				"type":"array",
+				"maxItems": 4,
+				"minItems": 2,
+				"items":{
+					"type": "object",
+					"properties":{
+						"field":{
+							"type": "string",
+							"title": "Field",
+							"enum": dropdownFields				
 						}
-					},
-					"x_null": {
-						"title": "Include null/undefined ?",
-						"type": "boolean",
-					},
-					"x_scale": {
-						"title": "Scale",
-						"type": "string",
-						"enum": [
-						  "linear", "log", "inverse"
-						]
-					}
-				},
-				"form": [
-					{
-						"type": "array",
-						"notitle": true,
-						"items": [{
-							"key": "x_arr[]",
-							
-						}]
-				   },
-				   {
-						"key":"x_null",
-						"inlinetitle": "Include null/undefined ?",
-						"notitle": true,
-				   },
-				   {
-						"key":"x_scale",
-						"inlinetitle": "Scale",
-						"notitle": true,
-					}
-				],
-				"value":{}
+					}	
+				}
+			},
+			"x_null": {
+				"title": "Include null/undefined ?",
+				"type": "boolean",
+			},
+			"x_scale": {
+				"title": "Scale",
+				"type": "string",
+				"enum": [
+					"linear", "log", "inverse"
+				]
 			}
-			
-			if(retrieveSquareParam(id,"Cs",false) !== undefined){
-				if(retrieveSquareParam(id,"Cs",false)['array'] !== null ){
-					jsonform.value = {}
-					jsonform.value['x_arr'] = []
-					_.each(retrieveSquareParam(id,"Cs",false)['array'], function(key,num){
-						jsonform.value['x_arr'].push({"field": key})
-					})
-				}
-
-				if(retrieveSquareParam(id,"Cs",false)['x_null']){
-					jsonform.form[1]['value'] = 1
-				}
-
-				if(retrieveSquareParam(id,"Cs",false)['x_scale']){
-					jsonform.form[2]['value'] = retrieveSquareParam(id,"Cs",false)['x_scale']
-				}
-
-			}else{
-				//create default layout
-				jsonform.value['x_arr'] = []
-				jsonform.value['x_arr'].push({})
-				jsonform.value['x_arr'].push({})
-
-				jsonform.form[1]['value'] = 1
-
-				jsonform.form[2]['value'] = "log"
-				
+		},
+		
+		
+		"form": [
+			{
+				"type": "array",
+				"notitle": true,
+				"items": [{
+					"key": "x_arr[]",
+					
+				}]
+			},
+			{
+				"key":"x_null",
+				"inlinetitle": "Include null/undefined ?",
+				"notitle": true,
+			},
+			{
+				"key":"x_scale",
+				"inlinetitle": "Scale",
+				"notitle": true,
 			}
+		],
+		"value":{}
+	}
+	
+	if(retrieveSquareParam(id,"Cs",false) !== undefined){
+		if(retrieveSquareParam(id,"Cs",false)['array'] !== null ){
+			jsonform.value = {}
+			jsonform.value['x_arr'] = []
+			_.each(retrieveSquareParam(id,"Cs",false)['array'], function(key,num){
+				jsonform.value['x_arr'].push({"field": key})
+			})
+		}
 
-			$(targetDiv).jsonForm(jsonform)
+		if(retrieveSquareParam(id,"Cs",false)['x_null']){
+			jsonform.form[1]['value'] = 1
+		}
 
-		}).catch(e => {
-			alert(e)
-			// setPageStatus(id, 'Critical', 'Fail to "elastic_get_fields" for id:'+id+', ('+e+')');
+		if(retrieveSquareParam(id,"Cs",false)['x_scale']){
+			jsonform.form[2]['value'] = retrieveSquareParam(id,"Cs",false)['x_scale']
+		}
 
-		})
+	}else{
+		//create default layout
+		jsonform.value['x_arr'] = []
+		jsonform.value['x_arr'].push({})
+		jsonform.value['x_arr'].push({})
+
+		jsonform.form[1]['value'] = 1
+
+		jsonform.form[2]['value'] = "log"
+		
+	}
+
+	$(targetDiv).jsonForm(jsonform)
+
 }
 
 
@@ -135,15 +130,26 @@ function elastic_populate_sankey(id){
 	})
 
 	var limit = 10000;
-	var query = elastic_query_builder(id, from, to, Ds, fields, limit, true);
+	
+	var filter = combineScriptFilter(id)
+	var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
+	
 
-	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
+
+	var handle = retrieveSquareParam(id, 'CH')
+	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
+
+	
+	var promises = []
+	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "all"))
+	return Promise.all(promises)
+
 }
 
 
-function elastic_rawtoprocessed_sankey(id){
+function elastic_rawtoprocessed_sankey(id, data){
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
+	var data = data[0]['data']['hits']['hits']
 	var dataout = {}
 
 	// to have ability to prevent UI overload with nodes, we need to limit
@@ -371,12 +377,13 @@ function elastic_rawtoprocessed_sankey(id){
 		return obj.source
 	})
 
-	saveProcessedData(id, '', dataout);
+	// saveProcessedData(id, '', dataout);
+	return dataout;
 
 }
 
 
-function elastic_graph_sankey(id){
+function elastic_graph_sankey(id, data){
 	
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	//https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030
@@ -398,8 +405,9 @@ function elastic_graph_sankey(id){
 	var width  = document.getElementById("square_"+id).clientWidth;
 	
 
-	var data = retrieveSquareParam(id, 'processeddata');
+	// var data = retrieveSquareParam(id, 'processeddata');
 
+	var colorScale = d3.scaleOrdinal().range(GLB.color)
 
 	// handled by data processing, but safety catch here to prevent page breaking
 	var badData = false;
@@ -516,7 +524,7 @@ function elastic_graph_sankey(id){
 			.attr("width", sankey.nodeWidth())
 			.style("fill", function(d) { 
 				//return d.color = color(d.name.replace(/ .*/, "")); 
-				return GLB.color(d.name)
+				return colorScale(d.name)
 			})
 			.style("stroke", function(d) { 
 				return d3.rgb(d.color).darker(2); 

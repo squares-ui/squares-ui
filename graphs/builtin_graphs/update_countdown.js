@@ -14,74 +14,68 @@ graphs_functions_json.add_graphs_json({
 var tickObject = new Object();
 
 
-function completeform_updatecountdown(id, targetDiv){
+async function completeform_updatecountdown(id, targetDiv){
 
-	var dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	var connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
+	var times = [10,30,120,300,900,3600,43200,86400]
 
-	elastic_get_fields(dst, connectionhandle, id)
-		.then(function(results){
-	
-			var times = [10,30,120,300,900,3600,43200,86400]
+	var jsonFormEnum = []
+	var titleMap = {}
 
-			var jsonFormEnum = []
-			var titleMap = {}
+	_.each(times, function(time, i){
+		jsonFormEnum.push(time)
+		titleMap[time] = countSeconds(time)
+	})
 
-			_.each(times, function(time, i){
-				jsonFormEnum.push(time)
-				titleMap[time] = countSeconds(time)
-			})
 
-			// qq(titleMap)
-
-			const jsonform = {
-				"schema": {
-				  "x_size": {
-					"type": "string",
-					"title": "Update Frequency",
-					"enum": jsonFormEnum
-				  }
-				},
-				"form": [
-				  {
-					"key": "x_size",
-					"titleMap" : titleMap
-					// "titleMap": {
-					// 	"10": "10 Seconds",
-					// 	"30": "30 Seconds",
-					// 	"60": "1 minute"
-					//   },
-				  }
-				],
-				"value":{}
-                
+	const jsonform = {
+		"schema": {
+			"x_size": {
+			"type": "string",
+			"title": "Update Frequency",
+			"enum": jsonFormEnum
 			}
-
-			if(retrieveSquareParam(id,"Cs",false) !== undefined){
-				if(retrieveSquareParam(id,"Cs",false)['x_size'] !== null){
-					jsonform.value.x_size = retrieveSquareParam(id,"Cs",false)['x_size']
-					
-				}
+		},
+		"form": [
+			{
+			"key": "x_size",
+			"titleMap" : titleMap
 			}
+		],
+		"value":{}
+		
+	}
 
-			$(targetDiv).jsonForm(jsonform)
+	// if(retrieveSquareParam(id,"Cs",false) !== undefined){
+	// 	if(retrieveSquareParam(id,"Cs",false)['x_size'] !== null){
+	// 		jsonform.value.x_size = retrieveSquareParam(id,"Cs",false)['x_size']			
+	// 	}else{
+	// 		jsonform.value.x_size = 300
+	// 	}
+	// }else{
+	// 	jsonform.value.x_size = 300
+	// }
 
-		})
+	$(targetDiv).jsonForm(jsonform)
+
 }
 
 function populate_updatecountdown(id){
 
 	// no back end data to fetch, but tell the system we're ready
-	process_updatecountdown(id)
+	// process_updatecountdown(id)
+	promises = []
+	return Promise.all(promises)
+
 
 }
-function process_updatecountdown(id){
+function process_updatecountdown(id, data){
 
 	// no data to process, but tell the system we're ready
-	saveProcessedData(id, '', "");
+	// saveProcessedData(id, '', "intentionallyEmpty");
+	return ""
 }
 
-function graph_updatecountdown(id){
+function graph_updatecountdown(id, data){
 
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	

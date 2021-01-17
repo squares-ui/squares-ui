@@ -5,7 +5,8 @@ graphs_functions_json.add_graphs_json({
 			"populate":"elastic_populate_globe",
 			"rawtoprocessed":"elastic_rawtoprocessed_globe",
 			"graph":"elastic_graph_globe",
-			"about": "Globe of Lat Lon"
+			"about": "Globe of Lat Lon",
+			"requireThreeJS": true
 		}
 	}
 });
@@ -14,81 +15,84 @@ if(GLB.threejs.enabled == true){
 	var loc_country_globe_camera = new THREE.PerspectiveCamera(45, 1, 10, 120);
 }
 
-function elastic_completeform_globe(id, targetDiv){
+async function elastic_completeform_globe(id, targetDiv){
 
-	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
+	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
+	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
 
-	elastic_get_fields(dst, connectionhandle, id)
-		.then(function(results){
-			
-			var dropdownFields = []
+	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
+	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
+	var thisMappings = await getSavedMappings(dst, indexPattern)
 
-			// _.omit keys of data types we dont want, or _.pick the ones we do, i.e. omit "text", or pick "ip"
-			subResults = _.omit(results, "")
-			_.each(subResults, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
-			dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
 
-			const jsonform = {
-				"schema": {
-					"x_lat": {
-						"title": "Latitude",
-						"type": "string",
-						"enum": dropdownFields
-					},
-					"x_lon": {
-						"title": "Longitude",
-						"type": "string",
-						"enum": dropdownFields
-					},
-					"x_track": {
-						"title": "Track By (e.g. Source IP, destination country...)",
-						"type": "string",
-						"enum": dropdownFields
-					},
-					"x_null": {
-						"title": "Include null/undefined ?",
-						"type": "boolean",
-					},
-					"x_scale": {
-						"title": "Scale",
-						"type": "string",
-						"enum": [
-						  "linear", "log", "inverse"
-						]
-					}
+	var dropdownFields = []
+	subResults = _.omit(thisMappings, "fields")
+	_.each(subResults, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
+	dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
 
-				},
+	var lonlatFields = []
+	subResults = _.pick(thisMappings, "float")
+	_.each(subResults, function(val, key){  _.each(val, function(val2){  lonlatFields.push(val2)  })}) 
+	lonlatFields = _.sortBy(lonlatFields, function(element){ return element})
 
-				"form": ["*"],
-				
-                "value":{}
-			}
-			
-			if(retrieveSquareParam(id,"Cs",false) !== undefined){
-				if(retrieveSquareParam(id,"Cs",false)['x_track'] !== undefined){
-					jsonform.value.x_track = retrieveSquareParam(id,"Cs",false)['x_track']
-				}
-				
-				if(retrieveSquareParam(id,"Cs",false)['x_lat'] !== undefined){
-					jsonform.value.x_lat = retrieveSquareParam(id,"Cs",false)['x_lat']
-				}
-				
-				if(retrieveSquareParam(id,"Cs",false)['x_lon'] !== undefined){
-					jsonform.value.x_lon = retrieveSquareParam(id,"Cs",false)['x_lon']
-				}
-				
-			}else{
-				
+
+
+	const jsonform = {
+		"schema": {
+			"x_lat": {
+				"title": "Latitude (float)",
+				"type": "string",
+				"enum": lonlatFields
+			},
+			"x_lon": {
+				"title": "Longitude (float)",
+				"type": "string",
+				"enum": lonlatFields
+			},
+			"x_track": {
+				"title": "Track By (all, e.g. Source IP, destination country...)",
+				"type": "string",
+				"enum": dropdownFields
+			},
+			"x_null": {
+				"title": "Include null/undefined ?",
+				"type": "boolean",
+			},
+			"x_scale": {
+				"title": "Scale",
+				"type": "string",
+				"enum": [
+					"linear", "log", "inverse"
+				]
 			}
 
-			$(targetDiv).jsonForm(jsonform)
+		},
 
-		}).catch(e => {
-			alert(e)
-			// setPageStatus(id, 'Critical', 'Fail to "elastic_get_fields" for id:'+id+', ('+e+')');
+		"form": ["*"],
+		
+		"value":{}
+	}
+	
+	if(retrieveSquareParam(id,"Cs",false) !== undefined){
+		if(retrieveSquareParam(id,"Cs",false)['x_track'] !== undefined){
+			jsonform.value.x_track = retrieveSquareParam(id,"Cs",false)['x_track']
+		}
+		
+		if(retrieveSquareParam(id,"Cs",false)['x_lat'] !== undefined){
+			jsonform.value.x_lat = retrieveSquareParam(id,"Cs",false)['x_lat']
+		}
+		
+		if(retrieveSquareParam(id,"Cs",false)['x_lon'] !== undefined){
+			jsonform.value.x_lon = retrieveSquareParam(id,"Cs",false)['x_lon']
+		}
+		
+	}else{
+		
+	}
 
-		})
+	$(targetDiv).jsonForm(jsonform)
+
+
 }
 
 
@@ -113,19 +117,25 @@ function elastic_populate_globe(id){
 		}
 	}
 	var limit = 10000;
+	var filter = combineScriptFilter(id)
+	var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
 
-	var query = elastic_query_builder(id, from, to, Ds, fields, limit, true);
+	var handle = retrieveSquareParam(id, 'CH')
+	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
 
-	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
+	
+	var promises = []
+	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "all"))
+	return Promise.all(promises)
 	
 }
 
 
 
-function elastic_rawtoprocessed_globe(id){
+function elastic_rawtoprocessed_globe(id, data){
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
+	var data = data[0]['data']['hits']['hits']
 	
 	
 	var incNull = false
@@ -141,6 +151,7 @@ function elastic_rawtoprocessed_globe(id){
 	
 	
 	var dataCount = {}
+	
 
 	var csTrack = retrieveSquareParam(id,"Cs",true)['x_track']
 	var csLat = retrieveSquareParam(id,"Cs",true)['x_lat']
@@ -151,7 +162,9 @@ function elastic_rawtoprocessed_globe(id){
 	var data2 = {}
 	
 
+	
 	// loop through results aggregating sums
+	var recordLacking = 0;
 	_.each(data, function(obj,i){
 
 		var lat = csLat.split('.').reduce(stringDotNotation, obj._source)
@@ -180,6 +193,8 @@ function elastic_rawtoprocessed_globe(id){
 				
 				data2[latlonName][track] = data2[latlonName][track] + 1
 			}
+		}else{
+			recordLacking++;
 		}
 	})
 	//{"37.4192|-122.0574":{"tcp":6,"udp":13},
@@ -242,11 +257,17 @@ function elastic_rawtoprocessed_globe(id){
 	dataOut.data = data2
 	dataOut.nodes = nodes
 	dataOut.highest = highest
-	saveProcessedData(id, '', dataOut);
+	
+	// many records lacking full lat/lon (even if they match)?
+	addSquareStatus(id, "warning", recordLacking+" Records matched the query but had no Lat/Lon to render.")
+
+	return dataOut
+
+
 }
 
 
-function elastic_graph_globe(id){
+function elastic_graph_globe(id, data){
 
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
@@ -264,9 +285,10 @@ function elastic_graph_globe(id){
 	var height = document.getElementById("square_"+id).clientHeight;
 	var width  = document.getElementById("square_"+id).clientWidth;
 	
-	var data = retrieveSquareParam(id, 'processeddata')['data']
+	// var data = retrieveSquareParam(id, 'processeddata')['data']
 	// var nodes = retrieveSquareParam(id, 'processeddata')['nodes']
-	var highest = retrieveSquareParam(id, 'processeddata')['highest']
+
+	var highest = data['highest']
 
 	var globeRadius = grid_size/3;
 	// var markerRadius = 0.5;
@@ -311,7 +333,7 @@ function elastic_graph_globe(id){
 	// add the planet/globe.  async is the best way?
 	new THREE.ImageLoader()
 		.setCrossOrigin( '*' )
-		.load( './globe.jpg' , function ( image ) {
+		.load( './images/globe.jpg' , function ( image ) {
 
 			var texture = new THREE.CanvasTexture( image );
 			var material = new THREE.MeshBasicMaterial( { color: 0x999999, map: texture } );
@@ -331,12 +353,18 @@ function elastic_graph_globe(id){
 
 
 	var phi, theta, x, z, y;
-	var geometry = new THREE.Geometry();
 
 
+	var colorScale = d3.scaleOrdinal().range(GLB.color)
+
+	var material = new THREE.LineBasicMaterial({
+		color: 0xff0000,
+		transparent: true,
+		opacity: 0.3
+	});
 
 	// for each lat|lon calculate the angles and positions
-	_.each(data, function(obj,latlon){
+	_.each(data.data, function(obj,latlon){
 		
 		myY = 0
 		heightOffset = grid_size/4
@@ -358,11 +386,7 @@ function elastic_graph_globe(id){
 		var points = [];
 		points.push( new THREE.Vector3( grid_size/2, grid_size/3, grid_size/2 ) );
 		points.push( new THREE.Vector3( x,y,z ) );
-		var material = new THREE.LineBasicMaterial({
-			color: 0xffffff,
-			transparent: true,
-			opacity: 0.3
-		});
+
 		var geometry = new THREE.BufferGeometry().setFromPoints( points );
 		var line = new THREE.Line( geometry, material );
 		scene.add( line );
@@ -381,11 +405,10 @@ function elastic_graph_globe(id){
 			z =  farOutness * Math.sin(phi)*Math.sin(theta) + grid_size/2
 			y =  farOutness * Math.cos(phi) + grid_size/3
 
-			mySize = 0.3
 
-			var material = new THREE.MeshBasicMaterial( {color: GLB.color(key2)  } );
+			var material = new THREE.MeshBasicMaterial( {color: colorScale(key2)  } );
 			
-			// I'd rather use cubes for a stacked bar chart,  but need to work out rotation...
+			// I'd rather use cubes for a stacked bar chart (performance),  but need to work out rotation...
 			// var geometry = new THREE.BoxGeometry( mySize, myTallness, mySize );
 			// var cube = new THREE.Mesh(geometry, material);
 
@@ -429,11 +452,11 @@ function elastic_graph_globe(id){
 	})
 
 
-	var lineMaterial = new THREE.LineBasicMaterial( { color: 0xff0000, linewidth: 1 } );
-	var myLines = new THREE.LineSegments( geometry, lineMaterial );
-	myLines.updateMatrix();
+	// var lineMaterial = new THREE.LineBasicMaterial( { color: 0x000000, linewidth: 1 } );
+	// var myLines = new THREE.LineSegments( geometry, lineMaterial );
+	// myLines.updateMatrix();
 	
-	scene.add(myLines);
+	// scene.add(myLines);
 
 	threeScenes["square_"+id] = scene;
 

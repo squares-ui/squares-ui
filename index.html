@@ -12,9 +12,9 @@
 	
 	
 
-	<script src="https://code.jquery.com/jquery-3.0.0.min.js"></script> 
+	<script src="./lib/jquery-3.0.0.min.js"></script> 
 	<script src="./lib/d3.v4.min.js" charset="utf-8"></script>
-	<script src="https://d3js.org/d3-array.v2.min.js"></script>
+	<script src="./lib/d3-array.v2.min.js"></script>
 
 
 	<script src="./lib/jstools.js"></script>
@@ -33,11 +33,15 @@
 	<script src="./alertify.js-0.3.11/lib/alertify.min.js"></script>
 	<script src="./lib/sankey.js"></script>  <!-- from Mike Bostock -->
 	
-	<script src="./lib/lockr.js"></script>
+	<!-- <script src="./lib/lockr.js"></script> -->
+	<script src="./lib/dexie.js"></script>
 
 	<script src="./lib/tsvJSON.js"></script>
 
 
+	<!-- https://github.com/flatpickr/flatpickr -->
+	<link rel="stylesheet" type="text/css" href="./styles/flatpickr.min.css"/ >
+	<script src="./lib/flatpickr.js"></script>
 
 	<script src="./config.js"></script>
 
@@ -60,10 +64,10 @@
 	<script src="./lib/underscore-min.js"></script>
 	<script src="./lib/jsonform.js"></script>
 	
-	<script src="./lib/tsne.js"></script>
+	<!-- <script src="./lib/tsne.js"></script> -->
 	<script src="./lib/jstat.js"></script>
 
-	<script src="https://bogdan-lyashenko.github.io/js-code-to-svg-flowchart/dist/js2flowchart.js"></script>
+	<!-- <script src="https://bogdan-lyashenko.github.io/js-code-to-svg-flowchart/dist/js2flowchart.js"></script> -->
 
 	<!-- https://realfavicongenerator.net/ -->
 	<link rel="apple-touch-icon" sizes="180x180" href="./favicon/apple-touch-icon.png">
@@ -73,9 +77,8 @@
 	<meta name="msapplication-TileColor" content="#da532c">
 	<meta name="theme-color" content="#ffffff">
 
-
 </head>
-<body>
+<body onload="onLoad()">
 
 
 <div id="bigwrapper">
@@ -88,10 +91,11 @@
 
 	<div id="menu" class="squares_segment fleft">
 		<img class='squaresmenuslot fleft squaresmenu_wipereset'  onclick='wipereset()' alt='Reset' title='Clean and refresh page'/>
-		<img class='squaresmenuslot fleft squaresmenu_addconnector' onclick='addGraphConnector()' alt='showConnectors' title='Create new Connector' />
-		<img class='squaresmenuslot fleft squaresmenu_update' onclick='updaterefresh(); alertify.log("URL Refreshed")' alt='Refresh' title='Reload URL' />
+		<img class='squaresmenuslot fleft squaresmenu_addconnector' onclick='addGraphConnector(null)' alt='showConnectors' title='Create new Connector' />
+		<img class='squaresmenuslot fleft squaresmenu_zoom' onclick='panzoom(); ' alt='Pan Zoom' title='Pan Zoom' />
+		<!-- <img class='squaresmenuslot fleft squaresmenu_update' onclick='updaterefresh(); alertify.log("URL Refreshed")' alt='Refresh' title='Reload URL' /> -->
 		<img class='squaresmenuslot fleft squaresmenu_log'   onclick='qq(url); alertify.log("URL Logged to Console")' alt='Log' title='Dump Squares config to Console' />
-		<img class='squaresmenuslot fleft squaresmenu_flush' onclick='Lockr.flush()' alt='Flush Data' title="Delete cached data, but don't disrupt page" />
+		<img class='squaresmenuslot fleft squaresmenu_flush' onclick='deleteAllStoredData()' alt='Flush Data' title="Delete cached data, but don't disrupt page" />
 		<img class='squaresmenuslot fleft squaresmenu_status' id='pageStatus' name='pageStatus' onclick='' alt='Status' title="Status" />
 
 

@@ -10,6 +10,9 @@
 .squaresmenu_addconnector{
     content:url("../squares-ui-icons/159122-technology-icon-collection/svg/browser-8.svg");
 }
+.squaresmenu_zoom{
+    content:url("../squares-ui-icons/159122-technology-icon-collection/svg/browser-30.svg");
+}
 .squaresmenu_update{
     content:url("../squares-ui-icons/159122-technology-icon-collection/svg/browser-29.svg");
 }
@@ -23,10 +26,10 @@
     content:url("../squares-ui-icons/159122-technology-icon-collection/svg/browser-23.svg");
 }
 .squaresmenu_countelements{
-    content:url("../squares-ui-icons/215482-creative-outlines/svg/dial.svg");
+    content:url("../squares-ui-icons/159122-technology-icon-collection/svg/browser-4.svg");
 }
 .squaresmenu_status{
-    content:url("../squares-ui-icons/215482-creative-outlines/svg/heart.svg");
+    content:url("../squares-ui-icons/159122-technology-icon-collection/svg/browser-15.svg");
 }
 
 
@@ -60,7 +63,7 @@
     content:url("../squares-ui-icons/126466-multimedia-collection/svg/garbage.svg");
 }
 .square_menu_icon_tobottom{
-    content:url("../squares-ui-icons/159687-interface-icon-assets/svg/transfer-4.svg");
+    content:url("../squares-ui-icons/159687-interface-icon-assets/svg/download-1.svg");
 }
 .square_menu_icon_status{
     content:url("../squares-ui-icons/215482-creative-outlines/svg/heart.svg");

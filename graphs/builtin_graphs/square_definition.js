@@ -12,15 +12,15 @@ graphs_functions_json.add_graphs_json({
 
 function populate_graphdefinition(id){
 
-	connector_bypass(id);
+	promises = []
+	return Promise.all(promises)
 
 }
-function process_graphdefinition(id){
-	
-	saveProcessedData(id, '', "");
+function process_graphdefinition(id, data){
+	return ""
 }
 
-function graph_graphdefinition(id){
+function graph_graphdefinition(id, data){
 
 	var foreignObject = workspaceDiv.selectAll('#foreignObject_'+id)
 	var square = foreignObject
@@ -68,7 +68,7 @@ function graph_graphdefinition(id){
 	mySelect.append(
 		$('<option></option>').val("-").html("--Connector Graphs--")
 	);
-	connector_type = connectors_json.handletotype( retrieveSquareParam(id, 'CH') );
+	connector_type = connectors.handletox( retrieveSquareParam(id, 'CK'), "key" );
 	//qq("connector_type for "+id+" found as:"+connector_type+" toshortnamelist:"+graphs_functions_json.typeToShortnameList(connector_type));
 	$.each(graphs_functions_json.typeToShortnameList(connector_type), function(i, v){
 		mySelect.append(

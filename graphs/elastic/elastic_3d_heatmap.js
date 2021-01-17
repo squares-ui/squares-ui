@@ -1,74 +1,189 @@
 	graphs_functions_json.add_graphs_json({
 	"elastic":{
-		"3DOrdinal":{
-			"completeForm": "elastic_completeform_3dordinal",
-			"populate": "elastic_populate_3dordinal",
-			"rawtoprocessed":"elastic_rawtoprocessed_3dordinal",
+		"3dHeatmap":{
+			"completeForm": "elastic_completeform_3dheatmap",
+			"populate": "elastic_populate_3dheatmap",
+			"rawtoprocessed":"elastic_rawtoprocessed_3dheatmap",
 			"param": "", 
-			"graph":"elastic_graph_3dordinal",
-			"about": "3D plot of ordinal fields",
+			"graph":"elastic_graph_3dheatmap",
+			"about": "3D plot of log occurance",
 			"requireThreeJS": true
 		}
 	}
 });
 
 
-function elastic_completeform_3dordinal(id, targetDiv){
+function elastic_completeform_3dheatmap(id, targetDiv){
 	
+	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
+	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
 
-
-	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
-
-	elastic_get_fields(dst, connectionhandle, id)
+	getSavedMappings(dst, indexPattern)
 		.then(function(results){
- 
-            const jsonform = {
-                "schema": {
-                    "x_first": {
-                        "type": "string",
-                        "title": "x", 
-                        "enum": results['text']
+			
+			var dropdownFields = []
+
+			// _.omit keys of data types we dont want, or _.pick the ones we do, i.e. omit "text", or pick "ip"
+			var subResults = _.omit(results['data'], "fields", "allFields", "keywordFields")
+			_.each(subResults, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
+			var dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
+
+			const jsonform = {
+				"schema": {
+					"x_x": {
+						"type":"array",						
+						"items":{
+							"type": "object",
+							"properties":{
+								"field":{
+                                    "title": "Field",
+                                    "type": "string",
+                                    "enum": dropdownFields,
+                                },
+                                "scale":{
+                                    "title": "Scale",
+                                    "type": "string",
+                                    "enum": [
+                                      "linear", "log", "inverse"
+                                    ],
+			
+								}
+							}	
+						}
+					},
+					"x_y": {
+						"type":"array",						
+						"items":{
+							"type": "object",
+							"properties":{
+								"field":{
+                                    "title": "Field",
+                                    "type": "string",
+									"enum": dropdownFields				
+                                },
+                                "scale":{
+                                    "title": "Scale",
+                                    "type": "string",
+                                    "enum": [
+                                      "linear", "log", "inverse"
+                                    ]			
+								}
+							}	
+						}
+					},
+					"x_z": {
+						"type":"array",						
+						"items":{
+							"type": "object",
+							"properties":{
+								"field":{
+                                    "title": "Field",
+                                    "type": "string",
+									"enum": dropdownFields				
+                                },
+                                "scale":{
+                                    "title": "Scale",
+                                    "type": "string",
+                                    "enum": [
+                                      "linear", "log", "inverse"
+                                    ]			
+								}
+							}	
+						}
+					},
+
+				},
+				
+				
+				"form": [
+					{
+                        "title": "X",
+                        "id":"square_edit_fields_x"+id,
+                        "key": "x_x[]",
+                        "onChange": function (e) {
+                            var caller = e.target || e.srcElement;
+                            var value = $(e.target).val();
+                            if(caller.name=="x_x[].field"){
+                                // changing field type, so check if "scale" needs showing
+                                $("#square_edit_fields_x"+id).children().eq(2).hide()
+                                qq("hiding "+"#square_edit_fields_x"+id)
+
+                                _.each(subResults, function(val, key){
+                                    if(_.contains(val, value) && _.contains(["float", "int", "integer", "long"], key)){
+                                        $("#square_edit_fields_x"+id).children().eq(2).show()
+                                        qq("showing "+"#square_edit_fields_x"+id)
+                                    }
+                                })
+                            }
+                        }
                     },
-                    "x_second": {
-                        "type": "string",
-                        "title": "y", 
-                        "enum": results['text']
+					{
+                        "title": "Y",
+                        "id":"square_edit_fields_y"+id,
+                        "key": "x_y[]",
+                        "onChange": function (e) {
+                            var caller = e.target || e.srcElement;
+                            var value = $(e.target).val();
+                            if(caller.name=="x_y[].field"){
+                                // changing field type, so check if "scale" needs showing
+                                $("#square_edit_fields_y"+id).children().eq(2).hide()
+                                qq("hiding "+"#square_edit_fields_y"+id)
+
+                                _.each(subResults, function(val, key){
+                                    if(_.contains(val, value) && _.contains(["float", "int", "integer", "long"], key)){
+                                        $("#square_edit_fields_y"+id).children().eq(2).show()
+                                        qq("showing "+"#square_edit_fields_y"+id)
+                                    }
+                                })
+                            }
+                        }
                     },
-                    "x_third": {
-                        "type": "string",
-                        "title": "z", 
-                        "enum": results['text']
-                    }
-                },
-                "form": [
-                  {
-                        "key": "x_first",
-                  },
-                  {
-                        "key": "x_second",
-                  },
-                  {
-                        "key": "x_third",
-                  }
-                ],
-                "value":{}
-            }
+					{
+                        "title": "Z",
+                        "id":"square_edit_fields_z"+id,
+                        "key": "x_z[]",
+                        "onChange": function (e) {
+                            var caller = e.target || e.srcElement;
+                            var value = $(e.target).val();
+                            if(caller.name=="x_z[].field"){
+                                // changing field type, so check if "scale" needs showing
+                                $("#square_edit_fields_z"+id).children().eq(2).hide()
+                                qq("hiding "+"#square_edit_fields_z"+id)
+
+                                _.each(subResults, function(val, key){
+                                    if(_.contains(val, value) && _.contains(["float", "int", "integer", "long"], key)){
+                                        $("#square_edit_fields_z"+id).children().eq(2).show()
+                                        qq("showing "+"#square_edit_fields_z"+id)
+                                    }
+                                })
+                            }
+                        }
+                    },
+
+				],
+				"value":{}
+			}
             
             
-            if(retrieveSquareParam(id,"Cs",false) !== undefined){
-                jsonform.schema.x_first.default = retrieveSquareParam(id,"Cs",false)['x_first']
-                jsonform.schema.x_second.default = retrieveSquareParam(id,"Cs",false)['x_second']
-                jsonform.schema.x_third.default = retrieveSquareParam(id,"Cs",false)['x_third']
-            }
+            // if(retrieveSquareParam(id,"Cs",false) !== undefined){
+                jsonform.schema.x_x.default = retrieveSquareParam(id,"Cs",false)['x_x[].field']
+                jsonform.schema.x_y.default = retrieveSquareParam(id,"Cs",false)['x_y[].field']
+                jsonform.schema.x_z.default = retrieveSquareParam(id,"Cs",false)['x_z[].field']
+            // }
+            
             $(targetDiv).jsonForm(jsonform)
+
+            $("#square_edit_fields_x"+id).children().eq(2).hide()
+            // $("#square_edit_fields_x"+id).children().eq(2).children().eq(1).children().removeAttr("selected");
+            $("#square_edit_fields_y"+id).children().eq(2).hide()
+            $("#square_edit_fields_z"+id).children().eq(2).hide()
 
 		})
 }
 
 
-function elastic_populate_3dordinal(id){
-	
+function elastic_populate_3dheatmap(id){
+	return
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
     
     var to = calcGraphTime(id, 'We', 0)
@@ -88,8 +203,8 @@ function elastic_populate_3dordinal(id){
 }
 
 
-function elastic_rawtoprocessed_3dordinal(id){
-
+function elastic_rawtoprocessed_3dheatmap(id){
+    return
 	var data = retrieveSquareParam(id, 'rawdata_'+'');
 
 	const firstBy = retrieveSquareParam(id,"Cs")['x_first']

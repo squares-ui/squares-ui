@@ -11,48 +11,54 @@ graphs_functions_json.add_graphs_json({
 	}
 });
 
-function elastic_completeform_rawoutput(id, targetDiv){
+async function elastic_completeform_rawoutput(id, targetDiv){
 
-	var dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	var connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
-
-	elastic_get_fields(dst, connectionhandle, id)
-		.then(function(results){
+	const jsonform = {
+		"schema": {
+			"x_count":{
+				"type": "integer",
+				"title": "Rows",
+				"default": 4,
+				"minimum": 2,
+				"maximum": 6
+			},
+			"x_vv": {
+				"title": "Include verbose lines e.g. 'orig_message'",
+				"type": "boolean",
+			}
+		},
+		"form": [
+			{
+			"key": "x_count"
 	
-			const jsonform = {
-				"schema": {
-					"x_count":{
-						"type": "integer",
-						"title": "Rows",
-						"default": 4,
-						"minimum": 2,
-						"maximum": 6
-					}
-				},
-				"form": [
-				  {
-					"key": "x_count"
-			
-				  }
-				],
-				"value":{
-				}
-                
+			},{
+			"key":"x_vv",
+			"inlinetitle": "Include verbose lines e.g. 'orig_message' ?",
+			"notitle": true,
 			}
+		],
+		"value":{
+		}
+		
+	}
 
-			if(retrieveSquareParam(id,"Cs",false) !== undefined){
-				if(retrieveSquareParam(id,"Cs",false)['x_count'] !== undefined){
-					jsonform.value.x_count = retrieveSquareParam(id,"Cs",false)['x_count']
-				}else{
-					jsonform.value.x_count = 5
-				}
-			}else{
-				jsonform.value.x_count = 5
-			}
+	if(retrieveSquareParam(id,"Cs",false) !== undefined){
+		if(retrieveSquareParam(id,"Cs",false)['x_count'] !== undefined){
+			jsonform.value.x_count = retrieveSquareParam(id,"Cs",false)['x_count']
+		}else{
+			jsonform.value.x_count = 5
+		}
 
-			$(targetDiv).jsonForm(jsonform)
+		if(retrieveSquareParam(id,"Cs",false)['x_vv']){
+			jsonform.form[1]['value'] = 1
+		}
+	}else{
+		jsonform.value.x_count = 5
+	}
 
-		})
+	$(targetDiv).jsonForm(jsonform)
+
+
 
 
 }
@@ -63,9 +69,10 @@ function elastic_populate_rawoutput(id){
 
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
-
 	var Ds = clickObjectsToDataset(id)
-	
+
+
+
 	var fields = [];  // use this to see all fields in raw output
 	//var fields = ["@timestamp", "type", "client_ip", "method", "port", "server_response"];
 	
@@ -76,28 +83,55 @@ function elastic_populate_rawoutput(id){
 		}
 	}
 
-	var query = elastic_query_builder(id, from, to, Ds, fields, limit, null);
+	var filter = combineScriptFilter(id)
+	var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
 
-	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
+	var handle = retrieveSquareParam(id, 'CH')
+	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
+
+	var promises = []
+	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "all"))
+	return Promise.all(promises)
+
 }
 
 
 
-function elastic_rawtoprocessed_rawoutput(id){
+function elastic_rawtoprocessed_rawoutput(id, data){
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
+	var data = data[0]['data']['hits']['hits']
+
+	
+	Cs = retrieveSquareParam(id,"Cs",true)
+	incVv = false
+	if(retrieveSquareParam(id,"Cs",true) !== undefined){
+		if(Cs.hasOwnProperty('x_vv')){
+			incVv = Cs.x_vv
+		}
+	}
+
+	qq(incVv)
 
 	var dataout = _.map(data, function(row){
+		if (!incVv){
+			// all noisy keys here
+			delete row._source.previous_log
+			delete row._source.previous_output
+			delete row._source.message
+			delete row._source.full_log
+			
+		}
 		return row._source
 	})
 
 	// nothing to do here
-	saveProcessedData(id, '', dataout);
+	// saveProcessedData(id, '', dataout);
+	return dataout;
 
 }
 
 
-function elastic_graph_rawoutput(id){
+function elastic_graph_rawoutput(id, data){
 	
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	// http://bl.ocks.org/bbest/2de0e25d4840c68f2db1
@@ -110,17 +144,21 @@ function elastic_graph_rawoutput(id){
 		.classed("box_binding", true)
 		.classed("square_body", true)
 		.classed("square_xhtml", true)
-		.classed("y_overflow", true)
+		.classed("overflow", true)
 		.on("mousedown", function() { d3.event.stopPropagation(); })
 	var height = document.getElementById("square_"+id).clientHeight;
 	var width  = document.getElementById("square_"+id).clientWidth;
 	
-	var data = retrieveSquareParam(id, 'processeddata');
+	// var data = retrieveSquareParam(id, 'processeddata');
 
 
 
 	// ##################
 	_.each(data, function(row){
+		
+		
+		
+		
 		square.append("pre")
 			.classed("square_rawoutput", true)
 			.text( JSON.stringify(row,null,2)+"," )

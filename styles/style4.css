@@ -104,7 +104,7 @@ div{
 	padding-top:20px;
 	padding-bottom:10px;
 	display: grid;
-	grid-template-columns: 20% auto 20%;
+	grid-template-columns: 15% auto 15%;
 }
 
 .square_cluster_text{
@@ -141,7 +141,7 @@ div{
 
 /*  Used for "loading" "no data" etc  */
 .square_dft_message{
-	font-size: 90px;
+	font-size: 40px;
 }
 .square_dft_message img{
 	height:120px;
@@ -149,22 +149,28 @@ div{
 }
 .square_aboutMe{
 	padding-top:50px;
+	overflow-y: auto;
+	word-break: break-all;
 	
 }
 .square_aboutMe_header{
 	text-align:left;
-	float:left;
-	width:400px;
+	/* float:left; */
+	/* width:40%; */
 	color: #black;
 	font-size:32px;
+	padding-top:30px;
 	padding-bottom:20px;
 	padding-left:20px;
 	padding-right:20px;
+	
 }
 .square_aboutMe_body{
 	text-align:left;
 	color: #black;
 	font-size:32px;
+	width:*;
+	padding-left:40px;
 }
 
 
@@ -248,9 +254,13 @@ textarea {
 
 .y_overflow{
 	/* https://bugs.chromium.org/p/chromium/issues/detail?id=568614 */
-		overflow:scroll; 
+		overflow-y:scroll; 
 		/* max-width: 1000px; */
 }
+.overflow{
+	overflow:scroll; 
+}
+
 
 .link {
   fill: none;
@@ -308,9 +318,15 @@ path.arc{
 .square_rawoutput{
 	font-size:24px;
 	word-wrap: break-word;
-	width:100%;
+	/* width:100%; */
 	text-align:left;
 	margin-bottom:20px;
+	background-color: #ffffff;
+	overflow: initial;
+	border: initial;
+	border-bottom-color: rgb(204, 204, 204);
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
 }	
 
 .form-group{
@@ -344,4 +360,9 @@ path.arc{
 table, td th {
 	width:100%;
 	text-align: left
+}
+
+
+.cloudText {
+	font-family: Impact;
 }

@@ -155,9 +155,9 @@ function elastic_graph_timemap(id){
 		theData = d.name +": "+d.value
 		setHoverInfo(id, theData)
 	})
-	.on("mouseout", function(d) {
-		clearHoverInfo(id)
-	})
+	// .on("mouseout", function(d) {
+	// 	clearHoverInfo(id)
+	// })
 	.on("click", function(d){
 		
 		childFromClick(id, {"y": 1000, "Wi":[d.to, (d.to-d.from), 0]} );

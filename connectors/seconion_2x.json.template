@@ -1,0 +1,63 @@
+{
+	"key": "<computer_friendly_name>",
+	"connectorDesc": "<human_friendly_name>",
+	"type": "elastic",
+	"dst": "<ip_and_port>",
+	"indices":[
+		{
+			"handle": "<computer_friendly_name>",
+			"indexDesc": "<human_friendly_name>",
+			"indexPattern": "<index_pattern_e.g._so-*",
+			"favourites": [
+				{	
+					"uid": "elastic_a3dcb4d229de6fde0db5686dee47145c",
+					"printable": "Source",
+					"Gt": "PieChart",
+					"Cs":{"array":["observer.name","event.category","event.module"],"x_scale":"linear","x_null":true}
+				},{
+					"uid":"b3f804d73f990a227894ef92d61dd58f",
+					"printable":"File mime source and Name",
+					"Gt":"Sankey",
+					"Cs":{"array":["file.mime_type","file.source"],"x_scale":"linear", "x_null":1}
+				},{	
+					"uid": "elastic_a3dcb4d229de6fde0db5686dee47145m",
+					"printable": "Trend of Event Types",
+					"Gt": "Trend",
+					"Cs":{"x_field":"event.dataset","x_windowSlide":"TheWindowSize","x_windows":"6"}
+				},{				
+					"uid": "elastic_a3dcb4d229de6fde0db5686dee47145l",
+					"printable": "Bytes xFer/Port/Protocol",
+					"Gt": "TreemapCandles",
+					"Cs":{"array":["network.protocol","destination.port"],"x_candle":"network.bytes","x_scale":"linear","x_null":true}
+				},{	
+					"uid": "elastic_a3dcb4d229de6fde0db5686dee47145e",
+					"printable": "Connection States",
+					"Gt": "PieChart",
+					"Cs":{"array":["connection.state_description","destination.port"],"x_scale":"log"}
+				},{	
+					"uid": "elastic_a3dcb4d229de6fde0db5686dee47145o",
+					"printable": "Trend DNS",
+					"Gt": "Trend",
+					"Cs":{"x_field":"dns.subdomain","x_windowSlide":"TheWindowSize","x_windows":"6"}
+				},{	
+					"uid": "elastic_a3dcb4d229de6fde0db5686dee47145g",
+					"printable": "PKI Certs",
+					"Gt": "Sankey",
+					"Cs":{"array":["ssl.version","ssl.validation_status","ssl.next_protocol"],"x_scale":"linear","x_null":true}
+				},{	
+					"uid": "elastic_a3dcb4d229de6fde0db5686dee47145i",
+					"printable": "HTTP Response Codes",
+					"Gt": "Sankey",
+					"Cs":{"array":["http.method","http.status_code"],"x_scale":"linear","x_null":true}
+				},{	
+					"uid": "elastic_a3dcb4d229de6fde0db5686dee47145s",
+					"printable": "Calendar Heatmap",
+					"Gt": "Calendar HeatMap",
+					"Cs":{"x_field":"@timestamp"}
+				}
+			]
+		}
+	]
+}
+
+

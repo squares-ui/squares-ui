@@ -12,63 +12,64 @@ graphs_functions_json.add_graphs_json({
 });
 
 
+
+
+
+
+
+
 function elastic_completeform_calendarHeatmap(id, targetDiv){
 
-	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
+	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
+	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
+	var thisMappings = await getSavedMappings(dst, indexPattern)
 
-	elastic_get_fields(dst, connectionhandle, id)
-		.then(function(results){
+
+	var dropdownFields = []
+	
+	var subResults = _.pick(thisMappings, "date")
+	_.each(subResults, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
+	dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
+
+
+	const jsonform = {
+		"schema": {
+			"x_field": {
+			"type": "string",
+			"title": "Top by:", 
+			"enum": dropdownFields
 			
-			var dropdownFields = []
-
-			// _.omit keys of data types we dont want, or _.pick the ones we do, i.e. omit "text", or pick "ip"
-			var subResults = _.omit(results, "")
-			_.each(subResults, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
-			dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
-
-			const jsonform = {
-				"schema": {
-				  "x_field": {
-					"type": "string",
-					"title": "Top by:", 
-					"enum": dropdownFields
-					
-				  },
-				  "x_max": {
-					"title": "Maximum accuracy?",
-					"type": "boolean",
-				 }
-				},
-				"form": [
-				  {
-					"key": "x_field"
-				  },
-				  {
-					"key":"x_max",
-					"inlinetitle": "Maximum accuracy?",
-					"notitle": true,
-				  }
-				],
-                "value":{}
+			},
+			"x_max": {
+			"title": "Maximum accuracy?",
+			"type": "boolean",
 			}
-			
-			if(retrieveSquareParam(id,"Cs",false) !== undefined){
-				if(retrieveSquareParam(id,"Cs",false)['x_field'] !== null ){
-					jsonform.value.x_field = retrieveSquareParam(id,"Cs",false)['x_field']
-				}
-				if(retrieveSquareParam(id,"Cs",false)['x_max']){
-					jsonform.form[1]['value'] = 1
-				}
+		},
+		"form": [
+			{
+			"key": "x_field"
+			},
+			{
+			"key":"x_max",
+			"inlinetitle": "Maximum accuracy?",
+			"notitle": true,
 			}
+		],
+		"value":{}
+	}
+	
+	if(retrieveSquareParam(id,"Cs",false) !== undefined){
+		if(retrieveSquareParam(id,"Cs",false)['x_field'] !== null ){
+			jsonform.value.x_field = retrieveSquareParam(id,"Cs",false)['x_field']
+		}
+		if(retrieveSquareParam(id,"Cs",false)['x_max']){
+			jsonform.form[1]['value'] = 1
+		}
+	}
 
-			$(targetDiv).jsonForm(jsonform)
+	$(targetDiv).jsonForm(jsonform)
 
-		}).catch(e => {
-			alert(e)
-			// setPageStatus(id, 'Critical', 'Fail to "elastic_get_fields" for id:'+id+', ('+e+')');
 
-		})
 }
 
 // month = days / hour
@@ -80,8 +81,8 @@ var calendarHeatMapSizes = []
 calendarHeatMapSizes.push([-60 * 60 * 24 * 7 * 4, "getDayOfMonth()", "getHour()", -60 * 60])
 calendarHeatMapSizes.push([-60 * 60 * 24 * 7, "getDayOfMonth()", "getHour()", -60 * 60])
 calendarHeatMapSizes.push([-60 * 60 * 24, "getHour()", "getMinute()", -60] )
-calendarHeatMapSizes.push([-60 * 60, "getMinute()", "getMinute()", -60])
-calendarHeatMapSizes.push([0, "getMinute()", "getMinute()", 0])
+calendarHeatMapSizes.push([-60 * 60, "getHour()", "getMinute()", -60])
+calendarHeatMapSizes.push([0, "getMinute()", "getSecond()", 0])
 
 
 function elastic_populate_calendarHeatmap(id){
@@ -125,7 +126,9 @@ function elastic_populate_calendarHeatmap(id){
 
 	var query = elasticQueryBuildderAggScriptDayHour(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, [aggTimeScriptNames[1], aggTimeScriptNames[2]], maxAccuracy)
 
-	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
+	var handle = retrieveSquareParam(id, 'CH')
+	elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query);
+	
 }
 
 
@@ -133,7 +136,13 @@ function elastic_rawtoprocessed_calendarHeatmap(id){
 
 	var data = retrieveSquareParam(id, 'rawdata_'+'')
 
-	saveProcessedData(id, '', data);
+	if(data.hits.total.value == 0){
+		saveProcessedData(id, '', null);
+	}else{
+		saveProcessedData(id, '', data);
+	}
+
+	
 
 }
 
@@ -166,43 +175,97 @@ function elastic_graph_calendarHeatmap(id){
 	var timeOne = []
 	var timeTwo = []
 	var flat = []
-	var max = 0
-	_.each(data['aggregations']['time']['buckets'], function(bucketDay){
-		timeOne.push(parseInt(bucketDay['key']))
-		_.each(bucketDay['time']['buckets'], function(bucketHour){
-			timeTwo.push( parseInt(bucketHour['key']) )
+	
+
+	// // calculate range for timeOne, just observed values
+	// _.each(data['aggregations']['time']['buckets'], function(bucketTimeOne){
+	// 	timeOne.push(parseInt(bucketTimeOne['key']))
+	// })
+	timeOne = _.pluck(data['aggregations']['time']['buckets'], "key")
+
+
+	// calculate range for timeTwo, this should be entire 0->x->maxPossible
+	var Ws = retrieveSquareParam(id, "Ws", true)
+	if(Ws > -3600){
+		timeTwo = _.range(0,60);
+	}else if(Ws > (-3600*24)){
+		timeTwo = _.range(0,24);
+	}else{
+		timeTwo = _.range(0,5);
+	}
+
+	// qq(Ws)
+	// qq(timeOne)
+	// qq(timeTwo)
+
+
+	// loop the bigger time bucket e.g. days
+	_.each(timeOne, function(bucketTimeOne){
+
+		_.each(timeTwo, function(bucketTimeTwo){
 			
 			var ma = []
-			// _.each(bucketHour['field']['buckets'], function(top){
+			// _.each(bucketTimeTwo['field']['buckets'], function(top){
 			// 	var mo = {}
 			// 	mo['key'] = top['key']
 			// 	mo['value'] = top['doc_count']
-			// 	mo['percentage'] = Math.floor(parseInt(top['doc_count']) / parseInt(bucketHour['doc_count'])*100)+"%"
+			// 	mo['percentage'] = Math.floor(parseInt(top['doc_count']) / parseInt(bucketTimeTwo['doc_count'])*100)+"%"
 			// 	ma.push(mo)
 			// })
-			flat.push({"timeOne":parseInt(bucketDay['key']), "timeTwo":parseInt(bucketHour['key']), "value":parseInt(bucketHour['doc_count']), "top": ma})
+			
+			qq("------------------")
+
+			qq("looking for:"+bucketTimeOne+", "+bucketTimeTwo)
+			bucketOneObj = _.find(data['aggregations']['time']['buckets'], function(obj){ 				
+				return obj['key'] == bucketTimeOne; 
+			});
+
+			// qq(bucketOneObj)
+			bucketOneLocation = _.indexOf(data['aggregations']['time']['buckets'], bucketOneObj)
+			qq("bucketOneLocation:"+bucketOneLocation)
+
+			// qq("-----======")
+			bucketTwoObj = _.find(data['aggregations']['time']['buckets'][bucketOneLocation]['time']['buckets'], function(obj){ 
+				return obj['key'] == bucketTimeTwo; 
+			});
+			// qq(bucketTwoObj)
+			bucketTwoLocation = _.indexOf(data['aggregations']['time']['buckets'][bucketOneLocation]['time']['buckets'], bucketTwoObj)
+			qq("bucketTwoLocation:"+bucketTwoLocation)
+
+			// qq(data['aggregations']['time']['buckets'][bucketOneLocation]['time']['buckets'][bucketTwoLocation])
+			
+			
+
+
+			// qq()
+			//if("doc_count" in data['aggregations']['time']['buckets'][bucketOneLocation]['time']['buckets'][bucketTwoLocation]){
+			if(bucketOneLocation != -1 &&  bucketTwoLocation != -1){
+				value = parseInt(data['aggregations']['time']['buckets'][bucketOneLocation]['time']['buckets'][bucketTwoLocation]['doc_count'])
+			}else{
+				value = 0
+			}
+			flat.push({"timeOne":parseInt(bucketTimeOne), "timeTwo":parseInt(bucketTimeTwo), "value":value, "top": ma})
 		})
 	})
+
+
+
+	qq(flat)
+
+
 
 	var flattimeTwo = _.uniq(timeTwo).sort(function(a, b){return a-b})
 	var flattimeOne = _.uniq(timeOne).sort(function(a, b){return a-b})
 	var flatmax = _.max(_.pluck(flat,['value']))
 
 	
-
-
 	flat = _.chain(flat)
-	  .sortBy('timeTwo')
-	  .sortBy('timeOne')
+	  .sortBy('flattimeTwo')
+	  .sortBy('flattimeOne')
 	  .value();
 
-
-
-   
-	var linearColour = d3.scaleLinear()
-	  .domain([1,max])
-	  .range(["white", "blue"])
-
+	
+	qq(flat)
 
 	// check calendarHeatMapSizes, what time breakdown does the elastic Script need?
 	var Ws = retrieveSquareParam(id, "Ws", true)
@@ -211,6 +274,13 @@ function elastic_graph_calendarHeatmap(id){
 
 	// is the size of this window, great than 1 hour?  then do grid, else do a watch face
 	if(aggTimeScriptNames[3] <= -3600){
+			// do grid layout
+   
+			var linearColour = d3.scaleLinear()
+			.domain([1,flatmax])
+			.range(["white", "blue"])
+	
+	
 
 			// for each entry, work out the y row
 			_.each(flat, function(obj){
@@ -306,8 +376,13 @@ function elastic_graph_calendarHeatmap(id){
 
 
 		}else{
-
+			// do clock face
 			
+   
+			var linearColour = d3.scaleLinear()
+				.domain([1,flatmax])
+				.range(["#ffdc00","#ffa900"])
+
 			var radius = Math.min(width, height) / 2;
 
 			var arcValue = d3.arc()
@@ -315,20 +390,21 @@ function elastic_graph_calendarHeatmap(id){
 				.innerRadius(radius - 70);
 					
 			var arcMins = d3.arc()
-				.outerRadius(radius - 60)
+				.outerRadius(radius - 80)
 				.innerRadius(radius - 100);
-			
 
 			var pie = d3.pie()
 				.sort(null)
 				.value(function (d) {
-				return  1;
-			});
+					qq(d)
+					return  1;
+				});
 			
 			var gChart = square.append('g')
 				.attr('transform', 'translate(' + (width/2) + ',' + (height/2) + ')');
 	
 			
+
 			var g = gChart.selectAll(".arc")
 				.data(pie(flat))
 				.enter().append("g")
@@ -378,8 +454,8 @@ function elastic_graph_calendarHeatmap(id){
 				})
 				.attr("dy", ".35em")
 				.style("text-anchor", "middle")
-				.text(function (d, i) {
-					return ":"+String(i).padStart(2, '0');
+				.text(function (d) {
+					return String(d.data.timeOne).padStart(2, '0')+":"+String(d.data.timeTwo).padStart(2, '0');
 				});
 
 

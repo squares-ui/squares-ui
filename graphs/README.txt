@@ -1,4 +1,4 @@
-Each folder in '/graphs/' represents the ability to talk to, and visualise output from a different destination device.
+Each folder in '/graphs/' represents the ability to talk to, and visualise output from a different destination technology.
 
 Each folder name MUST match (case sensitive) the <name> entry in "./connectors/<name>.json" 
 

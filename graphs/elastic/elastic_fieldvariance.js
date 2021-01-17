@@ -11,49 +11,50 @@ graphs_functions_json.add_graphs_json({
 	}
 });
 
-function elastic_completeform_fieldvariance(id, targetDiv){
+async function elastic_completeform_fieldvariance(id, targetDiv){
 
-
-	var dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	var connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
-
-	elastic_get_fields(dst, connectionhandle, id)
-		.then(function(results){
-	
-			const jsonform = {
-				"schema": {
-				  "x_size": {
-					"type": "string",
-					"title": "SampleSize",
-				  }
-				},
-				"form": [
-				  {
-					"key": "x_size"
-			
-				  }
-				],
-				"value":{
-				}
-                
+	const jsonform = {
+		"schema": {
+			"x_size": {
+				"type": "string",
+				"title": "SampleSize"
+			},
+			"x_unknown": {
+				"title": "",
+				"type": "boolean"
 			}
-
-			if(retrieveSquareParam(id,"Cs",false) !== undefined){
-				if(retrieveSquareParam(id,"Cs",false)['x_size'] !== undefined){
-					jsonform.value.x_size = retrieveSquareParam(id,"Cs",false)['x_size']
-				}else{
-					jsonform.value.x_size = 200
-				}
-			}else{
-				jsonform.value.x_size = 200
+		},
+		"form": [
+			{
+				"key": "x_size"
+			},
+			{
+				"key":"x_unknown",			
+				"inlinetitle": "Include unindexed fields types?",
+				"notitle": true
 			}
+		],
+		"value":{
+		}
+		
+	}
 
-			$(targetDiv).jsonForm(jsonform)
+	if(retrieveSquareParam(id,"Cs",false) !== undefined){
+		if(retrieveSquareParam(id,"Cs",false)['x_size'] !== undefined){
+			jsonform.value.x_size = retrieveSquareParam(id,"Cs",false)['x_size']
+		}else{
+			jsonform.value.x_size = 200
+		}
 
-		})
+		if(retrieveSquareParam(id,"Cs",true)['x_unknown'] !== null){
+			jsonform.form[1]['value'] = retrieveSquareParam(id,"Cs",true)['x_unknown']
+		}
+	}else{
+		jsonform.value.x_size = 200
+		jsonform.form[1]['value'] = 0
+	}
 
-
-
+	$(targetDiv).jsonForm(jsonform)
 
 }
 
@@ -74,71 +75,82 @@ function elastic_populate_fieldvariance(id){
 	if(retrieveSquareParam(id,"Cs",false) !== undefined){
 		limit = retrieveSquareParam(id,"Cs",false)['x_size']
 	}
+	var filter = combineScriptFilter(id)
 
-	var query = elastic_query_builder(id, from, to, Ds, fields, limit, true);
+	var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
 
-	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
+	var handle = retrieveSquareParam(id, 'CH')
+	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
+
+	var promises = []
+	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "all"))
+	return Promise.all(promises)
+
 }
 
 
 
-function elastic_rawtoprocessed_fieldvariance(id){
+async function elastic_rawtoprocessed_fieldvariance(id, data){
 
+	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
+	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
+	var thisMappings = await getSavedMappings(dst, indexPattern, true)
+
+	if(retrieveSquareParam(id,"Cs",true) !== undefined){
+		
+		var Cs = retrieveSquareParam(id,"Cs",true)
+
+		incUnknown = false
+		if(Cs.hasOwnProperty('x_unknown')){
+			incUnknown = Cs.x_unknown
+		}
 	
-	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits']
+	}
+
+	data = data[0]['data']['hits']['hits']
 	
-	// dataMid = {"answers":["a", "b", "a"]}
-	var dataMid = {}
+	////////////////////
+	// dataMid = {"ip":["1", "2", "1"]}
+	var dataMid = {}			
 
 	// dataMid2 = {"answers":["a", "b"]}
 	var dataMid2 = {}
 
 	// {"answers":{"populated":"80", "variance":"0.2"}}
 	var dataOut = {}
-	
 	////////////////////
 
 	var totalRows = _.size(data)
+	
+	// Loop every hit
+	_.each(data, function(logObj, i){
+		// map Log out
+		aggregatedKeys = nestedElasticResultsGroupedByField(logObj['_source'], {}, [])
+		// {"key": ["value"], "key2":[...]}
 
-	var mappings = connectors_json.getAttribute(retrieveSquareParam(id, 'CH'), "mappings")
-	// qq(mappings)
+		// message is noisy, and simply replicates the indexed data
+		delete aggregatedKeys['message']
 
-	//populate every field from every record into one big array
-	_.each(data, function(obj,key){
-		_.each(obj['_source'],function(obj,key){
-			// if(!(key in dataMid)){
-			// 	dataMid[key] = []
-			// }
-			// dataMid[key].push(obj)
-		
+		// loop through findings, push to master aggregate 'dataMid'
+		_.each(aggregatedKeys, function(arr, key){
+			
+			if(incUnknown || _.contains(thisMappings['allFields'], key)){
 
-			// is field dynamic?  (a deeper dynamic type)
-			if(typeof obj === "object" && obj !== null ){
-				_.each(obj, function(obj2,key2){
-					
-					if(!(key+"."+key2 in dataMid)){
-						dataMid[key+"."+key2] = []
-					}
-					dataMid[key+"."+key2].push(obj2)
-				})
-
-			}else{
-				// is this a new Type?
-				if(!(key in dataMid)){
+				if(!dataMid.hasOwnProperty(key)){
 					dataMid[key] = []
-				}
-
-				dataMid[key].push(obj)
+				}			
 				
+				_.each(arr, function(value){
+					dataMid[key].push(value)
+				})
+			
 			}
-				
+
 		})
+
 	})
 	// dataMid = {"gid":[1,1,2],"interface":["eth2",...],...}
-	
 
-	// .message is noisy, and simply replicates the indexed data
-	delete dataMid['message']
 
 	// with flattened obj, we can look how often each key was populated
 	_.each(dataMid,function(obj,key){
@@ -147,12 +159,23 @@ function elastic_rawtoprocessed_fieldvariance(id){
 		}
 		dataOut[key].occurancePercentage = Math.ceil((_.size(obj) / totalRows ) * 100)
 		dataOut[key].occurance = Math.ceil(_.size(obj))
-		if(mappings.hasOwnProperty(key)){
-			dataOut[key].type = mappings[key]['type']
-		}	
+		
+		if(thisMappings.hasOwnProperty(key)){
+			dataOut[key].type = thisMappings[key]['type']
+		}else{
+			dataOut[key].type = "Unknown"
+		}
+
+		_.each(thisMappings, function(obj2,key2){
+			if(key2 != "keywordFields" && _.contains(obj2, key)){
+				dataOut[key].type = key2						
+			}
+		})
+
+
+
 
 	})	
-
 
 
 	// now flatten/sort/uniq each key to find uniqueness
@@ -184,17 +207,22 @@ function elastic_rawtoprocessed_fieldvariance(id){
 
 
 	// this is a very noisy graphy type, delete raw data always
-	ww(id, " Clearing raw data for "+id);
-	Lockr.rm('squaredata_'+id+"_rawdata");
+	// ww(4, "Specific, clearing raw data for "+id);
+	// Lockr.rm('squaredata_'+id+"_rawdata_");
 
 
-	saveProcessedData(id, '', dataOut);
+	return dataOut
+	
+		
 }
 
 
-function elastic_graph_fieldvariance(id){
+function elastic_graph_fieldvariance(id, data){
 	
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	// qq("fieldVarience Drawing")
+	// qq(data)
+
 
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
@@ -210,8 +238,7 @@ function elastic_graph_fieldvariance(id){
 	var height = document.getElementById("square_"+id).clientHeight;
 	var width  = document.getElementById("square_"+id).clientWidth;
 	
-	var data = retrieveSquareParam(id, 'processeddata');
-	
+
 	var table = d3.select("#square_"+id).append("table")
 		.classed("tablesorter", true)
 		.attr("id", "square_"+id+"_table")
@@ -227,32 +254,32 @@ function elastic_graph_fieldvariance(id){
 		.classed("fontsize", true)
 		.text(function(d) { return d; });
 
-	$("#square_"+id+"_table").append("<tbody></tbody");
-	//$("#square_"+id+"_table").find('tbody').append("<tr><td>111</td><td>111</td><td>111</td></tr>");
+	$("#square_"+id+"_table").append("<tbody></tbody>");
 	_.each(data, function(obj,key){
-		
+		// qq(".")
 		clickObject = {"y": 1000, "Gt":"PieChart", "Cs":{"array":[key]}}
 
 		if(obj.samples.length == 5){
 			obj.samples.push("[...]")
 		}
-		samples = obj.samples.join(", ").substring(0,20)
+		var samples = obj.samples.join(", ").substring(0,20)
 
 		if(samples.length == 25){
 			samples = samples +"..."
 		}
-		samplesHover = obj.samples.join(", ")
+		var samplesHover = obj.samples.join(", ")
 
-		$("#square_"+id+"_table").find('tbody').append("<tr><td onclick='childFromClick("+retrieveSquareParam(id,"Pr",false)+", "+JSON.stringify(clickObject)+") ' >"+key+"</td0><td>"+obj['type']+"</td><td title='"+samplesHover+"'>"+samples+"</td><td>"+obj['occurance']+" ("+obj['occurancePercentage']+"%)</td><td>"+obj['variance']+" ("+obj['variancePercentage']+"%)</td><tr>");
+		$("#square_"+id+"_table").find('tbody').append("<tr><td onclick='childFromClick("+retrieveSquareParam(id,"Pr",false)+", "+JSON.stringify(clickObject)+") ' >"+key+"</td><td>"+obj['type']+"</td><td title='"+samplesHover+"'>"+samples+"</td><td>"+obj['occurance']+" ("+obj['occurancePercentage']+"%)</td><td>"+obj['variance']+" ("+obj['variancePercentage']+"%)</td><tr>");
+		
 
 
 	})
 
 	$("#square_"+id+"_table").tablesorter({
 		sortList: [[3,1], [4,2]]
-		
 	});
+	
+	data = null
 
 }
-
 

@@ -97,7 +97,7 @@ var graphs_functions_json = {
 		////ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"['"+type+"']['"+graphshort+"']['"+value+"']");
 
 
-		if(graphshort==null || this.local_json["builtin_graphs"] == undefined){
+		if(graphshort === null || this.local_json["builtin_graphs"] === undefined){
 			// no graph set, so relax
 			return null;
 		}else if(typeof this.local_json["builtin_graphs"][graphshort] !== 'undefined'){
@@ -115,7 +115,7 @@ var graphs_functions_json = {
 	},
 	namesToDropdown: function(id){
 		// IN : id of square, that we calculate the Connector Type, then find functions for that Connector
-		// resolve order = id -> CH -> type -> short names -> dropdown
+		// resolve order = id -> CK -> type -> short names -> dropdown
 		$("#systemgraphshere").empty();
 		$("#connectorgraphshere").empty();
 
@@ -127,7 +127,7 @@ var graphs_functions_json = {
 		);
 
 		// find the graphs specific to this Connector tyep
-		connector_type = connectors_json.handletotype( retrieveSquareParam(id, 'CH') );
+		connector_type = connectors.handletotype( retrieveSquareParam(id, 'CK') );
 		ww(4, "connector_type for "+id+" found as:"+connector_type+" toshortnamelist:"+graphs_functions_json.typeToShortnameList(connector_type));
 		$.each(graphs_functions_json.typeToShortnameList(connector_type), function(i, v){
 			mySelect.append(
@@ -143,7 +143,6 @@ var graphs_functions_json = {
 		// OUT : array of graphs names, in files declared in graphs.json
 		var toreturn = [];
 		$.each(this.local_json[type], function (k, v){
-			ww(7, "graph appropriate = "+JSON.stringify(k));
 			toreturn.push(k);
 		});
 		return toreturn.sort();
@@ -152,92 +151,139 @@ var graphs_functions_json = {
 }
 
 
-// connectors_json.handletotype
-var connectors_json = {
-	// Object to handle connectors
-	// Your configuration of hosts/connectors
-	//  ["0":{"handle":"dmz web","type":"apache"...},]
-	local_json: {},
-	get_connectors_json: function(){
-		return this.local_json;	
+// connectors.handletotype
+var connectors = {
+	// store maintain object of connections (//ip:port) and all the Indexes known at that location
+	
+	connectors: [],
+	get_connectors: function(){
+		return this.connectors;	
+	},	
+	
+	add_connector: function(new_connector){
+		// check if Connector is valid JSON, error if not
+		if(new_connector.hasOwnProperty("status") && new_connector.status == "errorLoading"){
+			ww(2, "Error: Loading "+new_connector.key+", permissions or invalid JSON");
+			udpateScreenLog("Error: Loading "+new_connector.key+" ");
+		}else{
+			this.connectors.push(new_connector);
+		}
 	},
-	set_connectors_json: function(new_connectors_json){
-		this.local_json = new_connectors_json;
-	},
-	handletotype: function(handle){
-		var toreturn;
-		$.each(this.local_json, function(k, v){
-			if(String(v['handle']) == String(handle)){
-				toreturn  = v['type'];
-				return false;
-			}
-		});
-		return toreturn;
-	},
-	handletodst: function(handle){
-		var toreturn;
-		$.each(this.local_json, function(k, v){
-			if(String(v['handle']) == String(handle)){
-				toreturn  = v['dst'];
-				return false;
-			}
-		});
-		return toreturn;
-	},
-	handletousername: function(handle){
-		var toreturn
-		$.each(this.local_json, function(k, v){
-			if(String(v['handle']) == String(handle)){
-				toreturn  = v['username'];
-				return false;
-			}
-		});
-		return toreturn;
-	},
-	handletoapikey: function(handle){
-		var toreturn
-		$.each(this.local_json, function(k, v){
-			if(String(v['handle']) == String(handle)){
-				toreturn  = v['apikey'];
-				return false;
-			}
-		});
-		return toreturn;
-	},
-	handletox: function(handle, x){
-		var toreturn
-		$.each(this.local_json, function(k, v){
-			if(String(v['handle']) == String(handle)){
-				toreturn  = v[x];
-				return false;
-			}
-		});
-		return toreturn;
-	},
-	getAttribute: function(handle, key){
-		var toreturn = null
-		$.each(this.local_json, function(k, v){
-			if(String(v['handle']) == String(handle)){
-				if(v.hasOwnProperty(key)){
-					toreturn = v[key]
-					return false;
-				}else{
-					toreturn = null;
-				}
-			}
-		});
-		return toreturn;
-		
-	},
-	setAttribute: function(handle, key, value){
-		$.each(this.local_json, function(k, v){
-			if(String(v['handle']) == String(handle)){
-				v[key] = value
-			}
-		})
-		
 
+
+	handletox: function(handle, x){
+		// ee(" -> "+arguments.callee.name+"(handle:"+handle+", x:"+x+")"); 
+		var toReturn = null;
+		
+		// is the attribute specific to the index, or generic to the connector
+		
+		if(x === "indexDesc" || x === "indexPattern"|| x === "favourites"){
+			var justIndices = _.flatten(_.pluck(this.connectors, 'indices'), true)
+			if(_.where(justIndices, {'handle': handle}).length > 0){
+				toReturn = _.where(justIndices, {'handle': handle})[0][x]
+			}else{
+				toReturn = null;
+			}
+			//return toReturn[x]
+			
+		}else{
+			_.each(this.connectors, function(connector){
+				if(	_.where(connector['indices'], {'handle': handle}).length > 0){
+					toReturn = connector[x]
+				}
+			})
+		}
+		return toReturn
 	},
+	
+	indexPatterntox: function(indexPattern, x){
+		// ee(" -> "+arguments.callee.name+"(handle:"+handle+", x:"+x+")"); 
+		var toReturn = null;
+		
+		// is the attribute specific to the index, or generic to the connector
+		
+		if(x === "handle" || x === "indexDesc"|| x === "favourites"){
+			var justIndices = _.flatten(_.pluck(this.connectors, 'indices'), true)
+			if(_.where(justIndices, {'indexPattern': indexPattern}).length > 0){
+				toReturn = _.where(justIndices, {'indexPattern': indexPattern})[0][x]
+			}else{
+				toReturn = null;
+			}
+			
+			
+		}else{
+			_.each(this.connectors, function(connector){
+				if(	_.where(connector['indices'], {'indexPattern': indexPattern}).length > 0){
+					toReturn = connector[x]
+				}
+			})
+		}
+		return toReturn
+	},
+
+	// keytox: function(key, x){
+
+	// 	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"(index:"+key+", x:"+x+")"); 
+
+	// 	var toReturn = null;
+
+	// 	_.each(this.connectors, function(connector){
+	// 		if(key === connector['key']){
+	// 			toReturn = connector[x]
+	// 		}
+	// 	})
+
+	// 	return toReturn
+	// },
+
+	// Connector is the destination of the server e.g. 192.168.1.1:9200
+	setConnectorAttribute: function(handle, key, value){
+		// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"(handle:"+handle+", key:"+key+", value:"+value+")"); 
+
+		_.each(this.connectors, function(connector){
+			_.each(connector['indices'], function(index){
+				if(index['handle'] === handle){
+					ww(5, "Updating key:"+key+" for:"+connector['key']);
+					
+					connector[key] = value
+				}
+			})
+		})
+	},
+
+	// handle is the index at that connector e.g. "index:ids"
+	setHandleAttribute: function(handle, key, value){
+		// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"(handle:"+handle+", key:"+key+", value:"+value+")"); 
+
+		_.each(this.connectors, function(connector){
+			_.each(connector['indices'], function(index){
+				if(index['handle'] === handle){
+					ww(5, "Updating key:"+key+" for:"+handle);
+					index[key] = value
+				}
+			})
+		})
+	},
+	
+
+
+	// patterntox: function(indexPattern, x){
+	// 	// ee(" -> "+arguments.callee.name+"(indexPattern:"+indexPattern+", x:"+x+")"); 
+	// 	var toReturn = null;
+		
+	// 	// is the attribute specific to the index, or generic to the connector
+		
+	// 	if(x === "handle" ){
+			
+	// 		var justIndices = _.flatten(_.pluck(this.connectors, 'indices'), true)
+	// 		if(_.where(justIndices, {'indexPattern': indexPattern}).length > 0){
+	// 			toReturn = _.where(justIndices, {'indexPattern': indexPattern})[0][x]
+	// 		}
+			
+			
+	// 	}
+	// 	return toReturn
+	// },
 
 }
 	
@@ -245,8 +291,8 @@ var connectors_json = {
 
 
 function updateurl(){
-	// //ee(" -> "+arguments.callee.name);
-	
+	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(url)+")");
+
 	var existingUrl = window.location
 	var newUrl = existingUrl.protocol + "//" + existingUrl.hostname + ":" + existingUrl.port + existingUrl.pathname + "#" + btoa(JSON.stringify(url))
 
@@ -264,7 +310,8 @@ function updaterefresh(){
 
 function wipereset(){
 	// //ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(url)+")");
-	Lockr.flush();
+	deleteAllStoredData()
+
 
 	// currentLocation = window.location
 	// url = currentLocation.protocol + "//" + currentLocation.hostname + ":" + currentLocation.port + currentLocation.pathname + "#" + btoa('{"squares":[],"Zt":""}')
@@ -283,7 +330,7 @@ function wipereset(){
 	
 	initialLoad()
 
-	addGraphConnector();
+	addGraphConnector(null);
 	window.location.reload()
 
 }
@@ -306,66 +353,23 @@ var container;
 
 var mouse;
 var threeRenderer
+var db;
+
+
+var url = {}
+var masterMappings = {}
 
 // error status is a state, not a config, so store it here, and not in URL square definition
 var errorStatus = {}
 errorStatus['page'] = {"critical":[], "warning":[]}
 errorStatus['squares'] = {} // {1: {"critical":[], "warning":[]}, 2:{}}
 
-
+var linesgroup
 
 ///// Do we already have an object to build from?
-var hash = window.location.hash.substring(1)
+var hash
 
-if(hash
-	&& re_str.test(hash)
-	&& classOf(JSON.parse(atob(hash)))=="Object" 
-	&& JSON.parse(atob(hash))
-	&& JSON.parse(atob(hash)).hasOwnProperty("squares")
-	&& JSON.parse(atob(hash)).hasOwnProperty("Zt")
-	){
-		// URL is compliant
-		ww(5, "Valid URL found");
-		var url = JSON.parse(atob(hash));
 
-}else{
-	// No compliant URL at all, let's build our own object
-	ww(5, "No valid URL found, show 'Intro' squares");
-	
-	// id=1 should be empty.  
-	// For square 1, the code should always reference the PathBar, and not the object.  
-	// Every other square will reference the Pr instead			
-	//url.squares = new Array();
-
-	url = {}
-	url.v = "1"
-	url.squares =  [{
-				"id": 1,
-				"Pr": 0,
-				"Gt": "intro",
-				"Wi": [],
-				"x": -1700,
-				"y": -1000
-			}, {
-				"id": 2,
-				"Pr": 1,
-				"Gt": "intro",
-				"Wi": [],
-				"x": 1100,
-				"y": 200
-			}, {
-				"id": 3,
-				"Pr": 1,
-				"Gt": "intro",
-				"Wi": [],
-				"x": 200,
-				"y": 1100
-			}
-		]
-	url.Zt = "translate(1529,863) scale(0.57)"
-
-	updateurl();
-}
 
 
 //******************************************************************
@@ -374,10 +378,6 @@ if(hash
 //******************************************************************
 //******************************************************************
 
-var drag = d3.drag()
-    .on("start", dragstarted)
-    .on("drag", dragged)
-    .on("end", dragended);
 
 
 function dragstarted(d) {
@@ -387,6 +387,7 @@ function dragstarted(d) {
 
 
 function dragged(d) {
+	// for individual squares, not entire workspace
 	// even a click registers as a drag, so check dx/dy (differnce in x/y) to see if movement took place
 	// event.dx isn't the total move dist, it's the move per frame/step
 
@@ -416,7 +417,7 @@ function dragged(d) {
 		var loop = true; // XXX must be a way to while(findChildren(id)>0){
 
 		// Keep looping until no new children are found
-		while(loop==true){
+		while(loop===true){
 			var newList = findChildren(redrawList);
 			$.merge(redrawList, newList);
 			if(newList.length<1){
@@ -473,6 +474,7 @@ function duplicateSquare(id, newObject){
 	delete clone.Wi;
 	delete clone.Ds;
 	delete clone.Cs;
+	delete clone.Fi;
 
 	clone.Pr = id;
 		
@@ -484,7 +486,16 @@ function duplicateSquare(id, newObject){
 
 	}
 
-	newSquare(clone);
+	newID = newSquare(clone);
+	
+	udpateScreenLog("#"+newID+" Connector has been created");
+	drawSquares([newID]);
+	drawLines([newID], false);
+	drawinBoxes([newID]);
+	drawLines(everyID(), false);  //line colours have changed
+	udpateScreenLog("#"+clone.id+" Created");
+	updateurl();
+	
 	return clone.id;
 
 }
@@ -509,28 +520,78 @@ function addGraphConnector(handle){
 		mo['CH'] = handle
 	}
 
-	newSquare(mo);
+	newID = newSquare(mo);
 
+	udpateScreenLog("#"+newID+" Connector has been created");
+	drawSquares([newID]);
+	drawLines([newID], false);
+	drawinBoxes([newID]);
+	drawLines(everyID(), false);  //line colours have changed
+	udpateScreenLog("#"+clone.id+" Created");
+	updateurl();
+	
+}
+
+
+function panzoom(){
+	//https://gist.github.com/mootari/64ff2d2b0b68c7e1ae6c6475f1015e1c
+
+
+	//perform the pan zoom
+	var box = workspaceDiv.select('#squaregroup').node().getBBox();
+	var scale = Math.min(window.innerWidth / box.width, window.innerHeight / box.height);
+
+	// Reset transform.
+	var transform = d3.zoomIdentity;
+	// Center [0, 0].
+	transform = transform.translate(window.innerWidth / 2, window.innerHeight / 2);
+	// Apply scale.
+	transform = transform.scale(scale);
+	// Center elements.
+	transform = transform.translate(-box.x - box.width / 2, -box.y - box.height / 2);
+	zoom.transform(squaregroup, transform);
+
+	
+	// XXX need to update URL, otherwise first drag moves around
 
 }
 	
 function newSquare(obj){
 	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(obj)+")");
 
+	// clean out it's data
+
+
 	var newID = highestSquareID()+1
 	obj['id'] = newID
 	
-	relX = 1000
-	relY = 1000
+	var relX = (obj['x'] == null ) ? 400 : obj['x']
+	var relY = (obj['y'] == null ) ? 800 : obj['y']
 
-	var validCoords = false
 	
+	// if matches after 100, just place on top
 	for (var i = 0; i <= 100; i++){
 		
-		if(isRelativePosTaken(obj['Pr'], relX, relY) == true){
+		var clash = false
+
+		for (var tmpId in url.squares){
+			var loopX = calcCord(url.squares[tmpId].id, 'x', 0)
+			var loopY = calcCord(url.squares[tmpId].id, 'y', 0)
+			var newX = calcCord(obj['Pr'], 'x', relX)
+			var newY = calcCord(obj['Pr'], 'y', relY)
+			if(loopX === newX && loopY === newY ){
+				qq("new square location used")
+				clash = true
+			}
+		}	
+
+		// if(isRelativePosTaken(obj['Pr'], relX, relY) === true){
+		if(clash === true){
+			qq(relX+":"+relY+"  taken, increasing")
 			relX += 100
 			relY += 100
 		}else{
+			qq(relX+":"+relY+"  not taken, using")
 			i = 101
 		}
 
@@ -540,33 +601,10 @@ function newSquare(obj){
 
 	url.squares.push(obj)
 
-	udpateScreenLog("#"+newID+" Connector has been created");
-	drawSquares([newID]);
-	drawLines([newID], false);
-	drawinBoxes([newID]);
-	drawLines(everyID(), false);  //line colours have changed
-	udpateScreenLog("#"+clone.id+" Created");
-	updateurl();
+	return obj['id']
 }
 
-function isRelativePosTaken(parentId, x, y){
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+parentId+" "+x+" "+y+")");
 
-	var clash = false
-
-	for (var id in url.squares){
-		var loopX = calcCord(url.squares[id].id, 'x', 0)
-		var loopY = calcCord(url.squares[id].id, 'y', 0)
-		var newX = calcCord(parentId, 'x', x)
-		var newY = calcCord(parentId, 'y', y)
-		if(loopX == newX || loopY == newY ){
-			qq("new square location used")
-			clash = true
-		}
-	}	
-
-	return clash
-}
 
 //******************************************************************
 //******************************************************************
@@ -599,7 +637,7 @@ function drawLines(ids, drawBezier){
 	////ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
 
 	deleteLines();
-	
+
 	var lines = d3.select("#linegroup")
 	.selectAll(".path_all")
     	.data(url.squares)
@@ -617,7 +655,7 @@ function drawLines(ids, drawBezier){
 			var myBendY = 0;
 			var prBendX = 0;
 			var prBendY = 0;
-			if(retrieveSquareParam(d.id, "Pr") == 0){
+			if(retrieveSquareParam(d.id, "Pr") === 0){
 				var prRelX = calcCord(d.id, 'x', 0);
 				var prRelY = calcCord(d.id, 'y', 0);
 			}else{
@@ -631,7 +669,7 @@ function drawLines(ids, drawBezier){
 			prBendX = prRelX + ((myRelX -prRelX)* bendX);
 			prBendY = prRelY + ((myRelY -prRelY)* bendY);
 
-			if(GLB.drawLineBezier==true && drawBezier==true && d.Pr!=0){
+			if(GLB.drawLineBezier===true && drawBezier===true && d.Pr!=0){
 				//draw the dots for bezier curve
 				// I suppose this could be done in it's own ".append", but then all the abve maths needs doing again?
 				squaregroup
@@ -661,11 +699,12 @@ function drawLines(ids, drawBezier){
 
 	
 	var lineFoWidth	= 350
+	
 	var linesfo = lines.append("foreignObject")
 	.classed("squarekey_all", true)	
 		.attr("x", function(d){
 			var myRelX = calcCord(d.id, 'x', 0);
-			if(retrieveSquareParam(d.id, "Pr") == 0){
+			if(retrieveSquareParam(d.id, "Pr") === 0){
 				var prRelX = calcCord(d.id, 'x', 0);
 			}else{
 				var prRelX = calcCord(retrieveSquareParam(d.id, "Pr"), 'x', 0);
@@ -674,7 +713,7 @@ function drawLines(ids, drawBezier){
 		})
 		.attr("y", function(d){
 			var myRelY = calcCord(d.id, 'y', 0);
-			if(retrieveSquareParam(d.id, "Pr") == 0){
+			if(retrieveSquareParam(d.id, "Pr") === 0){
 				var prRelY = calcCord(d.id, 'y', 0);
 			}else{
 				var prRelY = calcCord(retrieveSquareParam(d.id, "Pr"), 'y', 0);
@@ -690,6 +729,14 @@ function drawLines(ids, drawBezier){
 		linesfodiv.append("div")
 			.style("text-align", "center")
 			.text(function(d){ 
+				var textOut = []
+				
+				handle = retrieveSquareParam(d.id, "CH", false)
+				
+				if(handle){
+					textOut.push(handle)
+				}
+
 				var text = retrieveSquareParam(d.id, 'Ds', false)
 				if(text !== undefined){
 					
@@ -699,13 +746,23 @@ function drawLines(ids, drawBezier){
 					obj = JSON.parse(atob(retrieveSquareParam(d.id, 'Ds', false)))
 					
 					_.each(obj['compare'], function(obj,i){
-						out.push(_.values(obj)[0])
+						textOut.push(_.values(obj)[0])
 					})
 
-					out = out.join(", ")
+					// out = out.join(", ")
 
-					return out
+					// return out
 				}
+
+				var filter = retrieveSquareParam(d.id,"Fi",false)
+				if(filter !== undefined){
+					// best effort to tidy it up
+					stripped = filter.replace(/.*'].value./,'')
+					textOut.push(stripped)
+				}
+
+
+				return textOut.join(", ")
 			})
 			.on("click", function(d){
 				alert(atob(retrieveSquareParam(d.id, 'Ds')))
@@ -716,12 +773,12 @@ function drawLines(ids, drawBezier){
 
 function squareMouseOver(d, i){
 	// Hide all square menus if you want a cleaner interface?
-	if(GLB.hidesquaremenus == true){
+	if(GLB.hidesquaremenus === true){
 			$(".square_menu").removeClass("menu_invisible");
 	}
 }
 function squareMouseOut(d, i){
-	if(GLB.hidesquaremenus == true){
+	if(GLB.hidesquaremenus === true){
 		$(".square_menu").addClass("menu_invisible");
 	}
 }
@@ -760,12 +817,15 @@ function drawSquares(idlist) {
 	        .on("mouseover", squareMouseOver)
 			.on("mouseout", squareMouseOut)
 			.attr("transform", "scale(0.8)")
-		.style("height", function(d){
-			return (document.getElementById("foreignObject_"+d.id).clientHeight * retrieveSquareParam(d.id, "Sc") );
-		})
-		.style("width", function(d){
-			return (document.getElementById("foreignObject_"+d.id).clientWidth * retrieveSquareParam(d.id, "Sc") );
-		})
+			.on("dblclick.zoom", function() { d3.event.stopPropagation(); } )
+			.on("mousewheel.zoom", function() { d3.event.stopPropagation(); })
+			.on("DOMMouseScroll.zoom", function() { d3.event.stopPropagation(); })
+			.style("height", function(d){
+				return (document.getElementById("foreignObject_"+d.id).clientHeight * retrieveSquareParam(d.id, "Sc") );
+			})
+			.style("width", function(d){
+				return (document.getElementById("foreignObject_"+d.id).clientWidth * retrieveSquareParam(d.id, "Sc") );
+			})
 
 	var square_container = foreignObject
 		.append("xhtml:div")
@@ -798,7 +858,7 @@ function drawSquares(idlist) {
 				.classed("square_menu_icon_info", true)
 				.on("click", function(d){ graphAboutMe(d.id); })
 				.on("mousedown", function() { d3.event.stopPropagation(); })
-	        		.on("mouseout", function(d){ drawinBoxes([d.id]) })
+	        		// .on("mouseout", function(d){ drawinBoxes([d.id]) })
 				;	
 
 			// Edit
@@ -815,17 +875,19 @@ function drawSquares(idlist) {
 				.attr("title", "Reload data and redraw Square")			
 				.classed("square_menu_icon", true)
 				.classed("square_menu_icon_reload", true)
-				.on("click", function(d){deleteData(d.id), reloadData([d.id]);})
+				.on("click", function(d){ reloadData([d.id])}  )
 				.on("mousedown", function() { d3.event.stopPropagation(); })
 				;	
 				
+
+				
+
 			// Move
 			var move = menubarcontrols.append("img")
 				.attr("title", "Drag square to move")			
 				.classed("square_menu_icon", true)
 				.classed("square_menu_icon_move", true)
 				.attr("id", function(d){ return "square_menu_move_"+d.id })
-				//.on("click", function(d){deleteData(d.id); })
 				.on("mousedown", function() { d3.event.stopPropagation(); })
 					.call(drag)
 				;	
@@ -901,12 +963,6 @@ function drawSquares(idlist) {
 				;	
 			
 
-	// hover over info for any element
-	var squareinfo = square_container.append("xhtml:div")
-		.classed("square_menu_info", true)
-		.classed("square_menu", true)
-		.attr("id", function(d){ return "square_info_"+d.id })
-				
 
 	// Inform user of Window End and Window Size
 	var WeWs = square_container.append("xhtml:div")
@@ -931,6 +987,14 @@ function drawSquares(idlist) {
 				.on("mousedown", function() { d3.event.stopPropagation(); })
 				;				
 
+	// hover over info for any element
+	var squareinfo = square_container.append("xhtml:div")
+		.classed("square_menu_info", true)
+		.classed("square_menu", true)
+		.attr("id", function(d){ return "square_info_"+d.id })
+				
+
+
 	// move the square so that [0,0] is the middle, and not the corner
 	squaregroup.selectAll(".newsquare")
 		.attr("transform", function(d){
@@ -949,8 +1013,9 @@ function drawSquares(idlist) {
 	
 	
 	for (var i in idlist){
+		//graphLoading(idlist[i]);
 		
-		graphLoading(idlist[i]);
+		graphGraphError(idlist[i], "Loading")	
 
 	}
 
@@ -967,17 +1032,19 @@ function drawSquares(idlist) {
 
 
 //////////////////////////////
-// error handling
+// status/error handling
 //////////////////////////////
 
 function addSquareStatus(id, status, tooltip){
-	
+	// the little heard icon for each square
+	// this is handled in memory (not url) as it's temp, and shouldnt' be stored
+
 	if(!errorStatus['squares'].hasOwnProperty(id)){
 		errorStatus['squares'][id] = {"critical":[], "warning":[]}
 	}
 
 	errorStatus['squares'][id][status] = _.reject(errorStatus['squares'][id][status], function(singleTooltip){
-		return tooltip == singleTooltip
+		return tooltip === singleTooltip
 	})
 	errorStatus['squares'][id][status].push(tooltip)
 	renderSquareStatus(id, status)
@@ -987,25 +1054,26 @@ function removeSquareStatus(id, status, tooltip){
 	
 	// cycle through all statuses, and remove where string match
 	errorStatus['squares'][id][status] = _.reject(errorStatus['squares'][id][status], function(singleTooltip){
-		return tooltip == singleTooltip
+		return tooltip === singleTooltip
 	})
 	renderSquareStatus(id, status)
 }
 function wipeSquareStatus(ids){
 	
-	qq(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(url)+")");
+	// qq(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+")");
 	
 	if(!ids.isArray){
 		ids = [ids]
 	}
 
 	_.each(ids, function(id){
-		qq("wiping errorStatus for id:"+id)
+		// ww(7, "wiping errorStatus for id:"+id)
 		renderSquareStatus(id)
 		delete errorStatus['squares'][id]
 	})
 	
 }
+
 function renderSquareStatus(id){
 
 	// render can be called from general load, so might not have any issues logged for anything yet
@@ -1039,7 +1107,7 @@ function addPageStatus(status, tooltip){
 
 
 	errorStatus['page'][status] = _.reject(errorStatus['page'][status], function(singleTooltip){
-		return tooltip == singleTooltip
+		return tooltip === singleTooltip
 	})
 	errorStatus['page'][status].push(tooltip)
 
@@ -1049,7 +1117,7 @@ function removePageStatus(status, tooltip){
 	
 	// cycle through all statuses, and remove where string match
 	errorStatus['page'][status] = _.reject(errorStatus['page'][status], function(singleTooltip){
-		return tooltip == singleTooltip
+		return tooltip === singleTooltip
 	})
 	renderPageStatus(status)
 }
@@ -1075,7 +1143,9 @@ function renderPageStatus(){
 
 }
 
-
+//////////////////////////////
+// end of status/error handling
+//////////////////////////////
 
 
 
@@ -1099,6 +1169,7 @@ function setHoverInfo(id, data){
 }
 function clearHoverInfo(id){
 	
+	var localTimeout = GLB.square.hoverfade;
 	setTimeout(
 		function(localTimeout){
 			$("#square_info_"+id).css('display', 'none')
@@ -1127,7 +1198,7 @@ function scaleSquare(id){
 	// start with a default
 	var currentScale = GLB.zoomLevels[0];
 	
-	if(typeof(url.squares[squarearraysearch(id)].Sc) == null){
+	if(typeof(url.squares[squarearraysearch(id)].Sc) === null){
 		ww(6, "Scale found no existing scale for id:"+id);
 		url.squares[squarearraysearch(id)].Sc = 1;
 	}else if(typeof(url.squares[squarearraysearch(id)].Sc) != null && url.squares[squarearraysearch(id)].Sc > 0){
@@ -1147,33 +1218,31 @@ function scaleSquare(id){
 }
 
 // User has Loaded page/Dragged a box/Duplicated a box/Edited a square/other
-function drawinBoxes(ids){
+async function drawinBoxes(ids){
 	// IN : Array of Integers
-	////ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
-	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
 	
+	// ee(" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
+
 	// update the status icon
 	// setSquareStatus(id, "normal")
-
 	for (var i in ids){
+		let id = ids[i]
+		// qq("drawinBoxes("+id+")")
+
+		renderSquareStatus(id)
 	
-		renderSquareStatus(ids[i])
-	
+		////// draw the bottom text
+
 		//	var item = url.squares[squarearraysearch(ids[i])];
 		var thisDate = new Date();
 		var thisEpoch = Math.floor(thisDate.getTime() / 1000); 
-		var thisOffset = thisDate.getTimezoneOffset() * 60;
-	
+		
 		// keep times in epoch, but adjut for this user
 		// no need to apply our timezone offset agaisnt thisWe, as moment already does that for us
-		var thisWe = (calcGraphTime(ids[i]) );
-		var thisWs = retrieveSquareParam(ids[i], "Ws");
-		// var thisWr = retrieveSquareParam(ids[i], "Wr");
-		// qq("thisWe = "+thisWe)
+		var thisWe = (calcGraphTime(id) );
+		var thisWs = retrieveSquareParam(id, "Ws");
 		var sInDay = 60*60*24;
-		
 		// draw the time frames at the bottom of the box
-		
 		var momentFormat = ''
 		if(Math.abs(thisWe) > 21600 || thisWs > 21600 || Math.floor(thisEpoch / sInDay) > Math.floor(thisWe / sInDay)  ){
 			// if a big window, or before today
@@ -1181,168 +1250,184 @@ function drawinBoxes(ids){
 		}else{
 			momentFormat = 'ddd Do, HH:mm:ss'
 		}
-		
 		// moment.unix().format will auto show it in local time format.
 		// moment.unix().utc().format() to change
 		var squareStart = moment.unix(thisWe + thisWs).format(momentFormat);	
 		var squareDiff = countSeconds(thisWs);
 		var squareEnd = moment.unix(thisWe).format(momentFormat);
-		//$("#square_WeWs_"+ids[i]).text(squareStart + " ( +"+squareDiff+" ) "+squareEnd+" ("+thisWe+")");
-		$("#square_WeWs_"+ids[i]).text(squareStart + " ( +"+squareDiff+" ) "+squareEnd);
-
-		
-		// draw the actual graph
-		if(classOf(Lockr.get("squaredata_"+ids[i]+"_processeddata")) == "Object" 
-		|| classOf(Lockr.get("squaredata_"+ids[i]+"_processeddata")) == "Array"	
-		|| classOf(Lockr.get("squaredata_"+ids[i]+"_processeddata")) == "String" ){			
-			// I have data,  no one has deleted it, must be safe to use
-			//ww(6, "drawInBoxes thinks #"+ids[i]+" already has data ready to draw");
-			callTheGraph(ids[i], false);
-
-		}else if( thisWe !=null || thisWs !=null || retrieveSquareParam(ids[i], "Gt") !=null || retrieveSquareParam(ids[i], "Ds") !=null ){	
-			// I have no data and I differ, time to get my data created
-			
-			// for non "builtin" graphs, 'mappings' is needed to construct the query
-			var mappings = connectors_json.getAttribute(retrieveSquareParam(ids[i], 'CH'), "mappings")
-			
-			if(graphs_functions_json.get_graphs_json()['builtin_graphs'].hasOwnProperty(retrieveSquareParam(ids[i], "Gt"))   ||   mappings != null){
-				ww(6, "drawInBoxes() populating #"+ids[i]+": "+ connectors_json.handletotype( retrieveSquareParam(ids[i], 'CH')) +" "+retrieveSquareParam(ids[i], "Gt"));
-				window[graphs_functions_json.retrieveGraphParam(connectors_json.handletotype( retrieveSquareParam(ids[i], 'CH')), retrieveSquareParam(ids[i], "Gt") , "populate") ](ids[i]);
-			}else{
-				let unchangableI = ids[i]
-				let timeout = 200
-				ww(6, "drawInBoxes() had no mappings for id:"+ids[i]+", trying again in "+timeout+"ms");
-				setTimeout(function(){ 
-					drawinBoxes([unchangableI])
-				}, timeout);
-
-			}
+		$("#square_WeWs_"+id).text(squareStart + " ( +"+squareDiff+" ) "+squareEnd);
 
 
-		}else if(classOf(retrieveSquareParam(ids[i], "processeddata")) == "Object" 
-		|| classOf(retrieveSquareParam(ids[i], "processeddata")) == "Array" ){
-			// I have no data, I have no soul, but my parent has data, I'll use that...
-			//ww(6, "drawInBoxes thinks #"+ids[i]+" is soul-less and should steal data from parent");
-			ww(6, "drawInBoxes() 'callsTheGraph' for  #"+ids[i]+" "+ connectors_json.handletotype( retrieveSquareParam(ids[i], 'CH')) +" "+retrieveSquareParam(ids[i], "Gt"));
-			callTheGraph(ids[i], false);
-			
+		var theResult = await checkSavedDataIsMine(id)
+		var theData = await getSavedData(id, "processed", "")
+
+		if(theResult && theData && retrieveSquareParam(id, "Gt")!=="intro"){
+			// Hash checks out, and data exists
+			qq("drawinBoxes("+id+"): hash checks out and processed data exists")
+			callTheGraph(id, true);
+
 		}else{
-			graphNoData(ids[i]);
+			qq("drawinBoxes("+id+"): hash fail or no data")
+
+			// delete all saved data, , get raw data, save it, raw_to_processed, save it,
+			deleteStoredData([id])
+			.catch(e => ww(0, e));
+			
+			//save new hash
+			saveNewData(id, "hash", "", createSquareHash(id))
+			.catch(e => ww(0, e));
+
+			var thisGT = retrieveSquareParam(id, "Gt")
+			var thisCH = retrieveSquareParam(id, 'CH', true)
+			// var thisDst = connectors.handletox(thisCH, "dst")
+			// var thisIndex = connectors.handletox(thisCH, 'indexPattern')
+			
+			
+
+			// raw to processed
+			window[graphs_functions_json.retrieveGraphParam(connectors.handletox ( thisCH, "type"), thisGT , "populate") ](id)
+				.then(async function(values){
+			
+					var dataToProgess = false
+					_.each(values, function(value){						
+						if(value['data'] !== null){
+							if(GLB.saveRawData == true){
+								saveNewData(value.id, "raw", value.name, value.data)
+							}
+							dataToProgess = true
+
+							if(value.hasOwnProperty("status") && value['status'].length > 0){
+								addSquareStatus(id, "warning", value['status'])
+							}
+						}
+					})
+					
+					// Does data exist?  Or maybe the graph requires no Promises (e.g. UpdateCountdown)
+					if(dataToProgess || values.length==0){
+						thisGT = retrieveSquareParam(id, "Gt")
+						thisType = connectors.handletox( thisCH, "type")
+						// qq("drawing '"+graphs_functions_json.retrieveGraphParam(thisType, thisGT , "rawtoprocessed")+"' for id:"+id)
+						procData = await window[graphs_functions_json.retrieveGraphParam(thisType, thisGT , "rawtoprocessed") ](id, values)
+						
+						saveNewData(id, "processed", "", procData)
+						.catch(e => ww(0, "saveNewData: id:"+id+"m, error:"+e));
+
+						
+
+						callTheGraph(id, true);
+					}else{
+						// Only report the issue of the first Promise error?  Better way to represent errors of each Promise?
+						graphGraphError(id, values[0].error)
+					}
+				})
+
+
 		}
 
-
 	}
 }
 
-function graph_ajax_fin(id){
-	// Async ajax has finished for ID
-	window[graphs_functions_json.retrieveGraphParam(connectors_json.handletotype( retrieveSquareParam(id, 'CH')), retrieveSquareParam(id, "Gt") , "rawtoprocessed") ](id);
-}
+
+// Some data is ready, call the 'drawing function'
+async function callTheGraph(id, nudgeChildren){
+	// IN: Integer, Binary (whether to chase down all children and draw them too)
+	// ee(" -> "+arguments.callee.name+"("+id+", "+nudgeChildren+")");
+	clearSquareBody(id);
 
 
-
-// Squares call this centralised code point to save *raw* data and start drawing
-function saveRawData(id, validdata, name, data){
-	// IN : Integer ID, "raw|processed", Array|Object
-	// Raw data is handled by the graph, this can be messy and have different titles
-	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+validdata+", "+name+")");
-
-	udpateScreenLog("#"+id+" raw data saved");
+	// call the function that is defined as "graph" for the graph type of this square
+	var theDynamicGraphFunction = graphs_functions_json.retrieveGraphParam(connectors.handletox ( retrieveSquareParam(id, 'CH'), "type"), retrieveSquareParam(id, "Gt") , "graph");
 	
-	if(validdata == true){
-		Lockr.set('squaredata_'+id+'_rawdata_'+name, data);	
-		window[graphs_functions_json.retrieveGraphParam(connectors_json.handletotype( retrieveSquareParam(id, 'CH')), retrieveSquareParam(id, "Gt") , "rawtoprocessed") ](id);
+	//qq("for id:"+id+" graph type is "+theDynamicGraphFunction)
+
+	if(theDynamicGraphFunction != null){
+		// ok the graph names exists
 		
+		// qq("checking 3d: "+id)
+		// qq(GLB.threejs.enabled)
+		// qq(graphs_functions_json.retrieveGraphParam(connectors.handletox( retrieveSquareParam(id, 'CH'), "type"), retrieveSquareParam(id, "Gt") , "requireThreeJS"))
+		// qq("checked 3d: "+id)
+
+		if(graphs_functions_json.retrieveGraphParam(connectors.handletox( retrieveSquareParam(id, 'CH'), "type"), retrieveSquareParam(id, "Gt") , "requireThreeJS") == true && GLB.threejs.enabled == false){
+			// ThreeJS not enabled in config file
+			
+			graphGraphError(id, "Square Type '"+retrieveSquareParam(id, "Gt")+"' requires ThreeJS enabling in config")
+		
+		}else{
+
+			var savedData = await getSavedData(id, "processed", "")
+
+			if(savedData != null){
+				// qq("Now "+theDynamicGraphFunction+"("+id+")")
+				clearSquareBody(id)
+				window[theDynamicGraphFunction](id, savedData);
+			}else{
+				
+				graphGraphError(id, "No Results")
+				// qq("No Results id:"+id)
+			}
+		
+		}
+
 	}else{
-		Lockr.set('squaredata_'+id+'_rawdata_'+name, null);	
-		graphNoData(id);		
-	}
-
-	if(GLB.removeRawDataAfterProcessing == true){
-		
-		Lockr.rm('squaredata_'+id+"_rawdata");
-		Lockr.rm('squaredata_'+id+"_rawdata_");
-		
-	}
-
-}	
-
-
-function graphLoading(id){
-
-	////ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
-	// remove the "loading" div in a square
-	clearSquareBody(id);
-
-	// holding square whilst data loads/drawn, or we realise there is no data
-	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
+		ww(0, "window["+theDynamicGraphFunction+"] not found for id:"+id);
+	}	
 	
-	var square = squareContainer
-		.append("xhtml:div") 
-			.attr("id", function(d){return("square_holding_"+d.id)})
-			.classed("box_binding", true)
-			.classed("square_body", true)
-			.classed("square_xhtml", true)
-			.classed("square_dft_message", true)
-			.on("mousedown", function() { d3.event.stopPropagation(); })
-	var width = square.attr("width");
-	var loadingImage = square.append("img")
-			.attr("src","./images/021_b.png")
-			.classed("top_spacing", "true")
-			.on("mousedown", function() { d3.event.stopPropagation(); })
-	;		
 
+	if(nudgeChildren === true){
+		// Now look for children of mine that need new data to inherit
+		var promptTheseChildren = findChildren([id]);
+		//ww(6, "callTheGraph nudging for parent id:"+id+" children:"+JSON.stringify(promptTheseChildren));
+
+		for (var i in promptTheseChildren){
+			if(!( retrieveSquareParam(promptTheseChildren[i], "We") !=null 
+				|| retrieveSquareParam(promptTheseChildren[i], "Ws") !=null 
+				|| retrieveSquareParam(promptTheseChildren[i], "Gt") != null 
+				|| retrieveSquareParam(promptTheseChildren[i], "Pb") !=null )
+			){	
+				// you appear to be the same as me, call your 'drawing function' too
+				udpateScreenLog("#"+id+" rendering");
+				callTheGraph(promptTheseChildren[i], true);
+			}
+		}
+	}
 }
 
 
-function graphNoData(id){
+function graphGraphError(id, msg, imagePath="./squares-ui-icons/159687-interface-icon-assets/png/cancel.png"){
+	// ee(" -> graphGraphError ("+id+", "+msg+")");
+
+	// this isn't a graph type "/graphs/builtin_graphs/error" as it's not permanent, e.g. shouldn't be saved in the URL on load.  It's a temp error
 
 	// remove the "loading" div in a square
 	clearSquareBody(id);
 
 	// add a "no data" div to a square
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
-	var square = squareContainer
 		.append("xhtml:div") 
-			.attr("id", function(d){ return "square_nodata_"+d.id })
-			.classed("box_binding", true)
-			.classed("square_body", true)
-			.classed("square_xhtml", true)
-			.classed("square_dft_message", true)
-			.on("mousedown", function() { d3.event.stopPropagation(); })
-	var width = square.attr("width");
-	var loadingImage = square.append("img")
-			.attr("src","./images/168_b.png")
-			.classed("top_spacing", "true")
-			.on("mousedown", function() { d3.event.stopPropagation(); })
+		.attr("id", function(d){ return "square_error_"+d.id })
+		.classed("box_binding", true)
+		.classed("square_body", true)
+		.classed("square_xhtml", true)
+		.classed("square_dft_message", true)
+		.on("mousedown", function() { d3.event.stopPropagation(); });	
 
-}
-function graphGraphError(id, msg){
+	var loadingImage = squareContainer.append("img")
+		.attr("src",imagePath)
+		.on("mousedown", function() { d3.event.stopPropagation(); })
 
-	// remove the "loading" div in a square
-	clearSquareBody(id);
-
-	// add a "no data" div to a square
-	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
-		.append("xhtml:div") 
+		.append("div") 
 			.attr("id", function(d){ return "square_error_"+d.id })
-			.classed("box_binding", true)
-			.classed("square_body", true)
-			.classed("square_xhtml", true)
-			.classed("square_dft_message", true)
-			.text("'"+msg+"'")
+			.text(msg)
 		.on("mousedown", function() { d3.event.stopPropagation(); });
-	var width = square.attr("width");
-	var loadingImage = square.append("img")
-			.attr("src","./images/162_b.png")
-			.classed("top_spacing", "true")
-			.on("mousedown", function() { d3.event.stopPropagation(); })
-
+	
 }
+
+
 function graphAboutMe(id){
-	// if this graph type was persistent, then it would override all other attributes, making it annoying
-	// so it is a short lived function, not a square "type"
+	// AboutMe is a momentary thing and should redefine what the square is
+	// so this is handled as a function, and not a graph type
 
 	// remove the "loading" div in a square
 	clearSquareBody(id);
@@ -1367,24 +1452,29 @@ function graphAboutMe(id){
 	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_header'>Square ID:</div");
 	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>#"+id+"</div");
 	// $("#square_aboutme_"+id).append("<div class='clr'></div>");
-
-	$("#square_aboutme_"+id).append("<div class='square_aboutMe_header'>Coords (relative):</div");
-	$("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>x"+retrieveSquareParam(id, 'x')+", y"+retrieveSquareParam(id, 'y')+"</div");
+	var squareLoc = squarearraysearch(id);
+	
+	$("#square_aboutme_"+id).append("<div class='square_aboutMe_header'>Definition:</div");
+	$("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>"+JSON.stringify(_.omit(url.squares[squareLoc], "Ds"))+"</div");
 	$("#square_aboutme_"+id).append("<div class='clr'></div>");
 
-	$("#square_aboutme_"+id).append("<div class='square_aboutMe_header'>Coords (absolute):</div");
-	$("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>x"+calcCord(id, 'x', 0)+", y"+calcCord(id, 'y', 0)+"</div");
-	$("#square_aboutme_"+id).append("<div class='clr'></div>");
+	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_header'>Coords (relative):</div");
+	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>x"+retrieveSquareParam(id, 'x')+", y"+retrieveSquareParam(id, 'y')+"</div");
+	// $("#square_aboutme_"+id).append("<div class='clr'></div>");
+
+	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_header'>Coords (absolute):</div");
+	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>x"+calcCord(id, 'x', 0)+", y"+calcCord(id, 'y', 0)+"</div");
+	// $("#square_aboutme_"+id).append("<div class='clr'></div>");
 
 	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_header'>Parent ID:</div");
 	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>#"+retrieveSquareParam(id, 'Pr')+"</div");
 	// $("#square_aboutme_"+id).append("<div class='clr'></div>");
 
-	$("#square_aboutme_"+id).append("<div class='square_aboutMe_header'>Graph Type:</div");
-	$("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>'"+retrieveSquareParam(id, 'Gt')+"'</div");
-	var desc = graphs_functions_json.retrieveGraphParam(connectors_json.handletotype( retrieveSquareParam(id, 'CH')), retrieveSquareParam(id, "Gt") , "about") ;
-	$("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>"+desc+"</div");
-	$("#square_aboutme_"+id).append("<div class='clr'></div>");
+	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_header'>Graph Type:</div");
+	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>'"+retrieveSquareParam(id, 'Gt')+"'</div");
+	// var desc = graphs_functions_json.retrieveGraphParam(connectors.handletox ( retrieveSquareParam(id, 'CH'), "type"), retrieveSquareParam(id, "Gt") , "about") ;
+	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>"+desc+"</div");
+	// $("#square_aboutme_"+id).append("<div class='clr'></div>");
 
 	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_header'>Window End:</div");
 	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>"+moment.unix(calcGraphTime(id)).format("MMM ddd Do, HH:mm:ss")+"</div");
@@ -1398,8 +1488,8 @@ function graphAboutMe(id){
 	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>'"+getLineCol(id)+"'</div>");
 	// $("#square_aboutme_"+id).append("<div class='clr'></div>");
 
-	$("#square_aboutme_"+id).append("<div class='square_aboutMe_header fleft'>Data Subset: (including recursive from parents)</div>");
-	$("#square_aboutme_"+id).append("<div class='square_aboutMe_body fleft'>"+JSON.stringify(clickObjectsToDataset(id))+"</div>");
+	$("#square_aboutme_"+id).append("<div class='square_aboutMe_header '>Data Subset: (including recursive from parents)</div>");
+	$("#square_aboutme_"+id).append("<div class='square_aboutMe_body '>"+JSON.stringify(clickObjectsToDataset(id))+"</div>");
 	$("#square_aboutme_"+id).append("<div class='clr'></div>");
 	
 
@@ -1417,95 +1507,29 @@ function clearSquareBody(id){
 
 }
 
-// Squares call this centralised code point to save *processed* data and start drawing
-function saveProcessedData(id, name, data){
-	// IN : Integer ID, string, Array|Object
-	// Procesed data is needed by the main script, so it has to be "squaredata_x_processeddata"
-	
-	////ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+","+name+")");
-
-	var myHash = String(CryptoJS.MD5(JSON.stringify(url.squares[squarearraysearch(id)])));
-	Lockr.set('squaredata_'+id+'_hash', myHash);	
-	Lockr.set('squaredata_'+id+'_processeddata'+name, data);	
-
-	if(GLB.clearRawData == true){
-		ww(1, " Clearing raw data for "+id);
-		Lockr.rm('squaredata_'+id+"_rawdata");
-		Lockr.rm('squaredata_'+id+"_rawdata_");
-	}
-
-	udpateScreenLog("#"+id+" data processed");
-	callTheGraph(id, true);
-}
-
-// Squares call this to see if the saved data matches their own hash.  If not, it's stale from another page
-function checkSavedDataIsMine(id){
-	var myHash = String(CryptoJS.MD5(JSON.stringify(url.squares[squarearraysearch(id)])))
-	// if I'm a root square, return cumulativesquarearraysearch(id)]))) 
-	if(myHash == Lockr.get('squaredata_'+id+'_hash', myHash)){
-		// hash matches, this is my data
-	}else{
-		// saved data appears to be stale cache. remove
-		ww("stale data found for id="+id+", deleting");
-		deleteData(id);
-	}
-}
 
 
-// Some data is ready, call the 'drawing function'
-function callTheGraph(id, nudgeChildren){
-	// IN: Integer, Binary (whether to chase down all children and draw them too)
-	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+nudgeChildren+")");
-	clearSquareBody(id);
 
-
-	// call the function that is defined as "graph" for the graph type of this square
-	var theDynamicGraphFunction = graphs_functions_json.retrieveGraphParam(connectors_json.handletotype( retrieveSquareParam(id, 'CH')), retrieveSquareParam(id, "Gt") , "graph");
-	
-	//qq("for id:"+id+" graph type is "+theDynamicGraphFunction)
-
-	if(theDynamicGraphFunction != null){
-		// ok the graph names exists
-		window[theDynamicGraphFunction](id);
-	}else{
-		ww(0, "window["+theDynamicGraphFunction+"] not found for id:"+id);
-	}	
-	
-
-	if(nudgeChildren == true){
-		// Now look for children of mine that need data to inherit
-		var promptTheseChildren = findChildren([id]);
-		//ww(6, "callTheGraph nudging for parent id:"+id+" children:"+JSON.stringify(promptTheseChildren));
-
-		for (var i in promptTheseChildren){
-			if(!( retrieveSquareParam(promptTheseChildren[i], "We") !=null 
-				|| retrieveSquareParam(promptTheseChildren[i], "Ws") !=null 
-				|| retrieveSquareParam(promptTheseChildren[i], "Gt") != null 
-				|| retrieveSquareParam(promptTheseChildren[i], "Pb") !=null )
-			){	
-				// you appear to be the same as me, call your 'drawing function' too
-				udpateScreenLog("#"+id+" rendering");
-				callTheGraph(promptTheseChildren[i], true);
-			}
-		}
-	}
-}
 
 
 function udpateScreenLog(newMsg){
 
-	// trim too many logs and add enw log
-	if(screenLog.length>GLB.screenLogMax){
-		screenLog.shift();
+	if (document.location.href.indexOf('scripted_fields.html') === -1){ 
+
+		// trim too many logs and add enw log
+		if(screenLog.length>GLB.screenLogMax){
+			screenLog.shift();
+		}
+		screenLog.push(newMsg);
+
+		//update screenLog
+		$("#screenLog").html(screenLog.join("<br>"));
+
+		// scroll div to bottom
+		$("#screenLog").scrollTop($("#screenLog")[0].scrollHeight);
 	}
-	screenLog.push(newMsg);
-
-	//update screenLog
-	$("#screenLog").html(screenLog.join("<br>"));
-
-	// scroll div to bottom
-	$("#screenLog").scrollTop($("#screenLog")[0].scrollHeight);
 }
+
 
 
 //******************************************************************
@@ -1542,11 +1566,13 @@ function cloneTemplate(caller, target){
 	}
 	
 	clearSquareBody(caller.id);
-	deleteData([caller.id])
-	
 	drawSquares([caller.id])
 
-	drawinBoxes([caller.id])
+	deleteStoredData([caller.id])
+	.then(function(){
+		drawinBoxes([caller.id])
+	})
+
 	//hideOverlay();
 	updateurl();
 
@@ -1561,7 +1587,7 @@ function cloneChildren(caller, target){
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+caller+", "+target+")");
 
 	// for the calling square, remove existing children first?
-	// if(removeChildren == true){
+	// if(removeChildren === true){
 	deleteChain(caller, false);
 	// }
 	
@@ -1582,7 +1608,7 @@ function cloneChildren(caller, target){
 	var tmpHighestSquareID = highestSquareID();
 	for(var i in newArray){
 		// update immediate children of target to now be children of caller
-		if(newArray[i].Pr == target){
+		if(newArray[i].Pr === target){
 			newArray[i].Pr = caller;
 		}else{
 			newArray[i].Pr += tmpHighestSquareID;
@@ -1616,7 +1642,7 @@ function importSquareFavourite(id, uid){
 		
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+uid+")");
 
-	var favourites = connectors_json.handletox(retrieveSquareParam(id, "CH"), "favourites");
+	var favourites = connectors.handletox(retrieveSquareParam(id, "CH", true), "favourites");
 
 	// need to pass in uid and id
 	var favourite = _.where(favourites, {"uid": uid})[0]
@@ -1639,68 +1665,20 @@ function importSquareFavourite(id, uid){
 	
 
 	clearSquareBody(id);
-	deleteData([id])
 	
 	drawSquares([id])
+	deleteStoredData([id])
+	.then(function(){
+		drawinBoxes([id])
+	})
+	
 
-	drawinBoxes([id])
 	updateurl();
 
 }
 
 
-// push a template to the screen
-// function pushTemplate(square, template){
-// 	// IN : integer (ID of square to sprout from),  integer (id of master_templates array)
-	
-// 	// remove existing children
-// 	var deleteList = new Array();
-// 	deleteList.push(square);
-// 	var loop = true;
-// 	while(loop==true){
-// 		var newList = findChildren(deleteList);
-// 		$.merge(deleteList, newList);
-// 		if(newList.length<1){
-// 			loop=false;
-// 		}
-// 	}		
-// 	for(var j in deleteList){
-// 		// XXX improve this, don't add source in first place?
-// 		if(deleteList[j] != square){
-// 			ww(6, "deleting id:"+deleteList[j]);
-// 			url.squares.splice(squarearraysearch(deleteList[j]), 1);
-// 			workspaceDiv.select("#square_main_"+deleteList[j]).remove();
-// 			deleteData(deleteList[j]);
-// 		}
-// 	}
-	
-// 	// copy the prebuilt template, add highestID to each square so it can sit with existing squaers
-// 	highestID = highestSquareID();
-// 	tweakableJSON = new Object;
-// 	$.extend(tweakableJSON, master_templates[template]["structure"]);
 
-
-// 	$.each(tweakableJSON, function(i, obj) {
-// 		obj['id']+=highestID;
-// 		if(obj['Pr'] == 1){
-// 			// this it the linking square, point it to it's new master
-// 			obj['Pr']=square;
-// 		}else{	
-// 			obj['Pr']+=highestID;
-// 		}
-// 		url.squares.push(obj);
-// 	});
-
-// 	// merge Primary square with the new Template
-// //	url.squares = $.merge(url.squares, tweakableJSON);
-	
-// 	// draw 
-// 	drawLines(everyID(), false);
-// 	drawSquares(everyID());	
-// 	drawinBoxes(everyID());
-// 	updateurl();
-	
-// }
 
 
 function childFromClick(id, childCustomObject){
@@ -1765,7 +1743,7 @@ function squarearraysearch(id){
 	// IN : Integer of ID
 	// OUT : Integer location of ID in main array
 	for(var i in url.squares){
-		if (url.squares[i].id==id){
+		if (url.squares[i].id===id){
 			return i;
 		}
 	}
@@ -1788,43 +1766,37 @@ function subSet(ids){
 function reloadData(ids){
 	// IN : Integer
 
-	qq(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
+	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
 	
 	wipeSquareStatus(ids)
 
 	for (var i in ids){
-		//ww(6, "Reloading / refreshing data for id:"+ids[i]+" as instructd by "+arguments.callee.caller.name);
-		if(GLB.square.reshowLoadingIcon == true){
-			graphLoading(ids[i])	
+		let leti = ids[i]
+		// ww(6, "Reloading / refreshing data for id:"+ids[i]+" as instructd by "+arguments.callee.caller.name);
+		if(GLB.square.reshowLoadingIcon === true){
+			graphGraphError(leti, "Loading")	
 		}
-		deleteData(ids[i]); 
+		deleteStoredData([leti])
+		.then(function(){
+			drawinBoxes([leti])
+		})
+	
 	}	
 	
 
 	// start the data calculating
-	drawinBoxes(ids);
+	
 }
 
-// Delete all data for an ID
-function deleteData(id){
-	// IN : Integer
-	
-	// //ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
-
-	Lockr.rm('squaredata_'+id+"_hash");
-	Lockr.rm('squaredata_'+id+"_rawdata");
-	Lockr.rm('squaredata_'+id+"_rawdata_");
-	Lockr.rm('squaredata_'+id+"_processeddata");		
-
-	wipeSquareStatus([id])
-
-}	
 
 
-	
+
+
+
 // Delete a Square and all it's children
 function deleteChain(id, deleteID){
-	// IN : Integer of ID to look at.  BOOL whether to delete this ID (true), or just it's children (false)
+	// IN : Integer of ID to look at.  
+	// IN : BOOL whether to delete this ID (true), or just it's children (false)
 	
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")"); 
 	
@@ -1834,7 +1806,7 @@ function deleteChain(id, deleteID){
 		deleteChildSquare(deleteList[i]);
 	}
 	
-	if(deleteID == true){
+	if(deleteID === true){
 		// delete myself
 		deleteChildSquare(id);
 	}
@@ -1847,15 +1819,15 @@ function deleteChain(id, deleteID){
 function deleteChildSquare(id){
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")"); 
 
-	ww(4, "deleting id="+id);
+	// ww(7, "deleting id="+id);
 
-	udpateScreenLog("#"+id+" Deleted");
-
+	
 	url.squares.splice(squarearraysearch(id), 1);
-
 	workspaceDiv.select("#square_main_"+id).remove();
-	deleteData(id);
+	deleteStoredData([id]);
 	squaregroup.select("#line_"+id).remove();
+	
+	udpateScreenLog("#"+id+" Deleted");
 }
 
 
@@ -1869,7 +1841,7 @@ function findParents(id){
 	var newParent=0;
 	var parents = [];
 
-	while (1==1){
+	while (1===1){
 		newParent = retrieveSquareParam(currentID, "Pr");
 		if(newParent != 0){
 			parents.push(newParent);
@@ -1892,18 +1864,13 @@ function findChildren(findList){
 	var children = new Array()
 	for (var i in url.squares){
 		// check if not looking at myself
-		if(findList.indexOf(url.squares[i].id) == -1){
+		if(findList.indexOf(url.squares[i].id) === -1){
 			if(findList.indexOf(retrieveSquareParam(url.squares[i].id, 'Pr'))> -1){
-				//ww(4, "!"+JSON.stringify(findList)+"       "+retrieveSquareParam(url.squares[i].id, 'Pr')+"    "+findList.indexOf(retrieveSquareParam(url.squares[i].id, 'Pr')));
 				children.push(url.squares[i].id);
-			}else{
-				//ww(4, "£"+JSON.stringify(findList)+"       "+retrieveSquareParam(url.squares[i].id, 'Pr')+"    "+findList.indexOf(retrieveSquareParam(url.squares[i].id, 'Pr')));
 			}
-		}else{
-			//ww(7, "%"+JSON.stringify(findList)+"       "+retrieveSquareParam(url.squares[i].id, 'Pr')+"    "+findList.indexOf(retrieveSquareParam(url.squares[i].id, 'Pr')));
-    		}    
+    	}    
 	}
-	ww(6, "findChildren() found "+JSON.stringify(children));
+	// ww(7, "findChildren() found "+JSON.stringify(children));
 	return children;
 }
 
@@ -1916,7 +1883,7 @@ function findAllChildren(id){
 	returnList.push(id);
 
 	var loop = true;
-	while(loop==true){
+	while(loop===true){
 		var newList = findChildren(returnList);
 		$.merge(returnList, newList);
 		if(newList.length<1){
@@ -1929,9 +1896,159 @@ function findAllChildren(id){
 		returnList.splice(index, 1);
 	}
 
-	ww(6, "findAllChildren found "+JSON.stringify(returnList));
+	if(returnList.length!=0){
+		ww(6, "findAllChildren found "+JSON.stringify(returnList));
+	}
 	return returnList;
 }
+
+
+
+
+//******************************************************************
+//******************************************************************
+//*********   Saved data management
+//******************************************************************
+//******************************************************************	
+
+
+async function checkSavedDataIsMine(id){
+	var myHash = createSquareHash(id)
+	var hashForData = await getSavedData(id, "hash", "")
+
+	if (myHash !== hashForData){
+		return false
+	}else{                
+		return true
+	}
+	
+}
+
+var getSavedData = Dexie.async(function* (id, keyType, keyName) {
+	// ee("getSavedData ("+id+", "+keyType+", "+keyName+")"); 
+	try {
+		var bob = yield db.squares.get({squareid: id, keyType: keyType, keyName: keyName})
+		if(bob && bob.hasOwnProperty("data")){
+			return bob['data']
+		}else{
+			return null
+		}
+
+	} catch (error) {
+		qq("XXXX getSavedData :"+error);
+	}
+
+})
+
+
+var saveNewData = Dexie.async(function* (id, keyType, keyName, value) {	
+	// qq("Saving: "+id+", "+keyType+":~"+roughSizeOfObject(value)+"Bytes")
+
+	try {
+		yield db.squares.put({squareid: id, keyType: keyType, keyName:keyName, data: value})                
+	} catch (error) {
+		qq("XXXX saveNewData :"+error);
+	}
+
+})
+
+
+
+
+var deleteSavedData = Dexie.async(function* (id, keyType, keyName) {
+	// ee("deleteSavedData ("+id+", "+keyType+")"); 
+	try {
+		yield db.squares.get({squareid: id, keyType: keyType, keyName: keyName})
+	} catch (error) {
+		qq("XXXX deleteSavedData :"+error);
+	}
+})
+
+
+var deleteStoredData = Dexie.async(function* (ids) {
+	// ee("deleteStoredData ("+JSON.stringify(ids)+")"); 
+	try {
+		yield db.squares.where('squareid').anyOf(ids).delete()
+	} catch (error) {
+		// qq("XXXX deleteStoredData :"+error);
+	}
+})
+
+function deleteAllStoredData(){
+	// clear the indexeddb table
+	db.squares.clear()
+}
+
+
+
+
+function saveMappingsData(dst, indexPattern, value){
+
+	// ee(" -> "+arguments.callee.name+"("+dst+", "+indexPattern+", ~"+roughSizeOfObject(value)+"Bytes)");
+
+	// global var method
+	if(!masterMappings.hasOwnProperty(dst)){
+		masterMappings[dst] = {}
+	}
+	if(!masterMappings[dst].hasOwnProperty(indexPattern)){
+		masterMappings[dst][indexPattern] = {}
+	}
+	masterMappings[dst][indexPattern] = value
+
+}
+
+var saveMappingsDataIndexeddb = Dexie.async(function* (dst, indexPattern, value) {
+	// ee(" -> "+arguments.callee.name+"("+dst+", "+indexPattern+", ~"+roughSizeOfObject(value)+"Bytes)");
+	try {
+		yield dbMappings.squaresMappings.put({dst: dst, indexPattern: indexPattern, data: value})
+	} catch (error) {
+		qq("XXXX saveMappingsDataIndexeddb :"+error);
+	}
+
+})
+
+
+
+var getSavedMappings = Dexie.async(function* (dst, indexPattern, incSummaries = false) {
+	// ee("getSavedMappings ("+dst+", "+indexPattern+")"); 
+	try {
+		var bob = yield dbMappings.squaresMappings.get({dst: dst, indexPattern: indexPattern})
+		if(incSummaries){
+			return bob['data']
+		}else{
+			return _.omit(bob['data'], "fieldTypes", "allFields", "keywordFields")
+		}
+	} catch (error) {
+		qq("XXXX getSavedMappings :"+error);
+	}
+})
+
+
+
+
+function createSquareHash(id){
+	var clone = jQuery.extend({}, url.squares[squarearraysearch(id)]);
+	
+	//remove arbitary attributes
+	delete clone["x"]
+	delete clone["y"]
+
+	//add attr to make sure this square hash is specific
+	thisCH = retrieveSquareParam(id, 'CH', true)
+
+	clone["We"] = calcGraphTime(id)
+	clone["Ws"] = retrieveSquareParam(id, "Ws")
+	clone["Dst"] = connectors.handletox(thisCH, "dst")
+	clone["indexPattern"] = connectors.handletox(thisCH, 'indexPattern')
+
+
+	return String(CryptoJS.MD5(JSON.stringify(clone)))
+}
+
+
+//******************************************************************
+//******************************************************************
+
 
 
 function setSquareParam(id, key, value, redraw){
@@ -1951,13 +2068,15 @@ function setSquareParam(id, key, value, redraw){
 
 
 
+
+
+
 // Find attribute of a Square. Look up for inheritence if needed
 function retrieveSquareParam(id, key, recursive){
 	// IN : Integer, string (what attribute)
 	// OUT : value
-	// //ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+key+", "+recursive+")");
 
-	if(recursive == null || recursive == undefined){
+	if(recursive === null || recursive === undefined){
 		recursive = true;
 	}
 	
@@ -1967,83 +2086,83 @@ function retrieveSquareParam(id, key, recursive){
 	var item = url.squares[squareLoc];
 
 	// The order....
-	// if (non inheritable attribute || recursive==false)
+	// if (non inheritable attribute || recursive===false)
 	// if (I'm a root square)
 	// default to recisrive lookups
 
+	
+	if(item.hasOwnProperty("Pr") && item.Pr === 0){
+		// first square, can only inherit from taskbar, no recursive queries allowed
+		switch(key){
 
-	if(item.Pr == 0){
-
-		// first square, must inherit from the pathbar, and not from another square
-		if(key=="We"){
+			case "We":
 			
-			// if(typeof item['Wi'] != 'undefined' && item['Wi'].length>0 && item['Wi'][0]<0){
-			// 	// negative value means relative to URL
-			// 	return parseInt(item['Wi'][0]) + parseInt(url.ca.end);
-			// if(typeof item['Wi'] != 'undefined' && item['Wi'].length>0 && item['Wi'][0]>0){
-			// 	// positive value means absolute
-				return parseInt(item['Wi'][0]);
-			// }else{
-			// 	// no figure (or 0?) means just return URL
-			// 	return url.ca.end;
-			// }
-		}else if(key=="Ws"){
-			// if(typeof item['Wi'] != 'undefined' && item['Wi'].length>1){
-			// 	// reply
-			 	return parseInt(item['Wi'][1]);
-			// }else{
-				// deduce from URL alone (this should be created/validated on page load)
-				//  return (-1 * (url.ca.end - url.ca.start));
-			// }	
-		}else if(key=="Wr"){
-			if(typeof item['Wi'] != 'undefined' && item['Wi'].length>2){
-				// reply
-				return parseInt(item['Wi'][2]);
-			}else{
-				// deduce from URL alone (this should be created/validated on page load)
-				return 0;
-			}	
-		}else if(key=="CH"){
-			//ww(6, "Pr=0 returning CH="+url.squares[i]['CH']+" from url");
-			return item['CH'];
-		}else if(key=="Ds"){
-			//ww(6, "Pr=0 returning Ds="+url.Ds+" from url");
-			return item['Ds'];
+				// if(typeof item['Wi'] != 'undefined' && item['Wi'].length>0 && item['Wi'][0]<0){
+				// 	// negative value means relative to URL
+				// 	return parseInt(item['Wi'][0]) + parseInt(url.ca.end);
+				// if(typeof item['Wi'] != 'undefined' && item['Wi'].length>0 && item['Wi'][0]>0){
+				// 	// positive value means absolute
+					return parseInt(item['Wi'][0]);
+				// }else{
+				// 	// no figure (or 0?) means just return URL
+				// 	return url.ca.end;
+				// }
+			case "Ws":
+				// if(typeof item['Wi'] != 'undefined' && item['Wi'].length>1){
+				// 	// reply
+					return parseInt(item['Wi'][1]);
+				// }else{
+					// deduce from URL alone (this should be created/validated on page load)
+					//  return (-1 * (url.ca.end - url.ca.start));
+				// }	
+			case "Wr":
+				if(typeof item['Wi'] != 'undefined' && item['Wi'].length>2){
+					// reply
+					return parseInt(item['Wi'][2]);
+				}else{
+					// deduce from URL alone (this should be created/validated on page load)
+					return 0;
+				}	
+			case "CH":
+				//ww(6, "Pr=0 returning CK="+url.squares[i]['CK']+" from url");
+				return item['CH'];
 
-		}else if(key=="Gt"){
-			//ww(6, "Pr=0 returning graphtype=Info from url");
-			return item['Gt'];
-		}else if(key=="Hx"){
-			//ww(6, "Pr=0 returning graphtype=Info from url");
-			return "ffffff";
-		}else if(/^(raw|processed)data[a-zA-Z0-9_]*$/.test(key)){
-			//ww(6, "found '"+key+"' id:"+id+" key:"+key+" "+key+"="+Lockr.get('squaredata_'+id+'_processeddata'));
-			return Lockr.get('squaredata_'+id+'_'+key);
+
+			case "Ds":
+				//ww(6, "Pr=0 returning Ds="+url.Ds+" from url");
+				return item['Ds'];
+
+			case "Gt":
+				//ww(6, "Pr=0 returning graphtype=Info from url");
+				return item['Gt'];
+			case "Hx":
+				//ww(6, "Pr=0 returning graphtype=Info from url");
+				return "ffffff";
 		
-		}else if(key=="x" || key=="y"){
-			// if x or Y is missing, presume 0.  Helps cut down on URL size a inty bit
-			if(!item.hasOwnProperty(key)){
-				return 0
-			}else{
-				return item[key];
-			}
+			case "x":
+			case "y":
+				// if x or Y is missing, presume 0.  Helps cut down on URL size a inty bit
+				if(!item.hasOwnProperty(key)){
+					return 0
+				}else{
+					return item[key];
+				}
 
-		}else{
-			// no Gp, Pathbar can't handle it?
-			//ww(o, "Pr = 0, key = "+key+", no data found?");
-			if(typeof item[key] != undefined){
-				//qq("returning "+item[key])
-				return item[key];
+			default:
 
+			
+
+				if(typeof item[key] != undefined){
+					//qq("returning "+item[key])
+					return item[key];
 				
-
-				
-			}else{
-				return null;
-			}
+				}else{
+					return null;
+				}
 		}
 
-	}else if(     (recursive == false  && !/^(raw|processed)data/.test(key) )   || ['Pr', 'Ds', 'x', 'y', 'Sc'].indexOf(key) >= 0){
+	}else if( (recursive === false  && !/^(raw|processed)data/.test(key) )   || ['Pr', 'Ds', 'x', 'y', 'Sc'].indexOf(key) >= 0){
+		// query is for non-data, and something that shouldn't be inherited
 
 		switch(key){
 			case "Sc":
@@ -2091,6 +2210,7 @@ function retrieveSquareParam(id, key, recursive){
 
 
 	}else{
+		// data or inheritable attribute, recursive queries permitted
 
 		switch(key){
 			case "We":
@@ -2115,38 +2235,54 @@ function retrieveSquareParam(id, key, recursive){
 					return retrieveSquareParam(item.Pr, key, true);
 				}
 				
+			
 			case "CH":
 			case "Gt":
 			case "Gp":
 			case "Ds":
 			case "Hx":
 			case "Cs":
+			case "Fi":
 				if(classOf(item[key]).match(/(String|Number|Object|Array)/)){
 					return item[key];
 				}else{
 					return retrieveSquareParam(item.Pr, key,true);
 				}
-				
+		
+
+
+			default:
+				// can't case switch regex (easily) so....
+			
+				if(/^(raw|processed)data/.test(key)){
+						alert("# error:"+arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+						
+						
+						return
+					// 	getSavedData(id, key).then(function(savedData){
+						
+					// 	if(classOf(savedData) === "Object" 
+					// 		|| classOf(savedData) === "Array"	
+					// 		|| classOf(savedData) === "String"){
+					// 		// Looking for data, raw, processed, or (raw|processed) with a handle too
+					// 		//ww(6, "URL Param requsted and found id:"+id+" key:"+key);
+								
+					// 			return savedData
+					// 	}else if (recursive===true){
+					// 		return retrieveSquareParam(item.Pr, key, true);
+					// 	}else{
+					// 		return null;
+					// 	}	
+
+					// })
+
+			}
 		}
 
 	}
 
-	// This is recursive and will look through all parents until an answer is found.
-	// ww("retrieveSquareParam id:"+id+" key:"+key);
-
-
 	
-	if(/^(raw|processed)data/.test(key)
-		&& ((classOf(Lockr.get('squaredata_'+id+'_'+key)) == "Object")
-		|| (classOf(Lockr.get('squaredata_'+id+'_'+key)) == "Array")
-		|| (classOf(Lockr.get('squaredata_'+id+'_'+key)) == "String"))){
-		// Looking for data, raw, processed, or (raw|processed) with a handle too
-		//ww(6, "URL Param requsted and found id:"+id+" key:"+key);
-			return Lockr.get('squaredata_'+id+'_'+key);
-	}
-	
-	//nothing left to return, throw error
-	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"(ERROR "+id+", "+key+")");
+	ww(2, "retrieveSquareParam failed, id:"+id+" key:"+key);
 	return null
 
 }
@@ -2209,7 +2345,7 @@ function calcGraphTime___old(id, key, cumulative){
 	// We = Positive. Time is absolute EPOCH time reference
 	// Ws = is size of time window, should always be negative to relate to We
 
-	if(key=="Ws"){
+	if(key==="Ws"){
 		alert("Should you be doing a lookup for Ws? (i.e. only calc for We) from:"+arguments.callee.caller.name);
 	}
 
@@ -2218,7 +2354,7 @@ function calcGraphTime___old(id, key, cumulative){
 	// for any other square work it out
 
 
-	if(retrieveSquareParam(id, "Pr", false) == 0){
+	if(retrieveSquareParam(id, "Pr", false) === 0){
 		//ww(7, "found a root node, does it have a time? id:"+id+" return val:"+retrieveSquareParam(id, key));
 		return (retrieveSquareParam(id, key, true) + cumulative);	
 
@@ -2226,7 +2362,7 @@ function calcGraphTime___old(id, key, cumulative){
 		// time frame is absolute
 		//ww(7, "Time Absolute id:"+id+" "+key+"="+retrieveSquareParam(id, key));
 		return (retrieveSquareParam(id, key, true) + cumulative);
-	}else if(retrieveSquareParam(id, key, true) == null){
+	}else if(retrieveSquareParam(id, key, true) === null){
 		// time frame is either null (no change) 
 		//ww(7, "delve deeper for keyless square "+id+ "cumulative = "+cumulative);
 		return calcGraphTime(retrieveSquareParam(id, "Pr", true), key, cumulative);
@@ -2244,8 +2380,8 @@ function calcCord(id, xory, cumulative){
 	// IN : Integer, String (which x or y value), Integer of current relative cord
 	// OUT : Integer
 
-	// if asking about id==0 you reached the top, no more to calculate.
-	if(id==0){
+	// if asking about id===0 you reached the top, no more to calculate.
+	if(id===0){
 		return cumulative;
 	}else{	
 		cumulative += parseInt(retrieveSquareParam(id, xory));
@@ -2262,15 +2398,15 @@ function calcDs(id, cumulative){
 	////ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+classOf(cumulative)+" "+JSON.stringify(cumulative)+")");
 
 	var thisDs;
-	// if asking about id==0 you reached the top, no more to calculate.
-	if(id==0){
+	// if asking about id===0 you reached the top, no more to calculate.
+	if(id===0){
 		return cumulative.reverse();
 	}	
 	
 	// for any other square work it out
 	for(var i in url.squares){			
 		//ww(7, i+" "+JSON.stringify(url.squares[i]));
-		if(url.squares[i]['id']==id){
+		if(url.squares[i]['id']===id){
 			if(url.squares[i].Ds != null){
 				var parsed = JSON.parse(atob(url.squares[i].Ds))
 				cumulative.push(parsed);
@@ -2299,19 +2435,24 @@ function highestSquareID(){
 }
 
 
-function editNewConnector(id){
+async function editNewConnector(id){
 
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+" ("+typeof(id)+")");
-	ww(7, "Connected #"+id+" changed");
+	ww(7, "Connecter #"+id+" changed");
 
 	var item = url.squares[squarearraysearch(id)];
 	item.Pr = 0;
 	
-	if(!$("#square_connector_dropdown_"+id).val() == ''){
-		item.CH = $("#square_connector_dropdown_"+id).val()
+	// qq($("#square_connector_dropdown_"+id).val())
+
+
+
+	if($("#square_index_dropdown_"+id).val()){
+		item.CH = $("#square_index_dropdown_"+id).val()
 	}
-	
-	item.Wi[0] = moment($("#square_We_text_"+id).val()).unix();  
+
+	var tz = new Date().getTimezoneOffset();  // in minutes
+	item.Wi[0] = moment($("#square_We_text_"+id).val(), "YYYY-MM-DD hh:mm:ss").unix() + (tz*60)
 	item.Wi[1] = parseInt($("#square_Ws_dropdown_"+id).val());  
 	// item.Wi[2] handled below
 	
@@ -2335,19 +2476,26 @@ function editNewConnector(id){
 	updateDataList = findAllChildren(id);
 	// add originating ID back in
 	updateDataList.push(id);	
-	for (var i in updateDataList){
-		deleteData(updateDataList[i])
-	}
-	// recreate data for children squares
+
+	thisCH = retrieveSquareParam(id, 'CH', true)	
 
 	// do it here on load, also do it during new square creation
-	var handle = retrieveSquareParam(id, 'CH')
-	elastic_prep_mappings(handle)	
+	// elastic_version(thisCH)
+	thisDst = connectors.handletox(thisCH, "dst")
+	thisIndex = connectors.handletox(thisCH, 'indexPattern')
 
 	drawLines(everyID(), false);  //line colours have changed
 	drawSquares(updateDataList);
+
+
+	var value = await elastic_prep_mappings(thisDst, thisIndex, id)				
+	saveMappingsData(thisDst, thisIndex, value)
+	await saveMappingsDataIndexeddb(thisDst, thisIndex, value)
+	await deleteStoredData(updateDataList)
+	
 	drawinBoxes(updateDataList);
-	//hideOverlay();
+	
+	
 	updateurl();
 
 
@@ -2363,14 +2511,6 @@ function editMe(id){
 	clearSquareBody(id);
 	window[graphs_functions_json.retrieveGraphParam("builtin_graphs", "EditSquare", "graph") ](id);
 
-	// duplicate.  remove.
-	// $("#square_graph_dropdown_"+id).val(retrieveSquareParam(id, "Gt", false));
-	// $("#square_We_dropdown_"+id).val(retrieveSquareParam(id, "We"));
-	// $("#square_Ws_dropdown_"+id).val(retrieveSquareParam(id, "Ws"));
-	// $("#square_Wr_dropdown_"+id).val(retrieveSquareParam(id, "Wr"));
-	// if(retrieveSquareParam(id, "Ds") != null){
-	// 	$("#square_Ds_dropdown_"+id).val(atob(retrieveSquareParam(id, "Ds") ));
-	// }
 
 }
 
@@ -2468,37 +2608,22 @@ function editSquare(id){
 	// add originating ID back in
 	updateDataList.push(id);	
 	
-	for (var i in updateDataList){
-		deleteData(updateDataList[i])
-		
-	}
 	// recreate data for children squares
 	drawLines(everyID(), false);  //line colours have changed
 	wipeSquareStatus(updateDataList)
 	drawSquares(updateDataList);
-	drawinBoxes(updateDataList);
-	//hideOverlay();
+	deleteStoredData(updateDataList)
+	.then(function(){
+		drawinBoxes(updateDataList);
+	})
+
+
+	
 	updateurl();
 
 }
 	
 
-
-// // Hide the "Edit Square" Overlay
-// function hideOverlay(){
-
-// 	// hide the overlay
-// 	$('#editsquareform').css('display', 'none');
-// 	$('#templatediv').css('display', 'none');
-// 	$('#overlay_connector').css('display', 'none');
-// 	// clean the inputs
-// 	$('#form_time input[type=radio]').attr("checked", false);
-// 	$('#form_graph input[type=radio]').attr("checked", false);
-// 	$('#textareapb').attr("readonly", false);
-// 	$('#modify_time').attr("disabled", true);
-// 	$('#modify_graph').attr("disabled", false);
-// 	$('#modify_pb').attr("disabled", true);	
-// }
 
 // Build a list of every square ID
 function everyID(){
@@ -2561,7 +2686,7 @@ function downloadAsImage() {
 function pivotToX(id){
 	// IN : Integer
 
-	var index = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
+	var indexPattern = connectors.handletox ( retrieveSquareParam(id, 'CH'), 'indexPattern')
 
 
 	var to = calcGraphTime(id, 'We', 0)
@@ -2577,11 +2702,11 @@ function pivotToX(id){
 	var fields=["*"]
 	var limit = 10000;
 
-	var dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
+	var dst = connectors.handletox ( retrieveSquareParam(id, 'CH'), "dst")
 	// XXX remove port number, in config we should split that out as two fields? (or have a new field for the pivot address separate?)
 	var elasticIP = dst.split(":")[0]
 
-	var path = "https://"+elasticIP+"/app/kibana#/discover?"
+	var path = "https://"+elasticIP+"/kibana/app/kibana#/discover?"
 	var urlStruct = "_g=" + rison.encode({
 		//"filters":[],
 		"refreshInterval":{
@@ -2599,7 +2724,7 @@ function pivotToX(id){
 	var urlStructJSON = {
 		"columns": ["_source"],
 		"filters": [],
-		"index": "*:logstash-*",
+		"index": "e78287b0-4e9f-11eb-a354-fff6baaa6242",
 		"interval": "auto",
 		"query": {
 			"language": "lucene",
@@ -2609,28 +2734,28 @@ function pivotToX(id){
 	}
 	
 	// push basic "index" filter
-	urlStructJSON['filters'].push(
-		{
-            "$state": {
-                "store": "appState"
-            },
-            "match": {
-                "_index": {
-                    "query": index,
-                    "type": "phrase"
-                }
-            },
-            "meta": {
-                "alias": null,
-                "disabled": false,
-                "index": "*:logstash-*",
-                "key": "match",
-                "negate": false,
-                "type": "custom",
-                "value": "%7B%22_index%22:%7B%22query%22:%22*bro*%22,%22type%22:%22phrase%22%7D%7D"
-            }
-        }
-	)
+	// urlStructJSON['filters'].push(
+	// 	{
+    //         "$state": {
+    //             "store": "appState"
+    //         },
+    //         "match": {
+    //             "_index": {
+    //                 "query": index,
+    //                 "type": "phrase"
+    //             }
+    //         },
+    //         "meta": {
+    //             "alias": null,
+    //             "disabled": false,
+    //             "index": "*:logstash-*",
+    //             "key": "match",
+    //             "negate": false,
+    //             "type": "custom",
+    //             "value": "%7B%22_index%22:%7B%22query%22:%22*bro*%22,%22type%22:%22phrase%22%7D%7D"
+    //         }
+    //     }
+	// )
 	
 
 	//var elasticQuery = elastic_query_builder(id, from, to, Ds, fields, limit, false, null, true)['query'];
@@ -2676,7 +2801,7 @@ function pivotToX(id){
 	// qq(JSON.stringify(elasticQuery))
 	// qq( encodeURI(JSON.stringify(elasticQuery)))
 	// qq(encodeURIComponent(JSON.stringify(elasticQuery)))
-	// qq(kibanaQuery)
+	qq(kibanaQuery)
 
 	window.open(kibanaQuery);
 
@@ -2712,7 +2837,7 @@ function pivotNewTab(id){
 	newSquare.id = 1
 	newSquare.Pr = 0
 	newSquare.Gt = "DescribeSquare"
-	newSquare.CH = retrieveSquareParam(id, "CH")
+	newSquare.CH = retrieveSquareParam(id, "CK")
 	newSquare.Wi = [to, size]
 	newSquare.Ds = btoa(JSON.stringify(postDs))
 	
@@ -2755,39 +2880,7 @@ function stringtocol(string){
 	return "#"+shortenedhash;
 }
 	
-// Present ways to bookmark the current page in different ways
-function bookmarks(){
-	alert("went to bookmarks")
-	return
-	var string = "<span class='limitedalertify'>";
-	
-	/////////////
-	
-	string += "<span class='graph_info_title'>Exact URL</span><br>Exact URL, may include 'relative/soft' time references.  Ideal for Live Monitoring, Wallboards, Bookmars.<br>";
-	string += "<div class='divscroll'>"+window.location.href.replace(/\/#.*$/, "/#"+btoa(JSON.stringify(url))) +"</div><br>";
-	
-	/////////////
-	
-	var adjustedurl = jQuery.extend(true, {}, url);
-	for (var j in adjustedurl.squares){
 
-	}
-	
-	string += "<br><br><span class='graph_info_title'>Dereferenced URL</span><br>Adjusted so that Squares are locked to absolute timeframes.   Ideal for Investigations/Tickets/Case management.<br><br>";
-	string +=  "<div class='divscroll'>"+window.location.href.replace(/\/#.*$/, "/#"+btoa(JSON.stringify(adjustedurl)))+"</div><br>";
-
-	/////////////
-	
-	var trimmedurl = jQuery.extend(true, {}, url);
-	trimmedurl.squares.splice(squarearraysearch(1), 1);
-
-	string += "<br><br><span class='graph_info_title'>Template</span><br>The Structure of Squares (not id = 1).  This 'template' can be applied/pushed to future investigations.  To deploy, enter this into templates.json<br><br>";
-	string += "<div class='scrolly'>"+(JSON.stringify(trimmedurl.squares))+"</div>";
-
-	string += "</span>";
-	alertify.alert(string);
-
-}
 
 // populate the Template overlay
 // function doTemplates(){
@@ -2798,15 +2891,7 @@ function bookmarks(){
 // }
 
 
-// Display the Template Overlay
-function showConnectorDiv(id){
-	// IN : square ID
-	
-	// show overlay form
-	//d3.select("#transparent_screen").style("display", "block");
-	//d3.select("#overlay_connector").style("display", "block");
 
-}
 
 function compileGraphs(){
 	
@@ -2830,7 +2915,7 @@ function compileGraphs(){
 				.done(function( script, textStatus ) {
 					jsStilltoLoad--;
 					// multiple of these, finishing at different times, so after each load so if any left to do.  If not, populate graphs?
-					if(jsStilltoLoad==0){
+					if(jsStilltoLoad===0){
 						//ww(7, "jsStilltoLoad = "+jsStilltoLoad+"!!!!!!!!");
 						ww(5, "compileGraphs() finished all downloads");
 						
@@ -2852,55 +2937,65 @@ function compileConnectors(){
 	// get all connectors and add to the overlay
 	$.get( "./compile_connectors.php", function( data ) {
 		$.each(data, function(k, v) {
-			var existing_connectors = connectors_json.get_connectors_json();
-			existing_connectors[k] = v;
-			connectors_json.set_connectors_json(existing_connectors);
-			
+			connectors.add_connector(v)
 		})
-
-		// compileGraphs and conmpileConnectors finished (moved this functionality to promises???
-		initialLoad();
+		
+		// XXX needs improving - move to resolve? 
+		// Only do initial load if this is the main squares-page
+		if (document.location.href.indexOf('scripted_fields.html') === -1){ 
+			// compileGraphs and conmpileConnectors finished (moved this functionality to promises???
+			initialLoad();
+		}
 				
 	});
 
 }
 
-function initialLoad(){
-	// if you change page, squares will try and use other pages data, so check
-	ww(5,"***Check Saved Data Hash***");
-	
-	var tmpEveryID = everyID();
-	for(var i in tmpEveryID){
-		checkSavedDataIsMine(tmpEveryID[i]);
-	}
-	
+async function initialLoad(){
+
+	tmpEveryID = everyID()
+
 	ww(5,"***PageLoad drawLines ***");
-	drawLines(everyID(), false);
+	drawLines(tmpEveryID, false);
 
 	ww(5,"***PageLoad drawSquares ***");
-	drawSquares(everyID());
+	drawSquares(tmpEveryID);
 
-	// don't like doing this here. Use promises to look for downloads?
-	ww(5,"***PageLoad drawinBoxes***");
-	drawinBoxes(everyID());
 
+	ww(5,"***Prepare Mappings ***");
 	for(var i in tmpEveryID){
+		
 		var id = tmpEveryID[i]
 		
-		if(retrieveSquareParam(id, 'Pr') == 0){
-			// I'm a root, ensure my database "mappings" are prepared for speed
-			if(connectors_json.handletotype( retrieveSquareParam(id, 'CH')) == "elastic"){
+		// only get Mappings if the square has a connector handle (i.e. not inherinting squares)
+		if(retrieveSquareParam(id, 'CH', false)){
+
+			thisCH = retrieveSquareParam(id, 'CH', true)
+			thisDst = connectors.handletox(thisCH, "dst")
+			thisIndex = connectors.handletox(thisCH, 'indexPattern')
+			
+			if(connectors.handletox(thisCH, "type") === "elastic"){
 				
-				var handle = retrieveSquareParam(id, 'CH')
+				value = await elastic_prep_mappings(thisDst, thisIndex, id)				
+				saveMappingsData(thisDst, thisIndex, value)
+				await saveMappingsDataIndexeddb(thisDst, thisIndex, value)
 				
-				// do it here on load, also do it during new square creation
-				elastic_prep_mappings(handle)
+							
+				// elastic_version(retrieveSquareParam(id, 'CH', true))
+			
 			}
 		
 		}
+	
 	}
+	ww(5,"***PageLoad drawinBoxes***");
+	drawinBoxes(tmpEveryID);
+
+	
 
 }
+
+
 
 function resize_workspace(){
 	$("#workspaceDiv").css("width", "99%");
@@ -2908,7 +3003,7 @@ function resize_workspace(){
 }
 
 function qqLoggingChange(){
-	if(GLB.qqLogging == 7){
+	if(GLB.qqLogging === 7){
 		GLB.qqLogging = 0;
 	}else{
 		GLB.qqLogging++;
@@ -2919,71 +3014,70 @@ function qqLoggingChange(){
 
 
 
-// used to make flares from nested data of different depths
-//https://stackoverflow.com/questions/20913689/complex-d3-nest-manipulation
-//http://jsfiddle.net/DcHyp/3/
-// for usage look at a graphs "raw to processed2"
-// removed
+function zoomed(){	
+		//ww(6,"zooooomed");
+		// move and scale the "squaregroup" for zoom effect. Floor it to shorten URL
+		squaregroup.attr("transform",  d3.event.transform)
+
+		// squaregroup
+		// {"_groups":[[{"__zoom":{"k":0.43527531847787715,"x":545.0557806151778,"y":632.5716410660139}}]],"_parents":[{}]}
+
+		// squaregroup.attr("transform")			
+		// translate(543.0557806151778,629.5716410660139) scale(0.43527531847787715)
+
+		var roundingZero = 1
+		var roundingTwo = 100
+
+		var zoomString = squaregroup.attr("transform")	
+		var zoomRegex = /[0-9\.]+/g
+		var zoomMatches = zoomString.match(zoomRegex)
+		
+		
+		var newZoomString = "translate(" + Math.round((zoomMatches[0]) * roundingZero) / roundingZero + "," + Math.round((zoomMatches[1]) * roundingZero) / roundingZero + ") scale("+Math.round((zoomMatches[2]) * roundingTwo) / roundingTwo+")"
+
+		// save this zoom/transform base64 into the URL for pageload/bookmarks etc
+		url.Zt = newZoomString;
+	
+}
+
+function zoomEnd(){
+	updateurl();
+}
 
 
+var drag = d3.drag()
+	.on("start", dragstarted)
+	.on("drag", dragged)
+	.on("end", dragended);
 
-	////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////
+var zoom = d3.zoom()
+	.scaleExtent([.03, 10])
+	.on("zoom", zoomed)
+	.on("end", zoomEnd)
 
-$( document ).ready(function() {
-
-
+function onLoad(){		
 	
 	
+	db = new Dexie("squares");
+	db.version(1).stores({
+		squares: "[squareid+keyType+keyName], squareid, keyType, keyName, [squareid+keyType]"
+
+	});
+
+	dbMappings = new Dexie("squaresMappings");
+	dbMappings.version(1).stores({
+		squaresMappings: "dst, indexPattern, [dst+indexPattern]"
+
+	});
+
+
+
+
 	//////////////////////////////
 	// squares-ui / d3 stuff
 	//////////////////////////////
 	
-	var zoom = d3.zoom()
-		.scaleExtent([.03, 10])
-		.on("zoom", zoomed)
-		.on("end", zoomEnd)
-		
 
-	function zoomed(){	
-			//ww(6,"zooooomed");
-			// move and scale the "squaregroup" for zoom effect. Floor it to shorten URL
-			squaregroup.attr("transform",  d3.event.transform)
-
-			// squaregroup
-			// {"_groups":[[{"__zoom":{"k":0.43527531847787715,"x":545.0557806151778,"y":632.5716410660139}}]],"_parents":[{}]}
-
-			// squaregroup.attr("transform")			
-			// translate(543.0557806151778,629.5716410660139) scale(0.43527531847787715)
-
-			var roundingZero = 1
-			var roundingTwo = 100
-
-			var zoomString = squaregroup.attr("transform")	
-			var zoomRegex = /[0-9\.]+/g
-			var zoomMatches = zoomString.match(zoomRegex)
-			
-			
-			var newZoomString = "translate(" + Math.round((zoomMatches[0]) * roundingZero) / roundingZero + "," + Math.round((zoomMatches[1]) * roundingZero) / roundingZero + ") scale("+Math.round((zoomMatches[2]) * roundingTwo) / roundingTwo+")"
-
-			// save this zoom/transform base64 into the URL for pageload/bookmarks etc
-			url.Zt = newZoomString;
-		
-			
-
-
-	}
-	function zoomEnd(){
-		updateurl();
-	}
 
 	workspaceDiv = d3.select("#workspaceDiv")
 		.call(zoom);
@@ -2992,18 +3086,7 @@ $( document ).ready(function() {
 	squaregroup = workspaceDiv.append("g")
 		.attr("id", "squaregroup")
 
-	if(url.Zt!=null){
-		var newTransform = url['Zt'].split(/[\(\) ,]/);;
 
-		zoom.transform(squaregroup, d3.zoomIdentity.translate(newTransform[1], newTransform[2]).scale(newTransform[5]))
-		zoom.transform(workspaceDiv, d3.zoomIdentity.translate(newTransform[1], newTransform[2]).scale(newTransform[5]))
-	}
-
-	// used to store all the lines connecting squares		
-	var linesgroup = d3.select("#squaregroup")
-		.append("g")
-		.attr("id", "linegroup");	
-	
 
 	// auto update canvas size
 	$(window).resize(function() {
@@ -3012,14 +3095,85 @@ $( document ).ready(function() {
 	resize_workspace();
 
 	
+	// used to store all the lines connecting squares		
+	d3.select("#squaregroup")
+		.append("g")
+		.attr("id", "linegroup");
+
+
+	hash = window.location.hash.substring(1)
+
+
+	if(hash
+		&& re_str.test(hash)
+		&& classOf(JSON.parse(atob(hash)))==="Object" 
+		&& JSON.parse(atob(hash))
+		&& JSON.parse(atob(hash)).hasOwnProperty("squares")
+		&& JSON.parse(atob(hash)).hasOwnProperty("Zt")
+		){
+			// URL is compliant
+			ww(5, "Valid URL found");
+			url = JSON.parse(atob(hash));
+	
+	}else{
+		// No compliant URL at all, let's build our own object
+		ww(5, "No valid URL found, show 'Intro' squares");
+		
+		// id=1 should be empty.  
+		// For square 1, the code should always reference the PathBar, and not the object.  
+		// Every other square will reference the Pr instead			
+		//url.squares = new Array();
 	
 
 
+		url = {}
+		url.v = "1"
+		url.squares =  [{
+					"id": 1,
+					"Pr": 0,
+					"Gt": "intro",
+					"Wi": [],
+					"x": -800,
+					"y": -50
+				}, {
+					"id": 2,
+					"Pr": 1,
+					"Gt": "intro",
+					"Wi": [],
+					"x": 1100,
+					"y": 200
+				}, {
+					"id": 3,
+					"Pr": 1,
+					"Gt": "intro",
+					"Wi": [],
+					"x": 200,
+					"y": 1100
+				}
+			]
+		url['Zt'] = "translate(1530,863) scale(0.57)"
+	
+			qq("tim")
+			qq(url)
+
+		updateurl();
+	}
+
+	
+	if(url.Zt!=null){
+		var newTransform = url['Zt'].split(/[\(\) ,]/);;
+
+		zoom.transform(squaregroup, d3.zoomIdentity.translate(newTransform[1], newTransform[2]).scale(newTransform[5]))
+		zoom.transform(workspaceDiv, d3.zoomIdentity.translate(newTransform[1], newTransform[2]).scale(newTransform[5]))
+	}
+
+	
+	
 
 	//////////////////////////////
 	// ThreeJS  stuff
 	//////////////////////////////
-	if(GLB.threejs.enabled == false){
+	if(GLB.threejs.enabled === false){
 		// go straight to render
 		// otherwise wait until threeJS is loaded
 		compileGraphs();
@@ -3037,10 +3191,9 @@ $( document ).ready(function() {
 				
 				
 					$.getScript('./myThree.js', function() { 
-					
 						//qq("myThree.js loaded") 
 					
-						if(GLB.threejs.realTimeRender == true){
+						if(GLB.threejs.realTimeRender === true){
 							// set off real time rendering
 							animate_Three();
 						}else{
@@ -3078,8 +3231,9 @@ $( document ).ready(function() {
 			// //threeRenderer.setSize( container.clientWidth, container.clientHeight );
 
 			threeRenderer.domElement.id = 'workspacecanvas';
-			container = document.getElementById( 'workspacecontainer' );
-			container.appendChild( threeRenderer.domElement );
+			// container = document.getElementById( 'workspacecontainer' );
+			// container.appendChild( threeRenderer.domElement );
+			document.getElementById( 'workspacecontainer' ).appendChild( threeRenderer.domElement );
 
 			//mouse = new THREE.Vector2(), INTERSECTED;
 			mouse = new THREE.Vector2();
@@ -3111,7 +3265,7 @@ $( document ).ready(function() {
 					let rect = element.getBoundingClientRect();
 					if ( rect.bottom < 0 || rect.top  > threeRenderer.domElement.clientHeight ||
 						rect.right  < 0 || rect.left > threeRenderer.domElement.clientWidth ) {
-						ww(7, "square_"+square_id+" not in render scope, RETURN");
+						// ww(7, "square_"+square_id+" not in render scope, RETURN");
 						continue;  // it's off screen
 					}
 					var width  = Math.floor(rect.right - rect.left);
@@ -3145,7 +3299,7 @@ $( document ).ready(function() {
 				}
 			});
 
-			if(GLB.threejs.showperformance == true){
+			if(GLB.threejs.showperformance === true){
 				rendererStats.domElement.style.position	= 'absolute'
 				rendererStats.domElement.style.left	= '0px'	
 				rendererStats.domElement.style.bottom	= '0px'
@@ -3170,31 +3324,7 @@ $( document ).ready(function() {
 	}
 
 
-	
-	// document.addEventListener("visibilitychange", function() {
-	// 	var today = new Date();
-	// 	var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
-	// 	var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-	// 	var dateTime = date+' '+time;
-		
-	// 	if (document.visibilityState === 'visible') {
-	// 		ww(1, "visible at :"+dateTime)
-	// 	} else {
-	// 		ww(1, "hidden  at :"+dateTime)
-	// 	}
-	// });
-
-	// setInterval(function(){
-	// 	var today = new Date();
-	// 	var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
-	// 	var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-	// 	var dateTime = date+' '+time;
-	
-	// 	ww(1, "checkin at :"+dateTime)
-
-	// }, 10000);
 
 
 
-
-});
+}

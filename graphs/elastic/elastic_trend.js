@@ -13,90 +13,78 @@ graphs_functions_json.add_graphs_json({
 
 
 
-function elastic_completeform_trend(id, targetDiv){
+async function elastic_completeform_trend(id, targetDiv){
 
-	var dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	var connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
+	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
+	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
+	var thisMappings = await getSavedMappings(dst, indexPattern)
 
-	elastic_get_fields(dst, connectionhandle, id)
-		.then(function(results){
-			
-			var dropdownFields = []
 
-			// _.omit keys of data types we dont want, or _.pick the ones we do, i.e. omit "text", or pick "ip"
-			var subResults = _.omit(results, "")
-			_.each(subResults, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
-			var dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
+	var dropdownFields = []
+	
+	_.each(thisMappings, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
+	dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
 
-			const jsonform = {
-				"schema": {
-					"x_field": {
-						"type": "string",
-						"title": "Field Analysis", 
-						"enum": dropdownFields
-					},
-					"x_windowSlide": {
-						"title": "Window Slide",
-						"type": "string",
-						"enum": [
-						  "TheWindowSize", "Daily", "Weekly"
-						]
-					},
-					"x_windows":{
-						"type": "integer",
-						"title": "Windows (2->6)",
-						"default": 4,
-						"minimum": 2,
-						"maximum": 6
+	const jsonform = {
+		"schema": {
+			"x_field": {
+				"type": "string",
+				"title": "Field Analysis", 
+				"enum": dropdownFields
+			},
+			"x_windowSlide": {
+				"title": "Window Slide",
+				"type": "string",
+				"enum": [
+					"TheWindowSize", "Daily", "Weekly"
+				]
+			},
+			"x_windows":{
+				"type": "integer",
+				"title": "Windows (2->6)",
+				"default": 4,
+				"minimum": 2,
+				"maximum": 6
 
-					}
-					// "x_null": {
-					// 	"title": "Include null/undefined ?",
-					// 	"type": "boolean",
-					// }
-
-				},
-				"form": [
-					"*"
-				],
-				"value":{}
-			}
-			
-			
-			if(retrieveSquareParam(id,"Cs",false) !== undefined){
-				Cs = retrieveSquareParam(id,"Cs",false) 
-
-				if(Cs['x_field']){
-					jsonform.value['x_field'] = Cs['x_field']
-				}
-
-				if(Cs['x_windowSlide']){
-					jsonform.value['x_windowSlide'] = Cs['x_windowSlide']
-				}
-
-				if(Cs['x_windows']){
-					jsonform.value['x_windows'] = Cs['x_windows']
-				}	
-
-			}else{
-				//create default layout
-				jsonform.value['x_windowSlide'] = "Daily"
-				jsonform.value['x_windows'] = 4
-
-				
 			}
 
-			$(targetDiv).jsonForm(jsonform)
+		},
+		"form": [
+			"*"
+		],
+		"value":{}
+	}
+	
+	
+	if(retrieveSquareParam(id,"Cs",false) !== undefined){
+		Cs = retrieveSquareParam(id,"Cs",false) 
 
-		}).catch(e => {
-			alert(e)
-			// setPageStatus(id, 'Critical', 'Fail to "elastic_get_fields" for id:'+id+', ('+e+')');
+		if(Cs['x_field']){
+			jsonform.value['x_field'] = Cs['x_field']
+		}
 
-		})
+		if(Cs['x_windowSlide']){
+			jsonform.value['x_windowSlide'] = Cs['x_windowSlide']
+		}
+
+		if(Cs['x_windows']){
+			jsonform.value['x_windows'] = Cs['x_windows']
+		}	
+
+	}else{
+		//create default layout
+		jsonform.value['x_windowSlide'] = "Daily"
+		jsonform.value['x_windows'] = 4
+
+		
+	}
+
+	$(targetDiv).jsonForm(jsonform)
+
 }
 
 
-function elastic_populate_trend(id){
+function elastic_populate_trend(id, data){
 
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	
@@ -127,22 +115,34 @@ function elastic_populate_trend(id){
 	var statField = ""
 	var incTime = true
 	var urlencode = false
+	var filter = combineScriptFilter(id)
+
+	var query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, filter)
 
 
-	var query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode)
+	var handle = retrieveSquareParam(id, 'CH')
+	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
 
+	var promises = []
+	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "all"))
+	return Promise.all(promises)
 
-	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
-
+	
+	
 }
 
 
-function elastic_rawtoprocessed_trend(id){
+function elastic_rawtoprocessed_trend(id, data){
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'')['aggregations']['time_ranges']['buckets']
+	
+
+	var data = data[0]['data']['aggregations']['time_ranges']['buckets']
 	var dataMid = {}
-	var scale = "linear"
 
+	var dataOut = {}
+	dataOut['data'] = []
+	// dataOut['timeMin'] = data[0]['from_as_string']
+	dataOut['ticks'] = []
 
 	_.each(data, function(timerange){
 
@@ -157,16 +157,15 @@ function elastic_rawtoprocessed_trend(id){
 			}
 			dataMid[results['key']][timerange['from_as_string']] = results['doc_count']
 		
-		
 		})
 
-		// miniObj['data'] = miniArray
-		// dataout.push(miniObj)
+		dataOut['ticks'].push(timerange['from_as_string'])
+		// dataOut['timeMax'] = timerange['from_as_string'] // the last bucket time range
 	})
-	// qq(dataMid)
 
 
-	var dataOut = []
+	
+
 	_.each(dataMid, function(values,field){
 		// mini array
 		
@@ -177,25 +176,23 @@ function elastic_rawtoprocessed_trend(id){
 			mo['count'] = v
 			tmpArr.push(mo)	
 		})
-		dataOut.push({"name":field, "data":tmpArr})
+		dataOut['data'].push({"name":field, "data":tmpArr})
 
 	})
 
 
-	// qq(dataOut)
-	saveProcessedData(id, '', dataOut);
+
+	return dataOut
 
 
 
 }
 
 
-function elastic_graph_trend(id){
-	
+function elastic_graph_trend(id, data){
 
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
-	//https://bl.ocks.org/d3noob/013054e8d7807dff76247b81b0e29030
-
+	
 
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
@@ -216,7 +213,7 @@ function elastic_graph_trend(id){
     .attr("transform",
           "translate(" + margin.left + "," + margin.top + ")");
 
-	var data = retrieveSquareParam(id, 'processeddata')
+	// var data = retrieveSquareParam(id, 'processeddata')
 	var windows = parseInt(retrieveSquareParam(id,"Cs",true)['x_windows'])
 
 	//calculate count range once
@@ -224,7 +221,9 @@ function elastic_graph_trend(id){
 	var tickValues = []
 	var refWindows = []
 
-	_.each(data, function(obj, i){
+	var colorScale = d3.scaleOrdinal().range(GLB.color)
+
+	_.each(data['data'], function(obj, i){
 		dataCount.push( _.pluck(obj['data'], 'count')  )
 		_.each(obj['data'], function(obj, j){
 
@@ -242,38 +241,27 @@ function elastic_graph_trend(id){
 	_.each(tickValues, function(tick, i){
 		tickValues[i] = new Date(tick)
 	})
-	// qq(tickValues)
-	
-	// // Scale of "-1 Widow" across the top
-	// const xAxisTop= d3.axisTop(xTop)
-	// 	.tickValues(refWindows)
-	// g.append('g')
-	// 	.attr('transform', 'translate(0,0)')
-	// 	.attr("class", "xaxis")
-	// 	.call(xAxisTop)
-	// // scale for top "windows"
-	// var xTop = d3.scaleLinear()
-	// 	.domain(  
-	// 		d3.extent([-10,0])
-	// 	)
-	// 	.range([0, width - margin.right])
-
-
+		
 
 	// scale for dates
 	var xBottom = d3.scaleTime()
 		.domain(  
-			d3.extent(_.map(data[0]['data'], function(obj){ return new Date(obj['from_as_string']) }))
+			//d3.extent(_.map(data[0]['data'], function(obj){ return new Date(obj['from_as_string']) }))
+			[new Date(data['ticks'][0]), new Date(data['ticks'][data['ticks'].length-1])]
 		)
-		.range([0, width - margin.right])
+		.rangeRound([0, width - margin.right])
+		
+
 
 	// Scale of dates across the bottom
 	const xAxisBottom = d3.axisBottom(xBottom)
 		.tickFormat(d3.timeFormat("%b %d %H:%m"))
-		.tickValues(tickValues)
+		// .tickValues(tickValues)
+		
+
+
 	g.append('g')
 		.attr('transform', 'translate(0,' + height + ')')
-		.attr("class", "xaxis")
 		.call(xAxisBottom)
 
 
@@ -309,14 +297,14 @@ function elastic_graph_trend(id){
 
 	// Data Line lines
 	g.selectAll()
-		.data(data)
+		.data(data['data'])
 	.enter()
 		.append('path')
 		.attr('fill',  function(d) { 
-			return GLB.color(d.name)
+			return colorScale(d.name)
 		})
 		.attr('stroke', function(d) { 
-			return GLB.color(d.name)
+			return colorScale(d.name)
 		})
 		.attr('stroke-width', 10)
 		.datum(d => d.data)
@@ -325,7 +313,7 @@ function elastic_graph_trend(id){
 
 	// Data Line Title 
 	g.selectAll()
-		.data(data).enter()
+		.data(data['data']).enter()
 	.append('text')
 		.html(d => d.name)
 		.attr('fill', d => d.color)
@@ -338,19 +326,20 @@ function elastic_graph_trend(id){
 		});
 
 
-
-	// Data Line circle
+// Data Line circle
 	g.selectAll()
-		.data(data).enter()
+		.data(data['data']).enter()
 	.append("circle")
 		.attr('cx', width - margin.right)
 		.attr('cy', function(d){
 			// alert(JSON.stringify(d.data))
 			return y(_.last(d.data)['count'])
 		})
+
+
 		.attr('r', 8)
 		.style("fill", function(d) { 
-			return GLB.color(d.name)
+			return colorScale(d.name)
 		})
 		.on("click", function(d){ 
 			var clickObject = {"compare":[]}
@@ -381,18 +370,18 @@ function elastic_graph_trend(id){
 	  	});
 
 	// style the axis
-	d3.selectAll(".xaxis .tick").each(function(d,i){
-		var tick = d3.select(this),
-			text = tick.select('text'),
-			bBox = text.node().getBBox();
+	// d3.selectAll(".xaxis .tick").each(function(d,i){
+	// 	var tick = d3.select(this),
+	// 		text = tick.select('text'),
+	// 		bBox = text.node().getBBox();
 	  
-		tick.insert('rect', ':first-child')
-		  .attr('x', bBox.x - 3)
-		  .attr('y', bBox.y - 3)
-		  .attr('height', bBox.height + 6)
-		  .attr('width', bBox.width + 6)
-		  .style('fill', d3.schemeCategory20[i % 20]);      
-	  });
+	// 	tick.insert('rect', ':first-child')
+	// 	  .attr('x', bBox.x - 3)
+	// 	  .attr('y', bBox.y - 3)
+	// 	  .attr('height', bBox.height + 6)
+	// 	  .attr('width', bBox.width + 6)
+	// 	  .style('fill', d3.schemeCategory20[i % 20]);      
+	//   });
 
 }
 

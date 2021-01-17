@@ -15,15 +15,18 @@ function populate_templates(id){
 
 	// no back end data to fetch, but tell the system we're ready
 	//ww(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+","+name+")");
-	connector_bypass(id);
-
-}
-function process_templates(id){
 	
-	saveProcessedData(id, '', "");
+	promises = []
+	return Promise.all(promises)
+
+
+}
+function process_templates(id, data){
+	
+	return ""
 }
 
-function graph_templates(id){
+function graph_templates(id, data){
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(id)+") aConnector="+aConnector);
 
 
@@ -215,6 +218,86 @@ function graph_templates(id){
 		.classed("fleft", true)
 		.attr("src", "./images/239_b.png")
 
+	favourites = connectors.handletox(retrieveSquareParam(id, "CH", true), "favourites");
+
+	if(favourites.length>0){
+
+		clusterDiv = clusterSection.append("div")
+			.classed("square_cluster_text", true)
+			.classed("fleft", true);
+
+			clusterDiv.append("div")
+				.classed("square_cluster_text", true)
+				.append("div")
+					.classed("fontsize", true)
+					.text("Apply 'Favourite' to me:")
+				.append("div")
+				.append("select")
+					.classed("fontsize", true)
+					.attr("id", function(d){ return "template_apply_favourite" })
+					.attr("name", function(d){ return "template_apply_favourite" })
+
+		clusterDiv = clusterSection.append("div")
+			.classed("square_cluster_text", true)
+			.classed("fleft", true)
+			
+			clusterDiv.append("div")
+				.attr("id", function(d){ return "square_template_apply_favourite" })
+			var mySelectt = $('#template_apply_favourite');
+			
+
+			_.each(favourites, function(favourite){
+				mySelectt.append(
+					$('<option></option>').val(favourite.uid).html(favourite.printable+" ("+favourite.Gt+")")
+				);	
+			})
+
+			$("#square_template_apply_favourite").append("<input type='button' id='template_id_apply_favourite' value='Import Favourite' />");
+			$("#template_id_apply_favourite").bind("click",  function(){  importSquareFavourite(id, $('#template_apply_favourite').val())}  );
+
+		}else{
+
+
+
+			clusterDiv = clusterSection.append("div")
+			.classed("square_cluster_text", true)
+			.classed("fleft", true);
+
+			clusterDiv.append("div")
+				.classed("square_cluster_text", true)
+				.append("div")
+					.classed("fontsize", true)
+					// CSS breaks on "-", replace with char friendly unicode
+					.html("No favourites saved for: "+retrieveSquareParam(id, 'CH', true).replaceAll("-", "&#8209;") )
+					
+				
+					clusterDiv = clusterSection.append("div")
+					.classed("square_cluster_text", true)
+					.classed("fleft", true)
+					
+					clusterDiv.append("div")
+
+		}
+
+	/////////////////Create a Favourite///////////////////
+	
+	favString = {}
+	favString['uid'] =  String(CryptoJS.MD5(connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")))
+	favString['printable'] = "x"
+	favString['Gt'] = retrieveSquareParam(id,"Gt",true)
+	favString['Cs'] = retrieveSquareParam(id,"Cs",true)
+	
+	clusterSection = square.append("div")
+		.classed("square_cluster_section", true)
+	clusterDiv = clusterSection.append("div")
+		.classed("fleft", true);
+	clusterDiv.append("img")
+		.classed("square_cluster_image", true)
+		.classed("fleft", true)
+		.attr("src", "./images/239_b.png")
+
+	favourites = connectors.handletox(retrieveSquareParam(id, "CH", true), "favourites");
+
 	clusterDiv = clusterSection.append("div")
 		.classed("square_cluster_text", true)
 		.classed("fleft", true);
@@ -223,33 +306,21 @@ function graph_templates(id){
 			.classed("square_cluster_text", true)
 			.append("div")
 				.classed("fontsize", true)
-				.text("Apply 'Favourite' to me:")
+				.text("This square as a Favourite:")
 			.append("div")
-			.append("select")
+			.append("div")
 				.classed("fontsize", true)
-				.attr("id", function(d){ return "template_apply_favourite" })
-				.attr("name", function(d){ return "template_apply_favourite" })
+				.text(JSON.stringify(favString))
 
 	clusterDiv = clusterSection.append("div")
 		.classed("square_cluster_text", true)
 		.classed("fleft", true)
 		
 		clusterDiv.append("div")
-			.attr("id", function(d){ return "square_template_apply_favourite" })
-		var mySelectt = $('#template_apply_favourite');
+			.attr("id", function(d){ return "square_template_asa_favourite" })
+			
 		
-
-		favourites = connectors_json.handletox(retrieveSquareParam(id, "CH"), "favourites");
-		_.each(favourites, function(favourite){
-			mySelectt.append(
-				$('<option></option>').val(favourite.uid).html(favourite.printable+" ("+favourite.Gt+")")
-			);	
-		})
-
-		$("#square_template_apply_favourite").append("<input type='button' id='template_id_apply_favourite' value='Import Favourite' />");
-		$("#template_id_apply_favourite").bind("click",  function(){  importSquareFavourite(id, $('#template_apply_favourite').val())}  );
-
-
+	
 
 	////////////////////////////////////
 	clusterSection = square.append("div")

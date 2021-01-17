@@ -15,10 +15,14 @@ foreach (glob("./connectors/*.json") as $filename) {
         $handle = fopen($filename, "r");
         if ($handle) {
             $json = file_get_contents($filename);
-        $data = json_decode($json, true);
-        $jsons[] = $data;
+            $data = json_decode($json, true);
+            array_push($jsons, $data);
+
         } else {
-            echo "<br>cannot open file";
+            $friendly = preg_replace('/.*\\//', '', '.\\/connectors\\/seconion_1x.json', -1);
+            $data = '{"key": "'.$friendly.'", "status": "errorLoading"}';
+            array_push($jsons, json_decode($data, true));
+            
         }        
     }
 }

@@ -6,123 +6,126 @@ graphs_functions_json.add_graphs_json({
 			"rawtoprocessed":"elastic_rawtoprocessed_treemapCandle",
 			"param": "", 
 			"graph":"elastic_graph_treemapCandle",
-			"about": "Treemap for multiple dimensions.",
+			"about": "Treemap for multiple dimensions.",			
+			"requireThreeJS": true
 		}
 	}
 });
 
-function elastic_completeform_treemapCandle(id, targetDiv){
+async function elastic_completeform_treemapCandle(id, targetDiv){
 	
-	var dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	var connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
+	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
+	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
+	var thisMappings = await getSavedMappings(dst, indexPattern)
 
-	elastic_get_fields(dst, connectionhandle, id)
-		.then(function(results){
 
-			var dropdownFields = []
-			var dropdownNumbers = []
-			
-			// _.omit keys of data types we dont want, or _.pick the ones we do, i.e. omit "text", or pick "ip"
-			var subResults = _.omit(results, "")
-			_.each(subResults, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
-			var dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
+	var dropdownFields = []
+	var dropdownNumbers = []
+	
 
-			var numberDropDown = _.pick(results, "long")
-			_.each(numberDropDown, function(val, key){  _.each(val, function(val2){  dropdownNumbers.push(val2)  })}) 
-			var dropdownFieldsNumber = _.sortBy(dropdownNumbers, function(element){ return element})
+	
+	// _.omit keys of data types we dont want, or _.pick the ones we do, i.e. omit "text", or pick "ip"
+	var subResults = _.omit(thisMappings, "")
+	_.each(subResults, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
+	var dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
 
-			const jsonform = {
-				"schema": {
-					"x_arr": {
-						"type":"array",
-						"maxItems": 4,
-						"minItems": 1,
-						"items":{
-							"type": "object",
-							"properties":{
-								"field":{
-									"type": "string",
-									"title": "Field",
-									"enum": dropdownFields					
-								}
-							}	
+	var numberDropDown = _.pick(thisMappings, "long", "int", "integer")
+	_.each(numberDropDown, function(val, key){  _.each(val, function(val2){  dropdownNumbers.push(val2)  })}) 
+	var dropdownFieldsNumber = _.sortBy(dropdownNumbers, function(element){ return element})
+
+	const jsonform = {
+		"schema": {
+			"x_arr": {
+				"type":"array",
+				"maxItems": 4,
+				"minItems": 1,
+				"items":{
+					"type": "object",
+					"properties":{
+						"field":{
+							"type": "string",
+							"title": "Field",
+							"enum": dropdownFields					
 						}
-					},
-					"x_candle": {
-						"type": "string",
-						"title": "Candlesticks Value", 
-						"enum": dropdownFieldsNumber
-						
-					},
-					"x_null": {
-						"title": "Include null/undefined ?",
-						"type": "boolean",
-					},
-					"x_scale": {
-						"title": "Scale",
-						"type": "string",
-						"enum": [
-						  "linear", "log", "inverse"
-						]
-					}
-				},
-				"form": [
-					{
-				 		"type": "array",
-				 		"items": [{
-				 	  		"key": "x_arr[]",
-				 	  		
-				 		}]
-				   	},
-					{
-						"key":"x_candle",
-					},
-					{
-						"key":"x_null",
-						"inlinetitle": "Include null/undefined ?",
-						"notitle": true,
-					},
-					{
-						 "key":"x_scale",
-						 "inlinetitle": "Scale",
-						 "notitle": true,
-					}
-				],
-				"value":{}
-			}		
-
-			if(retrieveSquareParam(id,"Cs",true) !== undefined){
-				
-				if(retrieveSquareParam(id,"Cs",true)['array'] !== null ){
-					jsonform.value = {}
-					jsonform.value['x_arr'] = []
-					_.each(retrieveSquareParam(id,"Cs",true)['array'], function(key,num){
-						jsonform.value['x_arr'].push({"field": key})
-					})
-				
+					}	
 				}
-				
-				if(retrieveSquareParam(id,"Cs",true)['x_scale'] !== null){
-					jsonform.form[2]['value'] = retrieveSquareParam(id,"Cs",true)['x_scale']
-				}
-				if(retrieveSquareParam(id,"Cs",true)['x_candle'] !== null){
-					jsonform.form[1]['value'] = retrieveSquareParam(id,"Cs",true)['x_candle']
-				}
+			},
+			"x_candle": {
+				"type": "string",
+				"title": "Candlesticks Value", 
+				"enum": dropdownFieldsNumber
 
-			}else{
-				//create default layout
-				jsonform.value['x_arr'] = []
-				jsonform.value['x_arr'].push({})
-				
-				jsonform.form[1]['value'] = 1
-
-				jsonform.form[2]['value'] = "log"
-
-
+			},
+			"x_null": {
+				"title": "Include null/undefined ?",
+				"type": "boolean",
+			},
+			"x_scale": {
+				"title": "Scale",
+				"type": "string",
+				"enum": [
+					"linear", "log", "inverse"
+				]
 			}
-			$(targetDiv).jsonForm(jsonform)
+		},
+		"form": [
+			{
+				"type": "array",
+				"notitle": true,
+				"items": [{
+					"key": "x_arr[]",
+					
+				}]
+			},
+			{
+				"key":"x_candle",
+			},
+			{
+				"key":"x_null",
+				"inlinetitle": "Include null/undefined ?",
+				"notitle": true,
+			},
+			{
+					"key":"x_scale",
+					"inlinetitle": "Scale",
+					"notitle": true,
+			}
+		],
+		"value":{}
+	}		
 
-		})
+	if(retrieveSquareParam(id,"Cs",true) !== undefined){
+		
+		if(retrieveSquareParam(id,"Cs",true)['array'] !== null ){
+			jsonform.value = {}
+			jsonform.value['x_arr'] = []
+			_.each(retrieveSquareParam(id,"Cs",true)['array'], function(key,num){
+				jsonform.value['x_arr'].push({"field": key})
+			})
+		
+		}
+		
+		if(retrieveSquareParam(id,"Cs",true)['x_scale'] !== null){
+			jsonform.form[2]['value'] = retrieveSquareParam(id,"Cs",true)['x_scale']
+		}
+		if(retrieveSquareParam(id,"Cs",true)['x_candle'] !== null){
+			jsonform.form[1]['value'] = retrieveSquareParam(id,"Cs",true)['x_candle']
+		}
+
+	}else{
+		//create default layout
+		jsonform.value['x_arr'] = []
+		jsonform.value['x_arr'].push({})
+		jsonform.value['x_arr'].push({})
+		
+		jsonform.form[1]['value'] = 1
+
+		jsonform.form[2]['value'] = "log"
+
+
+	}
+	$(targetDiv).jsonForm(jsonform)
+
 }
 
 
@@ -148,20 +151,27 @@ function elastic_populate_treemapCandle(id){
 	var statField = retrieveSquareParam(id,"Cs",true)['x_candle']
 	var incTime = true
 	var urlencode = false
+	var filter = combineScriptFilter(id)
 
+	var query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, filter)
 
-	var query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode)
+	var handle = retrieveSquareParam(id, 'CH')
+	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
+	var promises = []
+	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "all"))
+	return Promise.all(promises)
 
-	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
+	
+
 }
 
 
 
 
 
-function elastic_rawtoprocessed_treemapCandle(id){
+function elastic_rawtoprocessed_treemapCandle(id, data){
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'')['aggregations']['time_ranges']['buckets'][0]['field']['buckets']
+	var data = data[0]['data']['aggregations']['time_ranges']['buckets'][0]['field']['buckets']
 	var fields = []
 	
 	if(retrieveSquareParam(id,"Cs",true) !== undefined){
@@ -184,14 +194,16 @@ function elastic_rawtoprocessed_treemapCandle(id){
 		}
 	}
 
-	saveProcessedData(id, '', elasticToFlare(data, scale))
+	// saveProcessedData(id, '', elasticToFlare(data, scale))
+	return elasticToFlare(data, scale)
 
 }
 
 
 
-function elastic_graph_treemapCandle(id){
+function elastic_graph_treemapCandle(id, data){
 	
+
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	// https://bl.ocks.org/ganezasan/52fced34d2182483995f0ca3960fe228
 
@@ -210,8 +222,10 @@ function elastic_graph_treemapCandle(id){
 	var height = document.getElementById("square_"+id).clientHeight;
 	var width  = document.getElementById("square_"+id).clientWidth;
 	
-	var data = retrieveSquareParam(id, 'processeddata');
+	
 	var Cs = retrieveSquareParam(id,"Cs",true)
+
+	var colorScale = d3.scaleOrdinal().range(GLB.color)
 
 
 	const treemap = d3.treemap()
@@ -219,8 +233,10 @@ function elastic_graph_treemapCandle(id){
 		.padding(10)
 
 
+
 	const root = d3.hierarchy(data, (d) => d.children)
 		.sum((d) => d.size);
+
 
 	const tree = treemap(root);
 
@@ -248,7 +264,8 @@ function elastic_graph_treemapCandle(id){
 	controls.userRotateSpeed = 0.01;
 	controls.target = new THREE.Vector3(grid_size/2,grid_size/3,grid_size/2);
 	scene.userData.controls = controls;
-
+	
+	
 	var myLight = masterAmbientLight.clone();
 	scene.add(myLight);
 
@@ -281,27 +298,30 @@ function elastic_graph_treemapCandle(id){
 			.range([1, grid_size/2]);
 	}
 
+	var recordsWithNull = 0
 
 	_.each(flatCords, function(coords){
 
-		if(coords['std_deviation'] == null){
+		// qq(coords)
 
+		if(coords['std_deviation'] == null || coords['std_deviation'] == 0){
+
+			// qq("Candle: name:"+coords['name']+", top:0 tallness:0" )
 			// no data, so draw a simple box under the grid
-
 			// create the standard deviation box 
 			// x & z = position on flat 
 			// y = standard deviation
+			recordsWithNull = recordsWithNull + 1
+			
 			var markerGeometry = new THREE.CubeGeometry(coords['width'],  1, coords['height']);
-			var material = new THREE.MeshBasicMaterial( { color: GLB.color(coords['name']) } );
+			var material = new THREE.MeshBasicMaterial( { color: colorScale(coords['name']) } );
 			var stdDev = new THREE.Mesh(markerGeometry, material);
 			stdDev.position.x = coords['x0'] + (coords['width'] /2)
 			stdDev.position.y = -2
 			stdDev.position.z = coords['y0'] + (coords['height'] /2)
 			// qq("adding val:"+coords['name']+", x:"+coords['x0']+", y:"+coords['y0'])
-			
-			//stdDev.squaresName = _.pluck(coords['chain'], "val").join(", ") + ", avg:"+Math.floor(coords['avg'])+", max:"+coords['max']+", min:"+coords['min']
 			stdDev.squaresName = _.pluck(coords['chain'], "val").join(", ") + ", avg:"+Math.floor(coords['avg'])+", max:"+coords['max']
-
+			
 
 			let clickObject = {"compare":[]}
 			_.each(coords['chain'], function(chai){
@@ -311,15 +331,10 @@ function elastic_graph_treemapCandle(id){
 
 			})
 			stdDev.squaresAction = function(){ childFromClick(id, {"y": 1000, "Ds": btoa(JSON.stringify(clickObject))} , {} ) };
-
 			scene.add(stdDev);
 
 		}else{
-			
 			// data, so draw a height box with minmax ba
-
-			
-
 			// create the standard deviation box 
 			// x & z = position on flat 
 			// y = standard deviation
@@ -330,6 +345,8 @@ function elastic_graph_treemapCandle(id){
 			var height = yScale(coords['avg'] +1)
 			var shiftHeight = (yScale((2 * coords['std_deviation'])+1)/2)
 			
+			// qq("Candle: name:"+coords['name']+", top:"+top+" tallness:"+tallness )
+
 			// qq("####################")
 			// qq("name:"+_.pluck(coords['chain'], "val").join(", "))
 			// qq("val:"+coords['name'])
@@ -347,14 +364,15 @@ function elastic_graph_treemapCandle(id){
 
 
 			var markerGeometry = new THREE.CubeGeometry(coords['width'],  tallness, coords['height']);
-			var material = new THREE.MeshBasicMaterial( { color: GLB.color(coords['name']) } );
+			var material = new THREE.MeshBasicMaterial( { color: colorScale(coords['name']) } );
 			var stdDev = new THREE.Mesh(markerGeometry, material);
 			stdDev.position.x = coords['x0'] + (coords['width'] /2)
 			stdDev.position.y = height
 			stdDev.position.z = coords['y0'] + (coords['height'] /2)
 			
 			//stdDev.squaresName = _.pluck(coords['chain'], "val").join(", ") + ", avg:"+Math.floor(coords['avg'])+", max:"+coords['max']+", min:"+coords['min']
-			stdDev.squaresName = _.pluck(coords['chain'], "val").join(", ") + ", avg:"+Math.floor(coords['avg'])+", max:"+coords['max']
+			// stdDev.squaresName = _.pluck(coords['chain'], "val").join(", ") + ", avg:"+Math.floor(coords['avg'])+", max:"+coords['max']
+			stdDev.squaresName = _.pluck(coords['chain'], "val").join(", ") + ", avg:"+coords['avg'].toFixed(3)+", max:"+coords['max']
 
 			let clickObject = {"compare":[]}
 			_.each(coords['chain'], function(chai){
@@ -389,6 +407,12 @@ function elastic_graph_treemapCandle(id){
 
 	threeScenes["square_"+id] = scene;
 
+	
+	if(recordsWithNull > 0){
+		addSquareStatus(id, "warning", recordsWithNull+" records had no statistics, rendering flat.")
+	}
+	
+
 }
 
 
@@ -407,9 +431,6 @@ function treeToFlatRecursive(id, dataNode, childrenNode, returnList, clickArray)
 		
 		for ( var i = 0 ; i < childrenNode['children'].length; i++){
 			
-			// qq("loop i:"+i)
-			// qq(dataNode['children'])
-
 			var a = dataNode['children'][i]
 			var b = childrenNode['children'][i]
 

@@ -11,7 +11,7 @@ graphs_functions_json.add_graphs_json({
 	}
 });
 
-function elastic_completeform_cloud(id, targetDiv){
+async function elastic_completeform_cloud(id, targetDiv){
 
 	// called by editsquare allowing each square graph type to have custom 'parameters'
 	// This function can potentially make multiple (async) queries to API and then apply output to a master JSON object.
@@ -20,45 +20,41 @@ function elastic_completeform_cloud(id, targetDiv){
 	// promise.all appears to be the best way.  Construct the list of promises that will each master the jsonform{}
 
 
-	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
+	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
+	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
+	var thisMappings = await getSavedMappings(dst, indexPattern)
 
 
-	elastic_get_fields(dst, connectionhandle, id)
-		.then(function(results){
+	var dropdownFields = []
+	
+	_.each(thisMappings, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
+	dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
 			
-			var dropdownFields = []
-			// _.omit keys of data types we dont want, or _.pick the ones we do, i.e. omit "text", or pick "ip"
-			var subResults = _.omit(results, "")
-			_.each(subResults, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
-			var dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
-			
-			const jsonform = {
-				"schema": {
-					"x_field": {
-						"type": "string",
-						"title": "Groupby", 
-						"enum": dropdownFields
-						
-					}
-				},
-				"form": [
-					{
-						"key": "x_field"
+	const jsonform = {
+		"schema": {
+			"x_field": {
+				"type": "string",
+				"title": "Groupby", 
+				"enum": dropdownFields
 				
-					}
-				],
-				"value":{}
 			}
-
-			
-			if(retrieveSquareParam(id,"Cs",false) !== undefined){
-                jsonform.value.x_field = retrieveSquareParam(id,"Cs",false)['x_field']
+		},
+		"form": [
+			{
+				"key": "x_field"
+		
 			}
+		],
+		"value":{}
+	}
 
-			$(targetDiv).jsonForm(jsonform)
+	
+	if(retrieveSquareParam(id,"Cs",false) !== undefined){
+		jsonform.value.x_field = retrieveSquareParam(id,"Cs",false)['x_field']
+	}
 
-		})
+	$(targetDiv).jsonForm(jsonform)
+
 
 
 
@@ -86,21 +82,31 @@ function elastic_populate_cloud(id){
 	var statField = null
 	var incTime = true
 	var urlencode = false
+	var filter = combineScriptFilter(id)
 
+	var query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, filter)
+	var handle = retrieveSquareParam(id, 'CH')
+	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
 
-	var query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode)
+	
+	var promises = []
+	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "all"))
+	return Promise.all(promises)
 
-	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
 }
 
 
 
-function elastic_rawtoprocessed_cloud(id){
+function elastic_rawtoprocessed_cloud(id, data){
 
 	// count into [{"name":"bob", "size":1}. {}]
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'')['aggregations']['time_ranges']['buckets'][0]['field']['buckets']
+	// var data = retrieveSquareParam(id, 'rawdata_'+'')['aggregations']['time_ranges']['buckets'][0]['field']['buckets']
+	
+	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
+	data = data[0]['data']['aggregations']['time_ranges']['buckets'][0]['field']['buckets']
+	
 	var bigfontsize = 120 // biggest font for 20 chars?
 
 
@@ -114,17 +120,18 @@ function elastic_rawtoprocessed_cloud(id){
 		mo = {}
 		mo['text'] = obj['key']
 		mo['size'] = Math.floor((obj['doc_count']/max['doc_count'])*bigfontsize)
-		mo['fullText'] = obj['key']
 		mo['count'] = obj['doc_count']
 		dataout.push(mo)
 	})
 
-	saveProcessedData(id, '', dataout);
+	// saveProcessedData(id, '', dataout);
+	return dataout
+
 
 }
 
 
-function elastic_graph_cloud(id){
+function elastic_graph_cloud(id, data){
 	
 	
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
@@ -144,10 +151,9 @@ function elastic_graph_cloud(id){
 	var height = document.getElementById("square_"+id).clientHeight;
 	var width  = document.getElementById("square_"+id).clientWidth;
 	
-	
+	var colorScale = d3.scaleOrdinal().range(GLB.color)
 
-	var data = retrieveSquareParam(id, 'processeddata');
-	
+
 	// http://jsfiddle.net/ymmh9dLq/
 	
 	const x_field = retrieveSquareParam(id,"Cs")['x_field']
@@ -157,7 +163,6 @@ function elastic_graph_cloud(id){
 		.words(data)
 		.padding(5)
 		.rotate(function() { return ~~(Math.random() * 2) * 90; })
-		.font("Impact")
 		.fontSize(function(d) {
 			return d.size
 		})
@@ -165,33 +170,40 @@ function elastic_graph_cloud(id){
 
 	layout.start();
 
+
+
 	function draw(words) {
-		square.append("svg")
-				.attr("width", layout.size()[0])
-				.attr("height", layout.size()[1])
+		
+		square
 			.append("g")
 				.attr("transform", "translate(" + layout.size()[0] / 2 + "," + layout.size()[1] / 2 + ")")
 				.selectAll("text")
 				.data(words)
 			.enter().append("text")
+				.classed("cloudText", true)
 				.style("font-size", function(d) { return d.size + "px"; })
-				.style("font-family", "Impact")
-				.style("fill", function(d, i) { return GLB.color(i) })
+				.style("fill", function(d, i) { 
+					return colorScale(i)
+				})
 				.attr("text-anchor", "middle")
 				.attr("transform", function(d) {
 					return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
 				})
-				.text(function(d) { return d.text; })
+				.text(function(d) { 
+					if(d['text'].length>8){
+						return d.text.substring(1, 5);
+					}else{
+						return d.text; 
+					}
+				})
 				.on("click", function(d){
-					// clickObject = btoa('[{"match":{"'+x_field+'":"'+d.text+'"}}]');
-					// childFromClick(id, {"y": 1000, "Ds": clickObject} );
-					clickObject = {"compare":[], "notexist":[], "timerange":[]}
+					var clickObject = {"compare":[], "notexist":[], "timerange":[]}
 
 					if(d.name == "null"){
 						clickObject.notexist.push(d.name)
 					}else{
-						miniObj ={}
-						miniObj[x_field] = d.fullText
+						var miniObj ={}
+						miniObj[x_field] = d.text
 						clickObject.compare.push(miniObj)
 					}
 					
@@ -201,7 +213,7 @@ function elastic_graph_cloud(id){
 
 				})
 				.on("mouseover", function(d) {
-					theData = d.fullText+", Count: "+d.count
+					var theData = d.text+", Count: "+d.count
 					setHoverInfo(id, theData)
 				})
 				

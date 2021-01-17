@@ -7,6 +7,7 @@
 			"param": "", 
 			"graph":"elastic_graph_3dGroupedNormal",
 			"about": "Height represents total Sigma difference over three fields. High dot represents away from Standard Deviation (above or below)",
+			"requireThreeJS": true
 		}
 	}
 });
@@ -98,7 +99,13 @@ function elastic_populate_3dGroupedNormal(id){
 
 function elastic_rawtoprocessed_3dGroupedNormal(id){
 
-	var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits'];
+	// check if no results
+    if(retrieveSquareParam(id, 'rawdata_'+'')['hits']['total']['value'] == 0){
+		saveProcessedData(id, '', null);
+        return;
+    }
+
+    var data = retrieveSquareParam(id, 'rawdata_'+'')['hits']['hits'];
 
 	const firstBy = retrieveSquareParam(id,"Cs")['x_first']
     const secondBy = retrieveSquareParam(id,"Cs")['x_second']

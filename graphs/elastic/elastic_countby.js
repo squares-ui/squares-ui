@@ -13,11 +13,10 @@ graphs_functions_json.add_graphs_json({
 
 function elastic_completeform_countby(id, targetDiv){
 
+	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
+	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
 
-	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
-
-	elastic_get_fields(dst, connectionhandle, id)
+	elastic_get_fields(dst, indexPattern, id)
 		.then(function(results){
 	
 			const jsonform = {
@@ -65,8 +64,9 @@ function elastic_populate_countby(id){
 
 	var query = elastic_query_builder(id, from, to, Ds, fields, limit, true);
 
-	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
-}
+	var handle = retrieveSquareParam(id, 'CH')
+	elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query);
+	}
 
 
 
