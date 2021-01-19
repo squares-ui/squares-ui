@@ -38,8 +38,8 @@ cd /var/www/html
 git clone https://github.com/squares-ui/squares-ui/
 curl http://<IP_of_box>/squares-ui/hello.txt
 cd squares-ui/connectors/
-cp -a blank elasticSecurityOnionBro.conf
-vim elasticSecurityOnionBro.conf
+cp -a seconion_2x.json.template seconion_2x.json
+vim seconion_2x.json
 ```
 
 Finally you need to configure some connectors in "/connectors/".
@@ -59,7 +59,7 @@ vim seconion_ossec.json
 By default Elastic does not allow CORS.  To change this SSH to Security Onion and modify the Elastic config file
 
 ```
-/etc/elasticsearch/elasticsearch.yml
+/opt/so/saltstack/default/salt/elasticsearch/files/elasticsearch.yml
 ```
 
 Then append these two lines (here I make the origin wide open, you may wish to restrict this, see Elastic documentation)
@@ -67,9 +67,13 @@ Then append these two lines (here I make the origin wide open, you may wish to r
 ```
 http.cors.enabled: true
 http.cors.allow-origin: "*"
+http.cors.allow-methods: "OPTIONS, HEAD, GET, POST"
 ```
 
 Then restart ElasticSearch
+```
+so-restart elasticsearch
+```
 
 # The Use Cases
 
@@ -114,15 +118,28 @@ Currently there are only a few graph types, though the number is growing
 
 Current queries to Elastic handle 'match', and 'does not exist'.  It does not yet handle queries such as "not 1.2.3.4", "Terms" , or ">5"
 
-Currently localStorage is used for client side storage which occassionally maxes out. Check config/delete raw for extra space.  Plans exist to move to IndexDB
-
-Some graphs can only hold so many keys/nodes (i.e. a Sankey chart) therefore some culling exists, though the UI does not currently inform you where/when this happens
-
-
 # Known Bugs
 
-If you swap tabs for a long time then return to Squares-UI it can take time to 'recover' (up to 1 minute).  Any help debugging welcomed.
+On page load/refresh there are no squares
+Fix: Page reload doesn't always zoom to the correct area, usually drag the page up a bit
 
-Rarely, a square is created with a blip in it's config, sometimes refreshing the page, or recreating the square helps.
+In some circumstances editing a Square that is multidimensional fields (e.g. pie chart) the first field selector doesn't appear.  
+Fix: Hit "+" button 
 
-Imperfect implementation of devicePixelRatio may affect 'retina screens' and OS font size changes
+Squares don't show data (no hits, no aggs, "Loading")
+Fix: reload the specific square
+
+Edit square, no 'customise form' is rendered at the top
+Fix: Page reload OR square reload OR change to a different SquareType, save, change back
+
+Squares go blank for too long before image appears
+The "Loading" message can be wiped too early, I need to look into reducing this gap.  Also use smaller 
+
+Bottom menu dissapears on window rescale/resize
+Fix: Reload window
+
+With Squares loaded, using a bookmark to load another square page, nothing changes on screen
+Fix: Hit f5 to force refresh the page
+
+Hovering over any Square element to view the stats, underneath text flickers like crazy
+Fix:Mouse out, wait a few sceonds, then mouse back in to the element.  
