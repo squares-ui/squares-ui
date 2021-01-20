@@ -75,6 +75,14 @@ Then restart ElasticSearch
 so-restart elasticsearch
 ```
 
+Also SecurityOnion needs inbound 9200 opening using so-allow, option e (port 9200), and enter the IP where Squares-UI is hosted, e.g.:
+```
+sudo so-allow
+e
+192.168.1.0/24
+```
+
+
 # The Use Cases
 
 Squares-ui can be used on the local desktop, to pivot and explore data sets

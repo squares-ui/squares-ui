@@ -2,7 +2,6 @@ if(GLB.useStrict){
 	"use strict";
 }
 // SQUARES attributes 
-// SQUARES attributes 
 // Pr = Integer defining Pr square ID
 // id = unique id of square
 // Gt = String, taken from import_graphs()
@@ -21,21 +20,22 @@ if(GLB.useStrict){
 // Gp = String with parameters the graph may choose to use (optional)
 // Sc = Scale
 // Hx = Hex colour, a way of marking/highlighting on demand, not implemented
+// Fi = Fields scripting (elastic only)
 
 
-// Alertify function 
-function reset () {
-	$("#toggleCSS").attr("href", "./alertify.js-0.3.11/themes/alertify.default.css");
-	alertify.set({
-		labels : {
-			ok     : "OK",
-			cancel : "Cancel"
-		},
-		delay : 5000,
-		buttonReverse : false,
-		buttonFocus   : "ok"
-	});
-}
+// // Alertify function 
+// function reset () {
+// 	$("#toggleCSS").attr("href", "./alertify.js-0.3.11/themes/alertify.default.css");
+// 	alertify.set({
+// 		labels : {
+// 			ok     : "OK",
+// 			cancel : "Cancel"
+// 		},
+// 		delay : 5000,
+// 		buttonReverse : false,
+// 		buttonFocus   : "ok"
+// 	});
+// }
 	
 
 
@@ -336,9 +336,9 @@ function wipereset(){
 }
 		
 
-var squareEdited = 0;
-var re_str = /^[\w =+\/]+$/;
-var re_int = /^[\d ]+$/;
+// var squareEdited = 0;
+// var re_str = /^[\w =+\/]+$/;
+// var re_int = /^[\d ]+$/;
 
 // d3 vars,  declared outside a function
 var workspaceDiv;
@@ -392,7 +392,7 @@ function dragged(d) {
 	// event.dx isn't the total move dist, it's the move per frame/step
 
 	if(Math.abs(d3.event.dx) > GLB.square.dragSensitivity || Math.abs(d3.event.dy) > GLB.square.dragSensitivity){
-		var wasMoved = true;
+		// var wasMoved = true;
 
 		deleteLines();
 
@@ -580,7 +580,7 @@ function newSquare(obj){
 			var newX = calcCord(obj['Pr'], 'x', relX)
 			var newY = calcCord(obj['Pr'], 'y', relY)
 			if(loopX === newX && loopY === newY ){
-				qq("new square location used")
+				// qq("new square location used")
 				clash = true
 			}
 		}	
@@ -619,14 +619,14 @@ function deleteLines(){
 	d3.selectAll(".bezier_line").remove();
 }
 
-function futureHalfHeight(id){
-	// XXX redner a square on page load, then measure it?
-	// XXX do that for each square css class?
-	return 500;
-}
-function futureHalfWidth(id){
-	return 500;
-}
+// function futureHalfHeight(id){
+// 	// XXX redner a square on page load, then measure it?
+// 	// XXX do that for each square css class?
+// 	return 500;
+// }
+// function futureHalfWidth(id){
+// 	return 500;
+// }
 
 
 
@@ -669,7 +669,7 @@ function drawLines(ids, drawBezier){
 			prBendX = prRelX + ((myRelX -prRelX)* bendX);
 			prBendY = prRelY + ((myRelY -prRelY)* bendY);
 
-			if(GLB.drawLineBezier===true && drawBezier===true && d.Pr!=0){
+			if((GLB.drawLineBezier===true || drawBezier===true )&& d.Pr!=0){
 				//draw the dots for bezier curve
 				// I suppose this could be done in it's own ".append", but then all the abve maths needs doing again?
 				squaregroup
@@ -774,7 +774,7 @@ function drawLines(ids, drawBezier){
 function squareMouseOver(d, i){
 	// Hide all square menus if you want a cleaner interface?
 	if(GLB.hidesquaremenus === true){
-			$(".square_menu").removeClass("menu_invisible");
+		$(".square_menu").removeClass("menu_invisible");
 	}
 }
 function squareMouseOut(d, i){
@@ -1261,11 +1261,19 @@ async function drawinBoxes(ids){
 		var theResult = await checkSavedDataIsMine(id)
 		var theData = await getSavedData(id, "processed", "")
 
+		var thisGT = retrieveSquareParam(id, "Gt")
+		var thisCH = retrieveSquareParam(id, 'CH', true)
+		var thisDst = connectors.handletox(thisCH, "dst")
+		var thisIndex = connectors.handletox(thisCH, 'indexPattern')
+
 		if(theResult && theData && retrieveSquareParam(id, "Gt")!=="intro"){
 			// Hash checks out, and data exists
 			qq("drawinBoxes("+id+"): hash checks out and processed data exists")
 			callTheGraph(id, true);
 
+		}else if (getMappingsData(id) == null){
+			graphGraphError(id, "Network error connecting to '"+thisDst+"',<br>Have you enabled CORS?<br>Have you enabled inbound 9200?")
+		
 		}else{
 			qq("drawinBoxes("+id+"): hash fail or no data")
 
@@ -1277,10 +1285,7 @@ async function drawinBoxes(ids){
 			saveNewData(id, "hash", "", createSquareHash(id))
 			.catch(e => ww(0, e));
 
-			var thisGT = retrieveSquareParam(id, "Gt")
-			var thisCH = retrieveSquareParam(id, 'CH', true)
-			// var thisDst = connectors.handletox(thisCH, "dst")
-			// var thisIndex = connectors.handletox(thisCH, 'indexPattern')
+
 			
 			
 
@@ -1317,7 +1322,7 @@ async function drawinBoxes(ids){
 						callTheGraph(id, true);
 					}else{
 						// Only report the issue of the first Promise error?  Better way to represent errors of each Promise?
-						graphGraphError(id, values[0].error)
+						graphGraphError(id, JSON.stringify(values[0].error))
 					}
 				})
 
@@ -1395,7 +1400,7 @@ async function callTheGraph(id, nudgeChildren){
 
 
 function graphGraphError(id, msg, imagePath="./squares-ui-icons/159687-interface-icon-assets/png/cancel.png"){
-	// ee(" -> graphGraphError ("+id+", "+msg+")");
+	ee(" -> graphGraphError ("+id+", "+msg+")");
 
 	// this isn't a graph type "/graphs/builtin_graphs/error" as it's not permanent, e.g. shouldn't be saved in the URL on load.  It's a temp error
 
@@ -1994,6 +1999,19 @@ function saveMappingsData(dst, indexPattern, value){
 		masterMappings[dst][indexPattern] = {}
 	}
 	masterMappings[dst][indexPattern] = value
+
+}
+
+function getMappingsData(id){
+
+	// ee(" -> "+arguments.callee.name+"("+dst+", "+indexPattern+", ~"+roughSizeOfObject(value)+"Bytes)");
+
+	// var thisGT = retrieveSquareParam(id, "Gt")
+	var thisCH = retrieveSquareParam(id, 'CH', true)
+	var thisDst = connectors.handletox(thisCH, "dst")
+	var thisIndex = connectors.handletox(thisCH, 'indexPattern')
+
+	return masterMappings[thisDst][thisIndex]
 
 }
 
@@ -2976,7 +2994,7 @@ async function initialLoad(){
 			
 			if(connectors.handletox(thisCH, "type") === "elastic"){
 				
-				value = await elastic_prep_mappings(thisDst, thisIndex, id)				
+				value = await elastic_prep_mappings(thisDst, thisIndex, id)		
 				saveMappingsData(thisDst, thisIndex, value)
 				await saveMappingsDataIndexeddb(thisDst, thisIndex, value)
 				
@@ -3105,7 +3123,7 @@ function onLoad(){
 
 
 	if(hash
-		&& re_str.test(hash)
+		&& /^[\w =+\/]+$/.test(hash)
 		&& classOf(JSON.parse(atob(hash)))==="Object" 
 		&& JSON.parse(atob(hash))
 		&& JSON.parse(atob(hash)).hasOwnProperty("squares")

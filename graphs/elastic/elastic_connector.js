@@ -112,8 +112,8 @@ async function elastic_connector(dst, indexPattern, id, query, name){
 		return(responseData)
 
 	} catch (error) {
-		ww(0, arguments.callee.name+" id:"+id+" e:"+error);
-		graphGraphError(id, error)
+		ww(0, arguments.callee.name+" id:"+id+" e:"+JSON.stringify(error));
+		graphGraphError(id, JSON.stringify(error))
 		// return({"id":id, "name":name, "data":null})
 	}
 	
@@ -242,8 +242,8 @@ function deepGetFieldNamesRecursive(obj, tmp, path){
 			deepGetFieldNamesRecursive(val, tmp, path)
 		})
 	}
-	return tmp
-}
+	return tmp}
+
 async function elastic_prep_mappings(dst, indexPattern, id){
 	// scrape index definitions to know what fields exist in the mappings
 	// return all answers grouped by type allowing originating function to filter for results
@@ -282,7 +282,11 @@ async function elastic_prep_mappings(dst, indexPattern, id){
 			return fields
 
 		} catch (error) {
-			ww(0, "arguments.callee.name :"+error);
+			addPageStatus("critical", "Network error connecting to '"+dst+"' have you enabled CORS?")
+			addSquareStatus(id, "critical", "Network error connecting to '"+dst+"' have you enabled CORS?")
+
+			ww(0, "arguments.callee.name :"+JSON.stringify(error));
+			return null
 		}
 }
 
