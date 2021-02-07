@@ -59,9 +59,16 @@ div{
 
 }
 .path_all{
-  	stroke-width:10;
-	stroke-dasharray:9;
+	fill:none;
+	stroke-width:10;
 }
+.path_solid{
+}
+.path_dotted{
+  	stroke-dasharray:9;
+}
+
+
 .bezier_line{
 	stroke: black;
 	stroke-width: 5

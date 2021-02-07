@@ -15,12 +15,10 @@ graphs_functions_json.add_graphs_json({
 
 async function elastic_completeform_calHeatMap(id, targetDiv){
 
-	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
-	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
 
-	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
-	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
-	var thisMappings = await getSavedMappings(dst, indexPattern)
+	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
+	var thisIndex = "*"
+	var thisMappings = await getSavedMappings(thisDst, thisIndex)
 
 	var dropdownFields = []
 
@@ -61,14 +59,16 @@ async function elastic_completeform_calHeatMap(id, targetDiv){
 
 async function elastic_populate_calHeatMap(id){
 	
-	ee(" -> "+arguments.callee.name+"("+id+")");
+	// ee(" -> "+arguments.callee.name+"("+id+")");
+
+	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
+	var thisIndex = "*"
 
 	
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var timesArray = [[from, to]]
 	
-	var Ds = clickObjectsToDataset(id)
 
 	var fields = []
 	_.each(retrieveSquareParam(id,"Cs",true)['array'], function(key,num){
@@ -83,32 +83,107 @@ async function elastic_populate_calHeatMap(id){
 	var handle = retrieveSquareParam(id, 'CH')
 	
 	var filter = combineScriptFilter(id)
-
+	var maxAccuracy = true;
 
 	//######
 
 	var promises = []
 	var handle = retrieveSquareParam(id, 'CH')
 
+
 	var aggBy = "getMonthValue"
-	var query = await elasticQueryBuildderAggScriptDayHour(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, aggBy+"()", false, filter)
-	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, aggBy))
+	// var query = await elasticQueryBuildderAggScriptDayHour(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, aggBy+"()", false, filter)
+	var query = await elasticQueryBuildderToRuleThemAllandOr(
+		id, 
+		timesArray, 
+		limit,
+		incTime,
+		filter,
+		true,
+		aggBy+"()",
+		false,
+		maxAccuracy,
+		fields, 
+		stats, 
+		statField	
+	)
+	promises.push(elastic_connector(thisDst, thisIndex, id, query, aggBy))
 	
+
 	var aggBy = "dayOfWeek"
-	var query = await elasticQueryBuildderAggScriptDayHour(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, aggBy, false, filter)
-	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, aggBy))
+	// var query = await elasticQueryBuildderAggScriptDayHour(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, aggBy, false, filter)
+	var query = await elasticQueryBuildderToRuleThemAllandOr(
+		id, 
+		timesArray, 
+		limit,
+		incTime,
+		filter,
+		true,
+		aggBy,
+		false,
+		maxAccuracy,
+		fields, 
+		stats, 
+		statField	
+	)
+	promises.push(elastic_connector(thisDst, thisIndex, id, query, aggBy))
 	
+
 	var aggBy = "getHour"
-	var query = await elasticQueryBuildderAggScriptDayHour(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, aggBy+"()", false, filter)
-	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, aggBy))
+	// var query = await elasticQueryBuildderAggScriptDayHour(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, aggBy+"()", false, filter)
+	var query = await elasticQueryBuildderToRuleThemAllandOr(
+		id, 
+		timesArray, 
+		limit,
+		incTime,
+		filter,
+		true,
+		aggBy+"()",
+		false,
+		maxAccuracy,
+		fields, 
+		stats, 
+		statField	
+	)
+	promises.push(elastic_connector(thisDst, thisIndex, id, query, aggBy))
 	
+
 	var aggBy = "getMinute"
-	var query = await elasticQueryBuildderAggScriptDayHour(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, aggBy+"()", false, filter)
-	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, aggBy))
+	// var query = await elasticQueryBuildderAggScriptDayHour(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, aggBy+"()", false, filter)
+	var query = await elasticQueryBuildderToRuleThemAllandOr(
+		id, 
+		timesArray, 
+		limit,
+		incTime,
+		filter,
+		true,
+		aggBy+"()",
+		false,
+		maxAccuracy,
+		fields, 
+		stats, 
+		statField	
+	)
+	promises.push(elastic_connector(thisDst, thisIndex, id, query, aggBy))
 	
+
 	var aggBy = "getSecond"
-	var query = await elasticQueryBuildderAggScriptDayHour(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, aggBy+"()", false, filter)
-	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, aggBy))
+	// var query = await elasticQueryBuildderAggScriptDayHour(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, aggBy+"()", false, filter)
+	var query = await elasticQueryBuildderToRuleThemAllandOr(
+		id, 
+		timesArray, 
+		limit,
+		incTime,
+		filter,
+		true,
+		aggBy+"()",
+		false,
+		maxAccuracy,
+		fields, 
+		stats, 
+		statField	
+	)
+	promises.push(elastic_connector(thisDst, thisIndex, id, query, aggBy))
 	
 
 	return Promise.all(promises)

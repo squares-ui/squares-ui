@@ -48,6 +48,7 @@ function graph_templates(id, data){
 
 	var aConnector = false;
 	if(retrieveSquareParam(id, "Pr")==0){
+		qq("Tempate for a connector")
 		aConnector = true;
 	}
 	
@@ -218,7 +219,8 @@ function graph_templates(id, data){
 		.classed("fleft", true)
 		.attr("src", "./images/239_b.png")
 
-	favourites = connectors.handletox(retrieveSquareParam(id, "CH", true), "favourites");
+	
+	var favourites = GLB.favourites
 
 	if(favourites.length>0){
 
@@ -279,50 +281,7 @@ function graph_templates(id, data){
 
 		}
 
-	/////////////////Create a Favourite///////////////////
-	
-	favString = {}
-	favString['uid'] =  String(CryptoJS.MD5(connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")))
-	favString['printable'] = "x"
-	favString['Gt'] = retrieveSquareParam(id,"Gt",true)
-	favString['Cs'] = retrieveSquareParam(id,"Cs",true)
-	
-	clusterSection = square.append("div")
-		.classed("square_cluster_section", true)
-	clusterDiv = clusterSection.append("div")
-		.classed("fleft", true);
-	clusterDiv.append("img")
-		.classed("square_cluster_image", true)
-		.classed("fleft", true)
-		.attr("src", "./images/239_b.png")
-
-	favourites = connectors.handletox(retrieveSquareParam(id, "CH", true), "favourites");
-
-	clusterDiv = clusterSection.append("div")
-		.classed("square_cluster_text", true)
-		.classed("fleft", true);
-
-		clusterDiv.append("div")
-			.classed("square_cluster_text", true)
-			.append("div")
-				.classed("fontsize", true)
-				.text("This square as a Favourite:")
-			.append("div")
-			.append("div")
-				.classed("fontsize", true)
-				.text(JSON.stringify(favString))
-
-	clusterDiv = clusterSection.append("div")
-		.classed("square_cluster_text", true)
-		.classed("fleft", true)
-		
-		clusterDiv.append("div")
-			.attr("id", function(d){ return "square_template_asa_favourite" })
-			
-		
-	
-
-	////////////////////////////////////
+	///////////////////// pivot to a new tab///////////////
 	clusterSection = square.append("div")
 		.classed("square_cluster_section", true)
 	clusterDiv = clusterSection.append("div")
@@ -354,6 +313,53 @@ function graph_templates(id, data){
 
 		$("#square_template_pivot_new_root").append("<input type='button' id='template_pivot_new_root' value='Piot New Tab' />");
 		$("#template_pivot_new_root").bind("click",  function(){  pivotNewTab(id) }  );
+
+
+
+	/////////////////Create a Favourite///////////////////
+	
+	favString = {}
+	
+	favString['printable'] = "x"
+	favString['Gt'] = retrieveSquareParam(id,"Gt",true)
+	favString['Cs'] = retrieveSquareParam(id,"Cs",true)
+	
+	// favString['uid'] =  String(CryptoJS.MD5(connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")))
+	favString['uid'] =  String(CryptoJS.MD5(JSON.stringify(favString)))
+	
+	clusterSection = square.append("div")
+		.classed("square_cluster_section", true)
+	clusterDiv = clusterSection.append("div")
+		.classed("fleft", true);
+	clusterDiv.append("img")
+		.classed("square_cluster_image", true)
+		.classed("fleft", true)
+		.attr("src", "./images/239_b.png")
+
+
+	clusterDiv = clusterSection.append("div")
+		.classed("square_cluster_text", true)
+		.classed("fleft", true);
+
+		clusterDiv.append("div")
+			.classed("square_cluster_text", true)
+			.append("div")
+				.classed("fontsize", true)
+				.text("This square as a Favourite:")
+			.append("div")
+			.append("div")
+				.classed("fontsize", true)
+				.text(JSON.stringify(favString))
+
+	clusterDiv = clusterSection.append("div")
+		.classed("square_cluster_text", true)
+		.classed("fleft", true)
+		
+		clusterDiv.append("div")
+			.attr("id", function(d){ return "square_template_asa_favourite" })
+			
+		
+	
 
 
 

@@ -64,13 +64,15 @@ async function elastic_completeform_rawoutput(id, targetDiv){
 }
 
 
-function elastic_populate_rawoutput(id){
+async function elastic_populate_rawoutput(id){
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+
+	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
+	var thisIndex = "*"
 
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
-	var Ds = clickObjectsToDataset(id)
-
+	var timesArray = [[from, to]]
 
 
 	var fields = [];  // use this to see all fields in raw output
@@ -79,18 +81,38 @@ function elastic_populate_rawoutput(id){
 	var limit = 5;
 	if(retrieveSquareParam(id,"Cs",false) !== undefined){
 		if(retrieveSquareParam(id,"Cs",false)['x_count'] !== undefined){
-			tlimit = retrieveSquareParam(id,"Cs",false)['x_count']
+			limit = retrieveSquareParam(id,"Cs",false)['x_count']
 		}
 	}
 
 	var filter = combineScriptFilter(id)
-	var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
+	// var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
+	var incTime = true
+	var maxAccuracy = true
+	var stats  = false
+	var statField = ""
+
+	// var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
+	var query = await elasticQueryBuildderToRuleThemAllandOr(
+		id, 
+		timesArray, 
+		limit,
+		incTime,
+		filter,
+		false,
+		"",
+		true,
+		maxAccuracy,
+		fields, 
+		stats, 
+		statField	
+	)
 
 	var handle = retrieveSquareParam(id, 'CH')
 	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
 
 	var promises = []
-	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "all"))
+	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all"))
 	return Promise.all(promises)
 
 }

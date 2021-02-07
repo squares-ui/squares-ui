@@ -15,9 +15,9 @@ sankeyLinksLimit = 180
 
 async function elastic_completeform_sankey(id, targetDiv){
 
-	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
-	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
-	var thisMappings = await getSavedMappings(dst, indexPattern)
+	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
+	var thisIndex = "*"
+	var thisMappings = await getSavedMappings(thisDst, thisIndex)
 
 
 	var dropdownFields = []
@@ -114,14 +114,17 @@ async function elastic_completeform_sankey(id, targetDiv){
 }
 
 
-function elastic_populate_sankey(id){
+async function elastic_populate_sankey(id){
 
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
-	
+	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
+	var thisIndex = "*"
+
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
-	var Ds = clickObjectsToDataset(id)
 	
+	var timesArray = [[from, to]]
+
 	// qq(Ds)
 	
 	var fields = []
@@ -132,7 +135,27 @@ function elastic_populate_sankey(id){
 	var limit = 10000;
 	
 	var filter = combineScriptFilter(id)
-	var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
+	var maxAccuracy = true
+	var incTime = true
+	var stats = false
+	var statField = ""
+
+	// var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
+
+	var query = await elasticQueryBuildderToRuleThemAllandOr(
+		id, 
+		timesArray, 
+		limit,
+		incTime,
+		filter,
+		false,
+		"",
+		true,
+		maxAccuracy,
+		fields, 
+		stats, 
+		statField	
+	)
 	
 
 
@@ -141,7 +164,7 @@ function elastic_populate_sankey(id){
 
 	
 	var promises = []
-	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "all"))
+	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all"))
 	return Promise.all(promises)
 
 }

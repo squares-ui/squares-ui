@@ -2,7 +2,7 @@ if(GLB.useStrict){
 	"use strict";
 }
 // SQUARES attributes 
-// Pr = Integer defining Pr square ID
+// Pr = [] of parent ID.  PR[0] = main parents, Pr[1] and onwards are "or" semi parents 
 // id = unique id of square
 // Gt = String, taken from import_graphs()
 // CH = Connection Handle, the name (not type) of the Connection (type can be inferred from this)
@@ -21,6 +21,7 @@ if(GLB.useStrict){
 // Sc = Scale
 // Hx = Hex colour, a way of marking/highlighting on demand, not implemented
 // Fi = Fields scripting (elastic only)
+// 
 
 
 // // Alertify function 
@@ -151,142 +152,150 @@ var graphs_functions_json = {
 }
 
 
-// connectors.handletotype
-var connectors = {
-	// store maintain object of connections (//ip:port) and all the Indexes known at that location
+// // connectors.handletotype
+// var connectors = {
+// 	// store maintain object of connections (//ip:port) and all the Indexes known at that location
 	
-	connectors: [],
-	get_connectors: function(){
-		return this.connectors;	
-	},	
+// 	connectors: [],
+// 	get_connectors: function(){
+// 		return this.connectors;	
+// 	},	
 	
-	add_connector: function(new_connector){
-		// check if Connector is valid JSON, error if not
-		if(new_connector.hasOwnProperty("status") && new_connector.status == "errorLoading"){
-			ww(2, "Error: Loading "+new_connector.key+", permissions or invalid JSON");
-			udpateScreenLog("Error: Loading "+new_connector.key+" ");
-		}else{
-			this.connectors.push(new_connector);
-		}
-	},
+// 	add_connector: function(new_connector){
+// 		// check if Connector is valid JSON, error if not
+// 		if(new_connector.hasOwnProperty("status") && new_connector.status == "errorLoading"){
+// 			ww(2, "Error: Loading "+new_connector.key+", permissions or invalid JSON");
+// 			udpateScreenLog("Error: Loading "+new_connector.key+" ");
+// 		}else{
+// 			this.connectors.push(new_connector);
+// 		}
+// 	},
 
 
-	handletox: function(handle, x){
-		// ee(" -> "+arguments.callee.name+"(handle:"+handle+", x:"+x+")"); 
-		var toReturn = null;
+// 	handletox: function(handle, x){
+// 		// ee(" -> "+arguments.callee.name+"(handle:"+handle+", x:"+x+")"); 
+// 		var toReturn = null;
 		
-		// is the attribute specific to the index, or generic to the connector
+// 		// is the attribute specific to the index, or generic to the connector
 		
-		if(x === "indexDesc" || x === "indexPattern"|| x === "favourites"){
-			var justIndices = _.flatten(_.pluck(this.connectors, 'indices'), true)
-			if(_.where(justIndices, {'handle': handle}).length > 0){
-				toReturn = _.where(justIndices, {'handle': handle})[0][x]
-			}else{
-				toReturn = null;
-			}
-			//return toReturn[x]
+// 		if(x === "dst"){			
+// 			// XXX experiment, dst in URL, not config
+// 			return url.dst
+
+// 		}else if(x === "indexDesc" || x === "indexPattern"|| x === "favourites"){
+// 			var justIndices = _.flatten(_.pluck(this.connectors, 'indices'), true)
+// 			if(_.where(justIndices, {'handle': handle}).length > 0){
+// 				toReturn = _.where(justIndices, {'handle': handle})[0][x]
+// 			}else{
+// 				toReturn = null;
+// 			}
+// 			//return toReturn[x]
 			
-		}else{
-			_.each(this.connectors, function(connector){
-				if(	_.where(connector['indices'], {'handle': handle}).length > 0){
-					toReturn = connector[x]
-				}
-			})
-		}
-		return toReturn
-	},
+// 		}else{
+// 			_.each(this.connectors, function(connector){
+// 				if(	_.where(connector['indices'], {'handle': handle}).length > 0){
+// 					toReturn = connector[x]
+// 				}
+// 			})
+// 		}
+// 		return toReturn
+// 	},
 	
-	indexPatterntox: function(indexPattern, x){
-		// ee(" -> "+arguments.callee.name+"(handle:"+handle+", x:"+x+")"); 
-		var toReturn = null;
+// 	indexPatterntox: function(indexPattern, x){
+// 		// ee(" -> "+arguments.callee.name+"(handle:"+handle+", x:"+x+")"); 
+// 		var toReturn = null;
 		
-		// is the attribute specific to the index, or generic to the connector
+// 		// is the attribute specific to the index, or generic to the connector
 		
-		if(x === "handle" || x === "indexDesc"|| x === "favourites"){
-			var justIndices = _.flatten(_.pluck(this.connectors, 'indices'), true)
-			if(_.where(justIndices, {'indexPattern': indexPattern}).length > 0){
-				toReturn = _.where(justIndices, {'indexPattern': indexPattern})[0][x]
-			}else{
-				toReturn = null;
-			}
+// 		if(x === "handle" || x === "indexDesc"|| x === "favourites"){
+// 			var justIndices = _.flatten(_.pluck(this.connectors, 'indices'), true)
+// 			if(_.where(justIndices, {'indexPattern': indexPattern}).length > 0){
+// 				toReturn = _.where(justIndices, {'indexPattern': indexPattern})[0][x]
+// 			}else{
+// 				toReturn = null;
+// 			}
 			
 			
-		}else{
-			_.each(this.connectors, function(connector){
-				if(	_.where(connector['indices'], {'indexPattern': indexPattern}).length > 0){
-					toReturn = connector[x]
-				}
-			})
-		}
-		return toReturn
-	},
+// 		}else{
+// 			_.each(this.connectors, function(connector){
+// 				if(	_.where(connector['indices'], {'indexPattern': indexPattern}).length > 0){
+// 					toReturn = connector[x]
+// 				}
+// 			})
+// 		}
+// 		return toReturn
+// 	},
 
-	// keytox: function(key, x){
+// 	// keytox: function(key, x){
 
-	// 	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"(index:"+key+", x:"+x+")"); 
+// 	// 	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"(index:"+key+", x:"+x+")"); 
 
-	// 	var toReturn = null;
+// 	// 	var toReturn = null;
 
-	// 	_.each(this.connectors, function(connector){
-	// 		if(key === connector['key']){
-	// 			toReturn = connector[x]
-	// 		}
-	// 	})
+// 	// 	_.each(this.connectors, function(connector){
+// 	// 		if(key === connector['key']){
+// 	// 			toReturn = connector[x]
+// 	// 		}
+// 	// 	})
 
-	// 	return toReturn
-	// },
+// 	// 	return toReturn
+// 	// },
 
-	// Connector is the destination of the server e.g. 192.168.1.1:9200
-	setConnectorAttribute: function(handle, key, value){
-		// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"(handle:"+handle+", key:"+key+", value:"+value+")"); 
+// 	// Connector is the destination of the server e.g. 192.168.1.1:9200
+// 	setConnectorAttribute: function(handle, key, value){
+// 		// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"(handle:"+handle+", key:"+key+", value:"+value+")"); 
 
-		_.each(this.connectors, function(connector){
-			_.each(connector['indices'], function(index){
-				if(index['handle'] === handle){
-					ww(5, "Updating key:"+key+" for:"+connector['key']);
+// 		_.each(this.connectors, function(connector){
+// 			_.each(connector['indices'], function(index){
+// 				if(index['handle'] === handle){
+// 					ww(5, "Updating key:"+key+" for:"+connector['key']);
 					
-					connector[key] = value
-				}
-			})
-		})
-	},
+// 					connector[key] = value
+// 				}
+// 			})
+// 		})
+// 	},
 
-	// handle is the index at that connector e.g. "index:ids"
-	setHandleAttribute: function(handle, key, value){
-		// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"(handle:"+handle+", key:"+key+", value:"+value+")"); 
+// 	// handle is the index at that connector e.g. "index:ids"
+// 	setHandleAttribute: function(handle, key, value){
+// 		// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"(handle:"+handle+", key:"+key+", value:"+value+")"); 
 
-		_.each(this.connectors, function(connector){
-			_.each(connector['indices'], function(index){
-				if(index['handle'] === handle){
-					ww(5, "Updating key:"+key+" for:"+handle);
-					index[key] = value
-				}
-			})
-		})
-	},
+// 		_.each(this.connectors, function(connector){
+// 			_.each(connector['indices'], function(index){
+// 				if(index['handle'] === handle){
+// 					ww(5, "Updating key:"+key+" for:"+handle);
+// 					index[key] = value
+// 				}
+// 			})
+// 		})
+// 	},
 	
 
 
-	// patterntox: function(indexPattern, x){
-	// 	// ee(" -> "+arguments.callee.name+"(indexPattern:"+indexPattern+", x:"+x+")"); 
-	// 	var toReturn = null;
+// 	// patterntox: function(indexPattern, x){
+// 	// 	// ee(" -> "+arguments.callee.name+"(indexPattern:"+indexPattern+", x:"+x+")"); 
+// 	// 	var toReturn = null;
 		
-	// 	// is the attribute specific to the index, or generic to the connector
+// 	// 	// is the attribute specific to the index, or generic to the connector
 		
-	// 	if(x === "handle" ){
+// 	// 	if(x === "handle" ){
 			
-	// 		var justIndices = _.flatten(_.pluck(this.connectors, 'indices'), true)
-	// 		if(_.where(justIndices, {'indexPattern': indexPattern}).length > 0){
-	// 			toReturn = _.where(justIndices, {'indexPattern': indexPattern})[0][x]
-	// 		}
+// 	// 		var justIndices = _.flatten(_.pluck(this.connectors, 'indices'), true)
+// 	// 		if(_.where(justIndices, {'indexPattern': indexPattern}).length > 0){
+// 	// 			toReturn = _.where(justIndices, {'indexPattern': indexPattern})[0][x]
+// 	// 		}
 			
 			
-	// 	}
-	// 	return toReturn
-	// },
+// 	// 	}
+// 	// 	return toReturn
+// 	// },
 
-}
+// }
 	
+
+
+
+
 
 
 
@@ -321,6 +330,8 @@ function wipereset(){
 	// addGraphConnector()
 	// //window.location.reload()
 
+
+
 	url = {}
 	url.v = "1"
 	url.squares =  []
@@ -336,9 +347,6 @@ function wipereset(){
 }
 		
 
-// var squareEdited = 0;
-// var re_str = /^[\w =+\/]+$/;
-// var re_int = /^[\d ]+$/;
 
 // d3 vars,  declared outside a function
 var workspaceDiv;
@@ -361,7 +369,7 @@ var masterMappings = {}
 
 // error status is a state, not a config, so store it here, and not in URL square definition
 var errorStatus = {}
-errorStatus['page'] = {"critical":[], "warning":[]}
+errorStatus['page'] = {"info":[], "critical":[], "warning":[]}
 errorStatus['squares'] = {} // {1: {"critical":[], "warning":[]}, 2:{}}
 
 var linesgroup
@@ -391,6 +399,10 @@ function dragged(d) {
 	// even a click registers as a drag, so check dx/dy (differnce in x/y) to see if movement took place
 	// event.dx isn't the total move dist, it's the move per frame/step
 
+	
+	// qq("--------")
+	// ee(" -> "+arguments.callee.name+"("+d.id+")");
+
 	if(Math.abs(d3.event.dx) > GLB.square.dragSensitivity || Math.abs(d3.event.dy) > GLB.square.dragSensitivity){
 		// var wasMoved = true;
 
@@ -401,13 +413,19 @@ function dragged(d) {
 		d3.select(this.parentNode.parentNode.parentNode.parentNode)
 			.attr("x", function(d,i){
 				var strippedName = parseInt(this.id.replace(/^square_main_/g,""));
-				var parentId = url.squares[squarearraysearch(strippedName)].Pr;
-				d.x = snapToGrid(newcoords[0]-calcCord(parentId, 'x', 0));
+				// var parentId = url.squares[squarearraysearch(strippedName)].Pr[0];
+				var parentId = retrieveSquareParam(strippedName, "Pr", false) ;
+				var newX = snapToGrid(newcoords[0]-calcCord(parentId, 'x', 0));
+				// qq("(dragged) id:"+strippedName+", Pr:"+parentId+", newX:"+newX)
+				d.x = newX
 			})
 			.attr("y", function(d,i){
 				var strippedName = parseInt(this.id.replace(/^square_main_/g,""));
-				var parentId = url.squares[squarearraysearch(strippedName)].Pr;
-				d.y = snapToGrid(newcoords[1]-calcCord(parentId, 'y', 0));
+				// var parentId = url.squares[squarearraysearch(strippedName)].Pr[0];
+				var parentId = retrieveSquareParam(strippedName, "Pr", false) ;
+				var newY = snapToGrid(newcoords[1]-calcCord(parentId, 'y', 0));
+				// qq("(dragged) id:"+strippedName+", Pr:"+parentId+", newY:"+newY)
+				d.y = newY
 			});
 
 		/// for every frame, just redraw local square
@@ -424,7 +442,7 @@ function dragged(d) {
 				loop=false;
 			}
 		}
-		drawLines(redrawList, true);
+		drawLines(redrawList, false);
 		drawSquares(redrawList);	
 	}
 }
@@ -469,14 +487,17 @@ function duplicateSquare(id, newObject){
 
 	// empty the criteria, so we inherit our details from above
 	delete clone.CH;
+	delete clone.Co;
 	delete clone.Gt;
 	delete clone.Gp;
 	delete clone.Wi;
 	delete clone.Ds;
 	delete clone.Cs;
 	delete clone.Fi;
+	delete clone.Pr
 
-	clone.Pr = id;
+	clone.Pr = []
+	clone.Pr.push(id);
 		
 	// merge in the custom fields
 	if(newObject.constructor === Object && Object.keys(newObject).length !== 0 ){
@@ -501,7 +522,7 @@ function duplicateSquare(id, newObject){
 }
 	
 
-function addGraphConnector(handle){
+function addGraphConnector(name){
 	// handle : optional, "CH" from the connector json
 
 	// in UTC
@@ -510,14 +531,14 @@ function addGraphConnector(handle){
 
 	var mo = {
 		
-		"Pr":0,
+		"Pr":[0],
 		"Gt":"EditSquare",
 		"Gp": null,
 		"Wi": [lastBlockEnd,-900,0],
 	}
 
-	if(handle){
-		mo['CH'] = handle
+	if(name){
+		mo['Co'] = name
 	}
 
 	newID = newSquare(mo);
@@ -577,8 +598,8 @@ function newSquare(obj){
 		for (var tmpId in url.squares){
 			var loopX = calcCord(url.squares[tmpId].id, 'x', 0)
 			var loopY = calcCord(url.squares[tmpId].id, 'y', 0)
-			var newX = calcCord(obj['Pr'], 'x', relX)
-			var newY = calcCord(obj['Pr'], 'y', relY)
+			var newX = calcCord(obj['Pr'][0], 'x', relX)
+			var newY = calcCord(obj['Pr'][0], 'y', relY)
 			if(loopX === newX && loopY === newY ){
 				// qq("new square location used")
 				clash = true
@@ -630,37 +651,70 @@ function deleteLines(){
 
 
 
-// Delets
+
 function drawLines(ids, drawBezier){
-	
-	// IN : Array of integers
-	////ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
+	// IN : Array of square IDs to draw for
+	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
 
 	deleteLines();
 
+	var relationships = []
+
+	//map out all relationships
+	_.each(url.squares, function(square){
+
+		if(square.Pr[0] != 0){
+			_.each(square.Pr, function(pr, i){
+				var tags = []
+				// the first parent ID in the array is the "master" 
+				// subsequent parent IDs are "or" parents
+				if(i == 0){
+					tags.push("parent")
+				}
+				relationships.push({"src": square.id, "dst": pr, "tags":tags})
+			})
+		}
+
+	})
+	// qq(relationships) 
+	// [{"src":2,"dst":1,"tags":["parent"]},
+
 	var lines = d3.select("#linegroup")
 	.selectAll(".path_all")
-    	.data(url.squares)
+    	.data(relationships)
 	.enter();
 
 	lines.append("path")
-		.attr("id", function(d){ return "path"+d.id})
-		.attr("class",  function(d){ return getLineCol(d.id)})
+		.attr("id", function(d){ return "path"+d.src})
+		.attr("class",  function(d){ 
+			var classString = ""
+			
+			classString += getLineCol(d.src)
+			
+			classString += " path_all"
+
+			if(_.contains(d.tags, "parent")){
+				classString += " path_solid"
+			}else{
+				classString += " path_dotted"
+			}
+			return classString
+		})
 		.attr("d", function(d){ 
 
 			// http://blogs.sitepointstatic.com/examples/tech/svg-curves/cubic-curve.html
-			var myRelX = calcCord(d.id, 'x', 0);
-			var myRelY = calcCord(d.id, 'y', 0);
+			var myRelX = calcCord(d.src, 'x', 0);
+			var myRelY = calcCord(d.src, 'y', 0);
 			var myBendX = 0;
 			var myBendY = 0;
 			var prBendX = 0;
 			var prBendY = 0;
-			if(retrieveSquareParam(d.id, "Pr") === 0){
-				var prRelX = calcCord(d.id, 'x', 0);
-				var prRelY = calcCord(d.id, 'y', 0);
+			if(d.dst === 0){
+				var prRelX = myRelX;
+				var prRelY = myRelY;
 			}else{
-				var prRelX = calcCord(retrieveSquareParam(d.id, "Pr"), 'x', 0);
-				var prRelY = calcCord(retrieveSquareParam(d.id, "Pr"), 'y', 0);
+				var prRelX = calcCord(d.dst, 'x', 0);
+				var prRelY = calcCord(d.dst, 'y', 0);
 			}	
 			var bendX = 0.4;
 			var bendY = 0.1
@@ -669,7 +723,7 @@ function drawLines(ids, drawBezier){
 			prBendX = prRelX + ((myRelX -prRelX)* bendX);
 			prBendY = prRelY + ((myRelY -prRelY)* bendY);
 
-			if((GLB.drawLineBezier===true || drawBezier===true )&& d.Pr!=0){
+			if((GLB.drawLineBezier===true || drawBezier===true )&& d.dst!=0){
 				//draw the dots for bezier curve
 				// I suppose this could be done in it's own ".append", but then all the abve maths needs doing again?
 				squaregroup
@@ -695,7 +749,7 @@ function drawLines(ids, drawBezier){
 
 			return "M"+myRelX+","+myRelY+" C"+myBendX+","+myBendY+" "+prBendX+","+prBendY+" "+prRelX+","+prRelY
 		})
-		.classed("path_all", true)
+		
 
 	
 	var lineFoWidth	= 350
@@ -703,20 +757,20 @@ function drawLines(ids, drawBezier){
 	var linesfo = lines.append("foreignObject")
 	.classed("squarekey_all", true)	
 		.attr("x", function(d){
-			var myRelX = calcCord(d.id, 'x', 0);
-			if(retrieveSquareParam(d.id, "Pr") === 0){
-				var prRelX = calcCord(d.id, 'x', 0);
+			var myRelX = calcCord(d.src, 'x', 0);
+			if(retrieveSquareParam(d.src, "Pr") === 0){
+				var prRelX = calcCord(d.src, 'x', 0);
 			}else{
-				var prRelX = calcCord(retrieveSquareParam(d.id, "Pr"), 'x', 0);
+				var prRelX = calcCord(retrieveSquareParam(d.src, "Pr"), 'x', 0);
 			}	
 			return (prRelX + myRelX)/2 - (lineFoWidth/2)
 		})
 		.attr("y", function(d){
-			var myRelY = calcCord(d.id, 'y', 0);
-			if(retrieveSquareParam(d.id, "Pr") === 0){
-				var prRelY = calcCord(d.id, 'y', 0);
+			var myRelY = calcCord(d.src, 'y', 0);
+			if(retrieveSquareParam(d.src, "Pr") === 0){
+				var prRelY = calcCord(d.src, 'y', 0);
 			}else{
-				var prRelY = calcCord(retrieveSquareParam(d.id, "Pr"), 'y', 0);
+				var prRelY = calcCord(retrieveSquareParam(d.src, "Pr"), 'y', 0);
 			}	
 			return (prRelY + myRelY)/2
 		})
@@ -724,26 +778,26 @@ function drawLines(ids, drawBezier){
 		.attr("height", "30")
 
 	var linesfodiv = linesfo.append("xhtml:div")
-		.attr("id", function(d){ return "square_lineskey_"+d.id })
+		.attr("id", function(d){ return "square_lineskey_"+d.src })
 		
 		linesfodiv.append("div")
 			.style("text-align", "center")
 			.text(function(d){ 
 				var textOut = []
 				
-				handle = retrieveSquareParam(d.id, "CH", false)
+				handle = retrieveSquareParam(d.src, "CH", false)
 				
 				if(handle){
 					textOut.push(handle)
 				}
 
-				var text = retrieveSquareParam(d.id, 'Ds', false)
+				var text = retrieveSquareParam(d.src, 'Ds', false)
 				if(text !== undefined){
 					
 					out = []
 
 					//obj = _.values(JSON.parse(atob(retrieveSquareParam(d.id, 'Ds', false))))
-					obj = JSON.parse(atob(retrieveSquareParam(d.id, 'Ds', false)))
+					obj = JSON.parse(atob(retrieveSquareParam(d.src, 'Ds', false)))
 					
 					_.each(obj['compare'], function(obj,i){
 						textOut.push(_.values(obj)[0])
@@ -754,7 +808,7 @@ function drawLines(ids, drawBezier){
 					// return out
 				}
 
-				var filter = retrieveSquareParam(d.id,"Fi",false)
+				var filter = retrieveSquareParam(d.src,"Fi",false)
 				if(filter !== undefined){
 					// best effort to tidy it up
 					stripped = filter.replace(/.*'].value./,'')
@@ -765,11 +819,10 @@ function drawLines(ids, drawBezier){
 				return textOut.join(", ")
 			})
 			.on("click", function(d){
-				alert(atob(retrieveSquareParam(d.id, 'Ds')))
+				alert(atob(retrieveSquareParam(d.src, 'Ds')))
 			})
 
 };
-
 
 function squareMouseOver(d, i){
 	// Hide all square menus if you want a cleaner interface?
@@ -788,7 +841,7 @@ function squareMouseOut(d, i){
 // Draw the *container* for each Square
 function drawSquares(idlist) {
 	// IN : Array of integers
-	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(idlist)+")");
+	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(idlist)+")");
 
 	
 	for (var i in idlist){
@@ -805,7 +858,7 @@ function drawSquares(idlist) {
 	.enter().append("g")
 		.attr("id", function(d){ return "square_main_"+ d.id })
 		.classed("square_main", true)
-		.classed("newsquare", true)  //tmp market, don't remove
+		.classed("newsquare", true)  //tmp marker, don't remove
 
 	// foreign object = XML inside a SVG tag
 	// get box-shadow colour first...
@@ -999,15 +1052,24 @@ function drawSquares(idlist) {
 	squaregroup.selectAll(".newsquare")
 		.attr("transform", function(d){
 			
-			var myX = -0.5 * document.getElementById("foreignObject_"+d.id).clientWidth;
-			var myY = -0.5 * document.getElementById("foreignObject_"+d.id).clientHeight;
-			
+
+			// shift is to offset the width/height of the box
+			var shiftX = -0.5 * document.getElementById("foreignObject_"+d.id).clientWidth;
+			var shiftY = -0.5 * document.getElementById("foreignObject_"+d.id).clientHeight;			
 			// XXX MAGIC NUMBER ALERT.... why is this not 50% transform  ????
 			// Meh, works for now (guilt)
-			myX = -400;
-			myY = -350;
+			shiftX = -401;
+			shiftY = -351;
 
-			return "translate("+(calcCord(d.id, 'x', 0)+myX)+", "+(calcCord(d.id, 'y', 0)+myY)+")"
+			var oldX = calcCord(d.id, 'x', 0)
+			shiftedX = oldX + shiftX
+			
+			var oldY = calcCord(d.id, 'y', 0)
+			shiftedY = oldY + shiftY
+			
+			// qq("(drawSquares) id:"+d.id+", X:"+shiftedX+" Y:"+shiftedY)
+			
+			return "translate("+shiftedX+", "+shiftedY+")"
 		})
 	
 	
@@ -1040,7 +1102,7 @@ function addSquareStatus(id, status, tooltip){
 	// this is handled in memory (not url) as it's temp, and shouldnt' be stored
 
 	if(!errorStatus['squares'].hasOwnProperty(id)){
-		errorStatus['squares'][id] = {"critical":[], "warning":[]}
+		errorStatus['squares'][id] = {"info": [], "critical":[], "warning":[]}
 	}
 
 	errorStatus['squares'][id][status] = _.reject(errorStatus['squares'][id][status], function(singleTooltip){
@@ -1093,8 +1155,23 @@ function renderSquareStatus(id){
 		
 		$('#square_status_img_'+id).addClass(cssClass)
 
-		var tooltip = [errorStatus['squares'][id]['critical'].join(", "), errorStatus['squares'][id]['warning'].join(", ")].join(" | ")
-		$('#square_status_img_'+id).prop('title', tooltip)
+		// var tooltip = [errorStatus['squares'][id]['critical'].join(", "), errorStatus['squares'][id]['warning'].join(", "), errorStatus['squares'][id]['info'].join(", ")].join(", ")
+
+		var allMsgs = []
+		_.each(errorStatus['squares'][id]['critical'], function(msg){
+			allMsgs.push(msg)
+		})
+		_.each(errorStatus['squares'][id]['warning'], function(msg){
+			allMsgs.push(msg)
+		})
+		_.each(errorStatus['squares'][id]['info'], function(msg){
+			allMsgs.push(msg)
+		})
+
+		$('#square_status_img_'+id).prop('title', allMsgs.join(", "))
+
+		//oppurtunistic return
+		return allMsgs
 	}
 	
 }
@@ -1240,7 +1317,7 @@ async function drawinBoxes(ids){
 		// keep times in epoch, but adjut for this user
 		// no need to apply our timezone offset agaisnt thisWe, as moment already does that for us
 		var thisWe = (calcGraphTime(id) );
-		var thisWs = retrieveSquareParam(id, "Ws");
+		var thisWs = retrieveSquareParam(id, "Ws", true);
 		var sInDay = 60*60*24;
 		// draw the time frames at the bottom of the box
 		var momentFormat = ''
@@ -1262,20 +1339,20 @@ async function drawinBoxes(ids){
 		var theData = await getSavedData(id, "processed", "")
 
 		var thisGT = retrieveSquareParam(id, "Gt")
-		var thisCH = retrieveSquareParam(id, 'CH', true)
-		var thisDst = connectors.handletox(thisCH, "dst")
-		var thisIndex = connectors.handletox(thisCH, 'indexPattern')
+		// var thisCH = retrieveSquareParam(id, 'CH', true)
+		// var thisDst = connectors.handletox(thisCH, "dst")
+		// var thisIndex = connectors.handletox(thisCH, 'indexPattern')
 
 		if(theResult && theData && retrieveSquareParam(id, "Gt")!=="intro"){
 			// Hash checks out, and data exists
-			qq("drawinBoxes("+id+"): hash checks out and processed data exists")
+			// qq("drawinBoxes("+id+"): hash checks out and processed data exists")
 			callTheGraph(id, true);
 
-		}else if (getMappingsData(id) == null){
-			graphGraphError(id, "Network error connecting to '"+thisDst+"',<br>Have you enabled CORS?<br>Have you enabled inbound 9200?")
+		// }else if (getMappingsData(id) == null){
+			// graphGraphError(id, "Network error connecting to '"+thisDst+"':<br /># Have you enabled CORS?<br /># Have you enabled inbound 9200? <br /># Check 'https://github.com/squares-ui/squares-ui' for instructions.")
 		
 		}else{
-			qq("drawinBoxes("+id+"): hash fail or no data")
+			// qq("drawinBoxes("+id+"): hash fail or no data")
 
 			// delete all saved data, , get raw data, save it, raw_to_processed, save it,
 			deleteStoredData([id])
@@ -1290,27 +1367,59 @@ async function drawinBoxes(ids){
 			
 
 			// raw to processed
-			window[graphs_functions_json.retrieveGraphParam(connectors.handletox ( thisCH, "type"), thisGT , "populate") ](id)
+			window[graphs_functions_json.retrieveGraphParam("elastic", thisGT , "populate") ](id)
+			
 				.then(async function(values){
 			
 					var dataToProgess = false
 					_.each(values, function(value){						
+						
 						if(value['data'] !== null){
+							
+							// qq(value)
+							
+							// set a marker that something was found
+							dataToProgess = true
+
+							// save the raw data?
 							if(GLB.saveRawData == true){
 								saveNewData(value.id, "raw", value.name, value.data)
 							}
-							dataToProgess = true
-
+							
+							// set square health status
 							if(value.hasOwnProperty("status") && value['status'].length > 0){
 								addSquareStatus(id, "warning", value['status'])
 							}
+
+							if(value['data'].hasOwnProperty("hits") && value['data']['hits']['total']['value'] == 10000){
+								addSquareStatus(id, "warning", "Max hit count reached (10,000)")
+							}
+
+							// add basic stats to the graph
+							if(value['data'].hasOwnProperty("took")){
+								addSquareStatus(id, "info", "took "+value['data']['took']+"ms")
+							}
+
+							if(value['data'].hasOwnProperty("hits")){
+								addSquareStatus(id, "info", value['data']['hits']['total']['value']+" hits")
+							}
+							
+							
+							if(value['data'].hasOwnProperty("aggregations")){
+								aggTotal = 0
+								_.each(value['data']['aggregations']['time_ranges']['buckets'], function(bucket){
+									aggTotal += bucket['doc_count']
+								})
+								addSquareStatus(id, "info", aggTotal+" aggs")
+							}
+
 						}
 					})
 					
 					// Does data exist?  Or maybe the graph requires no Promises (e.g. UpdateCountdown)
 					if(dataToProgess || values.length==0){
 						thisGT = retrieveSquareParam(id, "Gt")
-						thisType = connectors.handletox( thisCH, "type")
+						thisType = "elastic"
 						// qq("drawing '"+graphs_functions_json.retrieveGraphParam(thisType, thisGT , "rawtoprocessed")+"' for id:"+id)
 						procData = await window[graphs_functions_json.retrieveGraphParam(thisType, thisGT , "rawtoprocessed") ](id, values)
 						
@@ -1341,7 +1450,7 @@ async function callTheGraph(id, nudgeChildren){
 
 
 	// call the function that is defined as "graph" for the graph type of this square
-	var theDynamicGraphFunction = graphs_functions_json.retrieveGraphParam(connectors.handletox ( retrieveSquareParam(id, 'CH'), "type"), retrieveSquareParam(id, "Gt") , "graph");
+	var theDynamicGraphFunction = graphs_functions_json.retrieveGraphParam("elastic", retrieveSquareParam(id, "Gt") , "graph");
 	
 	//qq("for id:"+id+" graph type is "+theDynamicGraphFunction)
 
@@ -1353,7 +1462,7 @@ async function callTheGraph(id, nudgeChildren){
 		// qq(graphs_functions_json.retrieveGraphParam(connectors.handletox( retrieveSquareParam(id, 'CH'), "type"), retrieveSquareParam(id, "Gt") , "requireThreeJS"))
 		// qq("checked 3d: "+id)
 
-		if(graphs_functions_json.retrieveGraphParam(connectors.handletox( retrieveSquareParam(id, 'CH'), "type"), retrieveSquareParam(id, "Gt") , "requireThreeJS") == true && GLB.threejs.enabled == false){
+		if(graphs_functions_json.retrieveGraphParam("elastic", retrieveSquareParam(id, "Gt") , "requireThreeJS") == true && GLB.threejs.enabled == false){
 			// ThreeJS not enabled in config file
 			
 			graphGraphError(id, "Square Type '"+retrieveSquareParam(id, "Gt")+"' requires ThreeJS enabling in config")
@@ -1400,7 +1509,7 @@ async function callTheGraph(id, nudgeChildren){
 
 
 function graphGraphError(id, msg, imagePath="./squares-ui-icons/159687-interface-icon-assets/png/cancel.png"){
-	ee(" -> graphGraphError ("+id+", "+msg+")");
+	// ee(" -> graphGraphError ("+id+", "+msg+")");
 
 	// this isn't a graph type "/graphs/builtin_graphs/error" as it's not permanent, e.g. shouldn't be saved in the URL on load.  It's a temp error
 
@@ -1424,13 +1533,13 @@ function graphGraphError(id, msg, imagePath="./squares-ui-icons/159687-interface
 	var square = squareContainer
 		.append("div") 
 			.attr("id", function(d){ return "square_error_"+d.id })
-			.text(msg)
+			.html(msg)
 		.on("mousedown", function() { d3.event.stopPropagation(); });
 	
 }
 
 
-function graphAboutMe(id){
+async function graphAboutMe(id){
 	// AboutMe is a momentary thing and should redefine what the square is
 	// so this is handled as a function, and not a graph type
 
@@ -1453,7 +1562,27 @@ function graphAboutMe(id){
 			.attr("id", function(d){ return "square_aboutme_"+d.id })
 			.classed("square_aboutMe", "true")				
 			.on("mousedown", function() { d3.event.stopPropagation(); })
-				
+
+	// hits = await getSavedData(id, "raw", "all")
+	// // qq(hits)
+	// if(hits){
+	// 	hits = hits['hits']['total']['value']
+	// }else{
+	// 	hits = 0
+	// }
+
+	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_header'>Hits:</div");
+	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>"+hits+"</div");
+	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>Note: Refers to all hits, whether they match the requiremtns of this graph type or not.</div");
+	// $("#square_aboutme_"+id).append("<div class='clr'></div>");
+
+	
+	$("#square_aboutme_"+id).append("<div class='square_aboutMe_header'>Square Status:</div");
+	$("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>"+hits+"</div");
+	$("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>Note: Refers to all hits, whether they match the requiremtns of this graph type or not.</div");
+	$("#square_aboutme_"+id).append("<div class='clr'></div>");
+
+
 	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_header'>Square ID:</div");
 	// $("#square_aboutme_"+id).append("<div class='square_aboutMe_body'>#"+id+"</div");
 	// $("#square_aboutme_"+id).append("<div class='clr'></div>");
@@ -1514,12 +1643,9 @@ function clearSquareBody(id){
 
 
 
-
-
-
 function udpateScreenLog(newMsg){
 
-	if (document.location.href.indexOf('scripted_fields.html') === -1){ 
+	// if (document.location.href.indexOf('scripted_fields.html') === -1){ 
 
 		// trim too many logs and add enw log
 		if(screenLog.length>GLB.screenLogMax){
@@ -1532,7 +1658,7 @@ function udpateScreenLog(newMsg){
 
 		// scroll div to bottom
 		$("#screenLog").scrollTop($("#screenLog")[0].scrollHeight);
-	}
+	// }
 }
 
 
@@ -1613,10 +1739,10 @@ function cloneChildren(caller, target){
 	var tmpHighestSquareID = highestSquareID();
 	for(var i in newArray){
 		// update immediate children of target to now be children of caller
-		if(newArray[i].Pr === target){
-			newArray[i].Pr = caller;
+		if(newArray[i].Pr[0] === target){
+			newArray[i].Pr[0] = caller;
 		}else{
-			newArray[i].Pr += tmpHighestSquareID;
+			newArray[i].Pr[0] += tmpHighestSquareID;
 		}
 		newArray[i].id += tmpHighestSquareID;
 
@@ -1647,7 +1773,8 @@ function importSquareFavourite(id, uid){
 		
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+uid+")");
 
-	var favourites = connectors.handletox(retrieveSquareParam(id, "CH", true), "favourites");
+	//var favourites = connectors.handletox(retrieveSquareParam(id, "CH", true), "favourites");
+	var favourites = GLB.favourites
 
 	// need to pass in uid and id
 	var favourite = _.where(favourites, {"uid": uid})[0]
@@ -1727,13 +1854,13 @@ function getLineCol(id){
 
 //	item = url.squares[squarearraysearch(id)];
 	
-	if( retrieveSquareParam(id, 'We') != null ){
+	if( retrieveSquareParam(id, 'We', false) != null ){
 		// Time not null);
 		return "line_colour_one";
-	}else if( retrieveSquareParam(id, 'Ds') != null ){
+	}else if( retrieveSquareParam(id, 'Ds', false) != null ){
 		// DataSet not null
 		return "line_colour_two";
-	}else if( retrieveSquareParam(id, 'Gt') !=""){  
+	}else if( retrieveSquareParam(id, 'Gt', false) !=""){  
 		// Graph type has changed
 		return "line_colour_three";
 	}else{
@@ -1747,11 +1874,20 @@ function getLineCol(id){
 function squarearraysearch(id){
 	// IN : Integer of ID
 	// OUT : Integer location of ID in main array
+	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+
+	
+	var failedMatches = []
+	
 	for(var i in url.squares){
 		if (url.squares[i].id===id){
+			// qq("squarearraysearch match id:"+id+" at squareId:"+url.squares[i].id+" i:"+i)
 			return i;
+		// }else{
+			// failedMatches.push("("+typeof(url.squares[i].id)+")"+url.squares[i].id+"!=("+typeof(id)+")"+id)
 		}
 	}
+	// qq("squarearraysearch no match "+failedMatches.join(" | "))
 	return 0;
 }
 
@@ -1816,6 +1952,10 @@ function deleteChain(id, deleteID){
 		deleteChildSquare(id);
 	}
 	
+	
+	// todo XXX need to go through square "Pr" removing "or" links to me
+
+
 	drawLines(everyID(), false);
 	updateurl();
 	
@@ -1908,6 +2048,38 @@ function findAllChildren(id){
 }
 
 
+function findAllParentPaths(id){
+	// IN : integer ID
+	// OUT : multiple arrays, eachis a different path to root, [[4,3,2,1],[5,2,1],]
+
+	return findAllParentPathsRecursive(retrieveSquareParam(id, "Ps", false), [], [])
+
+
+}
+
+
+
+function findAllParentPathsRecursive(ids, currentPath, masterReturn){
+
+	_.each(ids, function(id){
+
+		currentPath.push(id)
+
+
+
+
+	})
+
+
+
+}	
+
+function addRemoteDataSourceToCookie(id){
+
+	newConnectors($("#square_remoteDataSource_name_"+id).val(), $("#square_remoteDataSource_dst_"+id).val(), $("#square_remoteDataSource_type_"+id).val(), $("#square_remoteDataSource_templates_"+id).val())
+
+
+}
 
 
 //******************************************************************
@@ -1940,7 +2112,7 @@ var getSavedData = Dexie.async(function* (id, keyType, keyName) {
 		}
 
 	} catch (error) {
-		qq("XXXX getSavedData :"+error);
+		ww(0, "getSavedData :"+error);
 	}
 
 })
@@ -1952,7 +2124,7 @@ var saveNewData = Dexie.async(function* (id, keyType, keyName, value) {
 	try {
 		yield db.squares.put({squareid: id, keyType: keyType, keyName:keyName, data: value})                
 	} catch (error) {
-		qq("XXXX saveNewData :"+error);
+		ww(0, "saveNewData :"+error);
 	}
 
 })
@@ -1965,7 +2137,7 @@ var deleteSavedData = Dexie.async(function* (id, keyType, keyName) {
 	try {
 		yield db.squares.get({squareid: id, keyType: keyType, keyName: keyName})
 	} catch (error) {
-		qq("XXXX deleteSavedData :"+error);
+		ww(0, "deleteSavedData :"+error);
 	}
 })
 
@@ -1975,7 +2147,7 @@ var deleteStoredData = Dexie.async(function* (ids) {
 	try {
 		yield db.squares.where('squareid').anyOf(ids).delete()
 	} catch (error) {
-		// qq("XXXX deleteStoredData :"+error);
+		// ww(0, "deleteStoredData :"+error);
 	}
 })
 
@@ -1989,7 +2161,7 @@ function deleteAllStoredData(){
 
 function saveMappingsData(dst, indexPattern, value){
 
-	// ee(" -> "+arguments.callee.name+"("+dst+", "+indexPattern+", ~"+roughSizeOfObject(value)+"Bytes)");
+	ee(" -> "+arguments.callee.name+"("+dst+", "+indexPattern+", ~"+roughSizeOfObject(value)+"Bytes)");
 
 	// global var method
 	if(!masterMappings.hasOwnProperty(dst)){
@@ -2020,7 +2192,7 @@ var saveMappingsDataIndexeddb = Dexie.async(function* (dst, indexPattern, value)
 	try {
 		yield dbMappings.squaresMappings.put({dst: dst, indexPattern: indexPattern, data: value})
 	} catch (error) {
-		qq("XXXX saveMappingsDataIndexeddb :"+error);
+		ww(9, "saveMappingsDataIndexeddb :"+error);
 	}
 
 })
@@ -2037,11 +2209,68 @@ var getSavedMappings = Dexie.async(function* (dst, indexPattern, incSummaries = 
 			return _.omit(bob['data'], "fieldTypes", "allFields", "keywordFields")
 		}
 	} catch (error) {
-		qq("XXXX getSavedMappings :"+error);
+		ww(9, "getSavedMappings :"+error);
 	}
 })
 
 
+
+
+
+var newConnectors  = Dexie.async(function* (name, dst, type, templates) {
+	// ee(" -> "+arguments.callee.name+"("+dst+", "+indexPattern+", ~"+roughSizeOfObject(value)+"Bytes)");
+	try {
+		yield dbConnectors.dbConnectors.put({name: name, dst: dst, type: type, templates:templates})
+	} catch (error) {
+		ww(0, "newConnectors :"+error);
+	}
+
+})
+
+var getAllSavedConnectors = Dexie.async(function* () {
+	
+	try {
+		var bob = yield dbConnectors.dbConnectors.toArray()
+		return bob
+
+	} catch (error) {
+		ww(0, "getAllSavedConnectors :"+error);
+	}
+
+})
+
+
+var deleteConnectors = Dexie.async(function* (name) {
+	// ee("deleteSavedData ("+id+", "+keyType+")"); 
+	try {
+		yield dbConnectors.dbConnectors.where('name').anyOf(name).delete()
+	} catch (error) {
+		ww(0, "deleteConnectors :"+error);
+	}
+})
+
+
+var nameToConnectors = Dexie.async(function* (name) {
+	// ee("getSavedMappings ("+dst+", "+indexPattern+")"); 
+	try {
+		var bob = yield dbConnectors.dbConnectors.get({name: name})
+		return bob
+		
+	} catch (error) {
+		ww(9, "nameToConnectors :"+error);
+	}
+})
+
+var nameToConnectorAttribute = Dexie.async(function* (name, attr) {
+	// ee("getSavedMappings ("+dst+", "+indexPattern+")"); 
+	try {
+		var bob = yield dbConnectors.dbConnectors.get({name: name})
+		return bob[attr]
+		
+	} catch (error) {
+		ww(9, "nameToConnectors :"+error);
+	}
+})
 
 
 function createSquareHash(id){
@@ -2056,8 +2285,11 @@ function createSquareHash(id){
 
 	clone["We"] = calcGraphTime(id)
 	clone["Ws"] = retrieveSquareParam(id, "Ws")
-	clone["Dst"] = connectors.handletox(thisCH, "dst")
-	clone["indexPattern"] = connectors.handletox(thisCH, 'indexPattern')
+	
+	// clone["Dst"] = connectors.handletox(thisCH, "dst")
+	// clone["indexPattern"] = connectors.handletox(thisCH, 'indexPattern')
+	clone["Co"] = retrieveSquareParam(id, "Co", true)
+	// clone["indexPattern"] = connectors.handletox(thisCH, 'indexPattern')
 
 
 	return String(CryptoJS.MD5(JSON.stringify(clone)))
@@ -2072,7 +2304,14 @@ function createSquareHash(id){
 function setSquareParam(id, key, value, redraw){
 	// Should really use this more...
 
-	url.squares[squarearraysearch(id)][key] = value;
+	if(key == "Pr"){
+		//shift to remove the first ID
+		url.squares[squarearraysearch(id)][key].shift()
+		url.squares[squarearraysearch(id)][key].unshift(value)
+
+	}else{
+		url.squares[squarearraysearch(id)][key] = value;
+	}
 
 	updateIDs =  [id].concat(findAllChildren(id));
 	
@@ -2090,9 +2329,27 @@ function setSquareParam(id, key, value, redraw){
 
 
 // Find attribute of a Square. Look up for inheritence if needed
-function retrieveSquareParam(id, key, recursive){
+function retrieveSquareParam(id, key, recursive, recursiveCount){
 	// IN : Integer, string (what attribute)
 	// OUT : value
+	// ee(" -> "+arguments.callee.name+"("+id+", "+key+", "+recursive+", "+recursiveCount+")");
+	// if(arguments.callee.caller){ ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+key+", "+recursive+")") }else{ ee(" -> "+arguments.callee.name+"("+id+", "+key+", "+recursive+")") }
+	
+	if(!recursiveCount){
+		recursiveCount=0
+		// qq("recursive count now 0")
+	}else{
+		recursiveCount = recursiveCount+1
+		
+		if(recursiveCount>20){
+			ww(0, "recCount exceeded")
+			return
+		}
+
+		// qq("recur count = "+recursiveCount)
+	}
+	
+
 
 	if(recursive === null || recursive === undefined){
 		recursive = true;
@@ -2109,12 +2366,13 @@ function retrieveSquareParam(id, key, recursive){
 	// default to recisrive lookups
 
 	
-	if(item.hasOwnProperty("Pr") && item.Pr === 0){
+	if(item.hasOwnProperty("Pr") && item.Pr[0] === 0){
 		// first square, can only inherit from taskbar, no recursive queries allowed
+		// ww(4, "answer for root square")
+
 		switch(key){
 
 			case "We":
-			
 				// if(typeof item['Wi'] != 'undefined' && item['Wi'].length>0 && item['Wi'][0]<0){
 				// 	// negative value means relative to URL
 				// 	return parseInt(item['Wi'][0]) + parseInt(url.ca.end);
@@ -2128,7 +2386,8 @@ function retrieveSquareParam(id, key, recursive){
 			case "Ws":
 				// if(typeof item['Wi'] != 'undefined' && item['Wi'].length>1){
 				// 	// reply
-					return parseInt(item['Wi'][1]);
+				
+				return parseInt(item['Wi'][1]);
 				// }else{
 					// deduce from URL alone (this should be created/validated on page load)
 					//  return (-1 * (url.ca.end - url.ca.start));
@@ -2145,7 +2404,6 @@ function retrieveSquareParam(id, key, recursive){
 				//ww(6, "Pr=0 returning CK="+url.squares[i]['CK']+" from url");
 				return item['CH'];
 
-
 			case "Ds":
 				//ww(6, "Pr=0 returning Ds="+url.Ds+" from url");
 				return item['Ds'];
@@ -2153,10 +2411,15 @@ function retrieveSquareParam(id, key, recursive){
 			case "Gt":
 				//ww(6, "Pr=0 returning graphtype=Info from url");
 				return item['Gt'];
+
 			case "Hx":
 				//ww(6, "Pr=0 returning graphtype=Info from url");
 				return "ffffff";
 		
+			case "Co":
+				//ww(6, "Pr=0 returning Ds="+url.Ds+" from url");
+				return item['Co'];
+
 			case "x":
 			case "y":
 				// if x or Y is missing, presume 0.  Helps cut down on URL size a inty bit
@@ -2166,21 +2429,22 @@ function retrieveSquareParam(id, key, recursive){
 					return item[key];
 				}
 
-			default:
+			case "Pr":
+				return item['Pr'][0];
 
-			
+			default:
 
 				if(typeof item[key] != undefined){
 					//qq("returning "+item[key])
-					return item[key];
-				
+					return item[key];				
 				}else{
 					return null;
 				}
 		}
 
-	}else if( (recursive === false  && !/^(raw|processed)data/.test(key) )   || ['Pr', 'Ds', 'x', 'y', 'Sc'].indexOf(key) >= 0){
+	}else if( (recursive === false  && !/^(raw|processed)data/.test(key) )   || ['Pr', 'Ps', 'Ds', 'x', 'y', 'Sc'].indexOf(key) >= 0){
 		// query is for non-data, and something that shouldn't be inherited
+		// ww(4, "answer non recursive")
 
 		switch(key){
 			case "Sc":
@@ -2211,31 +2475,36 @@ function retrieveSquareParam(id, key, recursive){
 					return null
 				}				
 
-			
+			case "Pr":
+				return item['Pr'][0];			
+
+			case "Ps":
+				return item['Pr'];	
+
 			default:
 				// if not specified, use default return
 				if(typeof item[key] != undefined){
-					//qq("returning "+item[key])
-					return item[key];
-
-					
-
-					
+					// qq("returning "+item[key])
+					return item[key];					
 				}else{
+					// qq("returning "+item[key])
 					return null;
+
 				}
 		}	
 
 
 	}else{
 		// data or inheritable attribute, recursive queries permitted
+		// ww(4, "answer recursive")
+		
 
 		switch(key){
 			case "We":
 				if(typeof item['Wi'] != 'undefined'  && !ISNAN(item["Wi"][0])){
 					return item["Wi"][0];
 				}else{
-					return retrieveSquareParam(item.Pr, key, true);
+					return retrieveSquareParam(item.Pr[0], key, true, recursiveCount);
 				}
 				
 			case "Ws":
@@ -2243,14 +2512,14 @@ function retrieveSquareParam(id, key, recursive){
 				if(typeof item['Wi'] != 'undefined' && !ISNAN(item["Wi"][1]) ){
 						return item["Wi"][1];
 					}else{
-						return retrieveSquareParam(item.Pr, key, true);
+						return retrieveSquareParam(item.Pr[0], key, true, recursiveCount);
 					}
 				
 			case "Wr":
 				if(typeof item['Wi'] != 'undefined' && !ISNAN(item["Wi"][2]) ){
 					return item["Wi"][2];
 				}else{
-					return retrieveSquareParam(item.Pr, key, true);
+					return retrieveSquareParam(item.Pr[0], key, true, recursiveCount);
 				}
 				
 			
@@ -2261,13 +2530,19 @@ function retrieveSquareParam(id, key, recursive){
 			case "Hx":
 			case "Cs":
 			case "Fi":
+			case "Co":
 				if(classOf(item[key]).match(/(String|Number|Object|Array)/)){
 					return item[key];
 				}else{
-					return retrieveSquareParam(item.Pr, key,true);
+					return retrieveSquareParam(item.Pr[0], key, true, recursiveCount);
 				}
 		
+			case "Pr":
+				return item['Pr'][0];
 
+			case "Ps":
+				// Ps = ParentS = all parent, including "or" parents
+				return item['Pr'];
 
 			default:
 				// can't case switch regex (easily) so....
@@ -2394,16 +2669,32 @@ function calcGraphTime___old(id, key, cumulative){
 // calculate cumulitive x or Y coordinate looking at parents position
 function calcCord(id, xory, cumulative){
 
-	////ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+xory+", "+cumulative+")");
+	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+xory+", "+cumulative+")");
+	// ee(" -> "+arguments.callee.name+"("+id+", "+xory+", "+cumulative+")");
 	// IN : Integer, String (which x or y value), Integer of current relative cord
 	// OUT : Integer
 
-	// if asking about id===0 you reached the top, no more to calculate.
-	if(id===0){
-		return cumulative;
+
+
+	// if ID is listed as 0, or null then yiou are being asked about a ghost. 
+	if(id === 0 || !id ){
+		// qq("parent === 0")
+		return cumulative 
+
 	}else{	
-		cumulative += parseInt(retrieveSquareParam(id, xory));
-		return calcCord(retrieveSquareParam(id, "Pr"), xory, cumulative);
+		var addToCumulative = parseInt(retrieveSquareParam(id, xory, false));
+		// qq("add to cumulative "+addToCumulative)
+		cumulative = cumulative + addToCumulative 
+
+		var theResult = calcCord(retrieveSquareParam(id, "Pr", false), xory, cumulative);
+		
+		// qq("theResult = "+theResult)
+		if(theResult){
+			return theResult
+		}else{
+			// qq("urg")
+			return cumulative
+		}
 	}
 
 }
@@ -2429,7 +2720,7 @@ function calcDs(id, cumulative){
 				var parsed = JSON.parse(atob(url.squares[i].Ds))
 				cumulative.push(parsed);
 			}
-			return calcDs(url.squares[i].Pr, cumulative);
+			return calcDs(url.squares[i].Pr[0], cumulative);
 		}
 	}
 	
@@ -2452,6 +2743,22 @@ function highestSquareID(){
 	return highest;
 }
 
+// Find next ID for a square (as it's an array not an object)
+function squareIDExist(id){
+	// IN : null
+	// OUT : Integer
+	
+	var found = false
+	
+	for(var i in url.squares){
+		if(url.squares[i].id == id){
+			found = true
+		}
+	}
+	
+	return found;
+}
+
 
 async function editNewConnector(id){
 
@@ -2459,14 +2766,14 @@ async function editNewConnector(id){
 	ww(7, "Connecter #"+id+" changed");
 
 	var item = url.squares[squarearraysearch(id)];
-	item.Pr = 0;
+	item.Pr = [0];
 	
-	// qq($("#square_connector_dropdown_"+id).val())
 
-
-
-	if($("#square_index_dropdown_"+id).val()){
-		item.CH = $("#square_index_dropdown_"+id).val()
+	// remote data connector source name
+	delete item.CH
+	delete item.Co
+	if($("#square_co_dropdown_"+id).val()){
+		item.Co = $("#square_co_dropdown_"+id).val()
 	}
 
 	var tz = new Date().getTimezoneOffset();  // in minutes
@@ -2495,16 +2802,20 @@ async function editNewConnector(id){
 	// add originating ID back in
 	updateDataList.push(id);	
 
-	thisCH = retrieveSquareParam(id, 'CH', true)	
+	// thisCH = retrieveSquareParam(id, 'CH', true)	
 
 	// do it here on load, also do it during new square creation
 	// elastic_version(thisCH)
-	thisDst = connectors.handletox(thisCH, "dst")
-	thisIndex = connectors.handletox(thisCH, 'indexPattern')
-
+	
+	
 	drawLines(everyID(), false);  //line colours have changed
 	drawSquares(updateDataList);
 
+	
+	thisCo = await nameToConnectors(retrieveSquareParam(id, 'Co', true))
+	thisDst = thisCo['dst']
+	thisType = thisCo['type']
+	thisIndex = "*"
 
 	var value = await elastic_prep_mappings(thisDst, thisIndex, id)				
 	saveMappingsData(thisDst, thisIndex, value)
@@ -2538,8 +2849,10 @@ function editSquare(id){
 	// OUT : na (but calls other functions
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
+	qq(retrieveSquareParam(id, 'Pr', false))
+	qq(retrieveSquareParam(id, 'Ps', false))
 	var item = url.squares[squarearraysearch(id)];
-
+	qq(item)
 
 	// delete entire Window sub object
 	delete item.Wi;
@@ -2571,6 +2884,28 @@ function editSquare(id){
 	// now handle "custom" flags, fields that are bespoke to that graph type
 	// should always start with "x_" which tells us to put this under "Cs"
 	delete item.Cs;
+
+
+
+	// deal with "additional" "or" parents. 
+	if($('#square_Ps_input_'+id).val() != ""){
+		// qq("edit square parents combined  item.Pr:"+JSON.stringify(item.Pr)+" + "+$('#square_Ps_input_'+id).val())
+	
+		var additionalParents = $.map($('#square_Ps_input_'+id).val().split(','), function(value){
+			// only accept square IDs that exist on the page right now
+			if(squareIDExist(value)){
+				return parseInt(value, 10);			
+			}else{
+				return null
+			}
+		});
+
+		item.Pr = $.merge([item.Pr[0]],  additionalParents)
+	}else{
+		// qq("edit square parents single : "+JSON.stringify([item.Pr[0]]))
+		item.Pr = [item.Pr[0]]
+	}
+
 
 	// ## This might get ugly.  JsonForm compiles a report on "submit" but we don't use their Submit method
 	// to move to JsonForm submit means rewriting ediqSquare to be 1 big form = big job = not today
@@ -2614,10 +2949,6 @@ function editSquare(id){
 	});
 
 
-
-
-
-	
 
 
 	// if we've edited the square, every square beneath us needs redrawing with inherited atributes
@@ -2851,13 +3182,16 @@ function pivotNewTab(id){
 	})
 
 
+	
+
 	newSquare = {}
 	newSquare.id = 1
-	newSquare.Pr = 0
+	newSquare.Pr = [0]
 	newSquare.Gt = "DescribeSquare"
-	newSquare.CH = retrieveSquareParam(id, "CK")
+	newSquare.CH = retrieveSquareParam(id, "CH")
 	newSquare.Wi = [to, size]
 	newSquare.Ds = btoa(JSON.stringify(postDs))
+	newSquare.Fi = combineScriptFilter(id)
 	
 	newUrl = {}
 	newUrl.v = "1"
@@ -2953,19 +3287,19 @@ function compileGraphs(){
 
 function compileConnectors(){
 	// get all connectors and add to the overlay
-	$.get( "./compile_connectors.php", function( data ) {
-		$.each(data, function(k, v) {
-			connectors.add_connector(v)
-		})
+	// $.get( "./compile_connectors.php", function( data ) {
+	// 	$.each(data, function(k, v) {
+	// 		connectors.add_connector(v)
+	// 	})
 		
-		// XXX needs improving - move to resolve? 
-		// Only do initial load if this is the main squares-page
-		if (document.location.href.indexOf('scripted_fields.html') === -1){ 
-			// compileGraphs and conmpileConnectors finished (moved this functionality to promises???
+	// 	// XXX needs improving - move to resolve? 
+	// 	// Only do initial load if this is the main squares-page
+	// 	// if (document.location.href.indexOf('scripted_fields.html') === -1){ 
+	// 		// compileGraphs and conmpileConnectors finished (moved this functionality to promises???
 			initialLoad();
-		}
+		// }
 				
-	});
+	// });
 
 }
 
@@ -2973,26 +3307,28 @@ async function initialLoad(){
 
 	tmpEveryID = everyID()
 
-	ww(5,"***PageLoad drawLines ***");
+	// ww(5,"***PageLoad drawLines ***");
 	drawLines(tmpEveryID, false);
 
-	ww(5,"***PageLoad drawSquares ***");
+	// ww(5,"***PageLoad drawSquares ***");
 	drawSquares(tmpEveryID);
 
 
-	ww(5,"***Prepare Mappings ***");
+	// ww(5,"***Prepare Mappings ***");
 	for(var i in tmpEveryID){
 		
 		var id = tmpEveryID[i]
 		
 		// only get Mappings if the square has a connector handle (i.e. not inherinting squares)
-		if(retrieveSquareParam(id, 'CH', false)){
+		if(retrieveSquareParam(id, 'Co', false)){
 
 			thisCH = retrieveSquareParam(id, 'CH', true)
-			thisDst = connectors.handletox(thisCH, "dst")
-			thisIndex = connectors.handletox(thisCH, 'indexPattern')
+			thisCo = await nameToConnectors(retrieveSquareParam(id, 'Co', true))
+			thisDst = thisCo['dst']
+			thisType = thisCo['type']
+			thisIndex = "*"
 			
-			if(connectors.handletox(thisCH, "type") === "elastic"){
+			if(thisType === "elastic"){
 				
 				value = await elastic_prep_mappings(thisDst, thisIndex, id)		
 				saveMappingsData(thisDst, thisIndex, value)
@@ -3006,7 +3342,7 @@ async function initialLoad(){
 		}
 	
 	}
-	ww(5,"***PageLoad drawinBoxes***");
+	// ww(5,"***PageLoad drawinBoxes***");
 	drawinBoxes(tmpEveryID);
 
 	
@@ -3088,8 +3424,10 @@ function onLoad(){
 
 	});
 
-
-
+	dbConnectors = new Dexie("dbConnectors");
+	dbConnectors.version(1).stores({
+		dbConnectors: "name, dst, type, templates"
+	});
 
 	//////////////////////////////
 	// squares-ui / d3 stuff
@@ -3148,25 +3486,32 @@ function onLoad(){
 		url.v = "1"
 		url.squares =  [{
 					"id": 1,
-					"Pr": 0,
+					"Pr": [0],
 					"Gt": "intro",
 					"Wi": [],
 					"x": -800,
-					"y": -50
+					"y": -800
 				}, {
 					"id": 2,
-					"Pr": 1,
+					"Pr": [1],
 					"Gt": "intro",
 					"Wi": [],
-					"x": 1100,
-					"y": 200
+					"x": 950,
+					"y": 50
 				}, {
 					"id": 3,
-					"Pr": 1,
+					"Pr": [1],
 					"Gt": "intro",
 					"Wi": [],
-					"x": 200,
-					"y": 1100
+					"x": 250,
+					"y": 1200
+				}, {
+					"id": 4,
+					"Pr": [3],
+					"Gt": "intro",
+					"Wi": [],
+					"x": 900,
+					"y": 50
 				}
 			]
 		url['Zt'] = "translate(1530,863) scale(0.57)"
@@ -3345,4 +3690,91 @@ function onLoad(){
 
 
 
+}
+
+
+
+async function tim(){
+
+	id = 12
+		//// basic
+		// id: 12
+		// timesArray: [[epoch, epoch], [], ]
+		// limit: 1000
+		// incTime: true
+		// filter: "doc['@timestamp'].value.getMonth()"
+		
+		//// aggs
+		// aggsTerm: boolean
+		// aggsTermTime: "getMonth()"
+		// aggsRanges: boolean 
+		// aggsRangesInput: <<uses timeArray as input>>
+		
+		// maxAccuracy: boolean
+		// fields: ["copntinent.name", "city.name", ""]	
+		// stats: true
+		// statField: "destination.port"
+
+
+
+	var query = await elasticQueryBuildderToRuleThemAllandOr(
+		id, 
+		[[1612472400,1612558800]], 
+		1,
+		true,
+		"doc['@timestamp'].value.getMonth().getValue()==2",
+		
+		true,
+		"getMonth()",
+		false,
+		
+		true,
+		["destination.geo.continent_name", "destination.geo.region_name", "destination.geo.city_name"], 
+		true, 
+		"destination.port"	
+	)
+	
+	// return query
+	// qq(query['query']['must'])
+	
+
+}
+
+
+
+function tim2(){
+
+	var tim = [{
+		"term": {
+			"destination.geo.continent_name.keyword": "North America"
+		}
+	}, {
+		"term": {
+			"destination.geo.region_name.keyword": "California"
+		}
+	}, {
+		"term": {
+			"destination.geo.city_name.keyword": "Mountain View"
+		}
+	}, {
+		"term": {
+			"destination.geo.continent_name.keyword": "North America"
+		}
+	}, {
+		"term": {
+			"destination.geo.region_name.keyword": "California"
+		}
+	}, {
+		"term": {
+			"destination.geo.continent_name.keyword": "North America"
+		}
+	}]
+	
+	qq("----")
+
+	qq(tim)
+
+	qq("----")
+
+	qq(_.uniq(tim))
 }

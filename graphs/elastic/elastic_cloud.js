@@ -20,9 +20,9 @@ async function elastic_completeform_cloud(id, targetDiv){
 	// promise.all appears to be the best way.  Construct the list of promises that will each master the jsonform{}
 
 
-	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
-	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
-	var thisMappings = await getSavedMappings(dst, indexPattern)
+	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
+	var thisIndex = "*"
+	var thisMappings = await getSavedMappings(thisDst, thisIndex)
 
 
 	var dropdownFields = []
@@ -62,16 +62,16 @@ async function elastic_completeform_cloud(id, targetDiv){
 }
 
 
-function elastic_populate_cloud(id){
+async function elastic_populate_cloud(id){
 	
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
+	var thisIndex = "*"
 
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var timesArray = [[from, to]]
 
-	var Ds = clickObjectsToDataset(id)
-	
 	
 	//var fields = [];  // use this to see all fields in raw output
 	//var fields = ["@timestamp", "type", "client_ip", "method", "port", "server_response"];
@@ -83,14 +83,34 @@ function elastic_populate_cloud(id){
 	var incTime = true
 	var urlencode = false
 	var filter = combineScriptFilter(id)
+	var maxAccuracy = true
 
-	var query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, filter)
+	// var query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, filter)
+	
+	var query = await elasticQueryBuildderToRuleThemAllandOr(
+		id, 
+		timesArray, 
+		limit,
+		incTime,
+		filter,
+		false,
+		"",
+		true,
+		maxAccuracy,
+		fields, 
+		stats, 
+		statField	
+	)
+
+
+
+
 	var handle = retrieveSquareParam(id, 'CH')
 	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
 
 	
 	var promises = []
-	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "all"))
+	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all"))
 	return Promise.all(promises)
 
 }

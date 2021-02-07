@@ -13,11 +13,12 @@ graphs_functions_json.add_graphs_json({
 
 async function populate_describesquare(id){
 
+	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
+	var thisIndex = "*"
+
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var timesArray = [[from, to]]
-
-	var Ds = clickObjectsToDataset(id)
 
 	var fields = []
 
@@ -30,9 +31,25 @@ async function populate_describesquare(id){
 
 	var promises = []
 	var handle = retrieveSquareParam(id, 'CH')
+	var maxAccuracy = true
 
-	query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, filter)
-	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "all") )
+	// query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, filter)
+	var query = await elasticQueryBuildderToRuleThemAllandOr(
+		id, 
+		timesArray, 
+		limit,
+		incTime,
+		filter,
+		false,
+		"",
+		true,
+		maxAccuracy,
+		fields, 
+		stats, 
+		statField	
+	)
+
+	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all") )
 	
 	return Promise.all(promises)
 
@@ -44,7 +61,7 @@ function process_describesquare(id, data){
 	
 }
 
-function graph_describesquare(id, data){
+async function graph_describesquare(id, data){
 
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
@@ -66,7 +83,8 @@ function graph_describesquare(id, data){
 	if(retrieveSquareParam(id, "Pr")==0){
 		aConnector = true;
 	}
-	
+	var thisCo = await nameToConnectors(retrieveSquareParam(id, 'Co', true))
+
 
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(id)+") aConnector="+aConnector);
 
@@ -96,7 +114,7 @@ function graph_describesquare(id, data){
 				.classed("square_cluster_text", true)
 				.append("div")
 					.classed("fontsize", true)
-					.text(connectors.handletox(retrieveSquareParam(id, "CH"), 'indexDesc'));
+					.text(thisCo['name']);
 
 
 					

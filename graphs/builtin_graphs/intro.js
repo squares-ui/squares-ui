@@ -18,13 +18,15 @@ async function populate_intro(id){
 	await deleteStoredData([id])
 
 	promises = []
-	if(id==3){
-		_.each(connectors.get_connectors(), function(connector){
+	if(id==4){
+		_.each(await getAllSavedConnectors(), function(connector){
 			var dst = connector['dst']
-			_.each(connector['indices'], function(index){
-				promises.push(elastic_test_connector(id, dst, index['indexPattern']) )
+			var name = connector['name']
+			
+			// _.each(connector['indices'], function(index){
+				promises.push(elastic_test_connector(id, name, dst) )
 
-			})
+			// })
 		})
 	}
 	
@@ -35,48 +37,49 @@ async function populate_intro(id){
 }
 
 
+// id:1 = "welcome to squares"
+// id:2 = how to, github link
+// id:3 = add ip:port
+// id:4 = list, stats, delete ip:port
+
 
 function process_intro(id, data){
 	//qq(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(id)+")");
 
-	if(id==3){
-	
+	if(id==4){
 		
-			var dataout = []
+		var dataout = []
+		
+		// this function runs once per connector installed, each time updating with latest info
+		_.each(data, function(dstResults){
+			miniObj = {}
+
+			miniObj['name'] = dstResults['name']
+			miniObj['dst'] = dstResults['dst']
+			miniObj['type'] = dstResults['type']
+
+			if(dstResults['data'].hasOwnProperty('took')){
+
+				miniObj['status'] = "Yes"
+				miniObj['hits'] = dstResults['data']['hits']['total']['value']
+
+			}else{
+				
+				miniObj['status'] = dstResults['data']['error']
+				miniObj['hits'] = "-"
+			}
 			
-			// this function runs once per connector installed, each time updating with latest info
-			_.each(data, function(indexResults){
-				miniObj = {}
-				miniObj['indexPattern'] = indexResults['name']
-				
+			dataout.push(miniObj)
+		})
 
-				if(indexResults['data'].hasOwnProperty('took')){
-					miniObj['status'] = "Success"
-					
-					miniObj['hits'] = indexResults['data']['hits']['total']['value']
-					// if(indexResults['data']['hits']['total']['value'] != 0){
-					// 	
-					// }else{
-					// 	miniObj['hits'] = "0"
-					// }
-
-				}else{
-					miniObj['status'] = indexResults['error']
-					miniObj['hits'] = "-"
-				}
-				
-				dataout.push(miniObj)
-			})
-
-				
-			return dataout
-		
-	}else{
+			
+		return dataout
+			}else{
 		return "empty"
 	}
 }
 
-function graph_intro(id, data){
+async function graph_intro(id, data){
 
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(id)+")");
 
@@ -122,8 +125,7 @@ function graph_intro(id, data){
 				.classed("fontsize", true)
 				// .html(bodies[id])
 				
-				
-	
+			
 	if(id == 1){
 		
 		thisString = `
@@ -139,7 +141,7 @@ function graph_intro(id, data){
 			<a href='https://github.com/squares-ui/squares-ui'>Link</a>
 		`	
 		
-		$("#square_bodyhtml_"+id).html(thisString);
+		theBody.html(thisString);
 
 
 	}else if(id == 2){
@@ -162,40 +164,84 @@ function graph_intro(id, data){
 			<div class='fleft'><h2>Repeat this process exploring your data.</h2></div>
 			<div class='clr'></div>
 		`
-		$("#square_bodyhtml_"+id).html(thisString);
+		theBody.html(thisString);
 	
 	}else if(id == 3){
+		
+		theBody.append("div").html("<h1>Add remote location:</h1>")
+
+		// name
+		theBody.append("div").html("<h3>Name (unique):</h3>")
+		theBody.append("div").append("input").attr("id", function(d){ return "square_remoteDataSource_name_"+d.id })
+				
+		// dst
+		theBody.append("div").html("<h3>Please enter the ip:port of your elastic server</h3>")
+		theBody.append("div").append("input").attr("id", function(d){ return "square_remoteDataSource_dst_"+d.id }).attr("placeholder", "e.g. 192.168.0.1:9200")
+		
+		// type
+		theBody.append("div").html("<h3>Type:</h3>")
+		theBody.append("div").append("select").attr("id", function(d){ return "square_remoteDataSource_type_"+d.id })
+		$('#square_remoteDataSource_type_'+id).append($('<option>', { 
+			value: "elastic",
+			text : "elastic"
+		}));	
+
+		// // favs / imports / templates
+		// theBody.append("div").html("<h3>Type:</h3>")
+		// theBody.append("div").append("select").attr("id", function(d){ return "square_remoteDataSource_templates_"+d.id })
+		// $('#square_remoteDataSource_templates_'+id).append($('<option>', { 
+		// 	value: "so-*",
+		// 	text : "Security Onion (all)"
+		// }));					
+			
+		
+
+		
+		// submit
+		theBody.append("div").html("<input type='button' value='Add' onclick='addRemoteDataSourceToCookie("+id+"); reloadData([4])' />");
+
+		theBody.append("div").classed("clr", true).html("<br>")
+
+		theBody.append("div").html("<h1>About:</h1>")
+		theBody.append("div").html("<h3>These server details are saved in IndexedDB (local to your browser). API data requests originate from your browser, and not the server.  This allows you to explore data held in private servers (i.e. not publicly routable)</h3>")
+	
+	}else if(id == 4){
 
 
-		var header = d3.select("#square_bodyhtml_"+id).append("div").html("<h1>Connectors Check</h1><br>")
+		var header = theBody.append("div").html("<h1>Remote data locations</h1><br>")
 		
-		if(data.length < 1){
-			d3.select("#square_bodyhtml_"+id).append("div").html("<h1>No Connectors were defined.  Please check <html>/connectors/*.json <br><br>Please complete &lt;all_fields&gt;</h1><br>")
-			return
-		}
+		// if(data.length < 1){
+		// 	theBody.append("div").html("<h1>No Connectors were defined.  Please check <html>/connectors/*.json <br><br>Please complete &lt;all_fields&gt;</h1><br>")
+		// 	return
+		// }
 		
-		d3.select("#square_bodyhtml_"+id).append("div").html("<h3>A look at the configured connectors and whether we can connect and find data.</h1><br>")
+		theBody.append("div").html("<h3>A look at the configured connectors and whether we can connect and find data.</h1><br>")
 		
-		var table  = d3.select("#square_bodyhtml_"+id).append("table")
+		var table  = theBody.append("table")
 			.classed("tablesorter", true)
 			.attr("id", "square_"+id+"_table")
 
 		var header = table.append("thead").append("tr");
 		header
 			.selectAll("th")
-			.data(["indexPattern", "Connected", "Data", ""])
+			.data(["Name", "Connection", "Hits", "Pivot", "Del"])
 			.enter()
 			.append("th")
 			.text(function(d) { return d; });
 
 		$("#square_"+id+"_table").append("<tbody></tbody");
 		_.each(data, function(obj,i){
+			
+			var newImg = "<img style='width:32px; margin-left:32px' class='squaresmenuslot fleft squaresmenu_addconnector' onclick='addGraphConnector(\""+obj['name']+"\")' alt='showConnectors' title='Create new Connector' />"
+			var deleteImg = "<img style='width:32px; margin-left:32px' class='squaresmenuslot fleft square_menu_icon_delete' onclick='deleteConnectors(\""+obj['name']+"\"); reloadData([4])' alt='showConnectors' title='Create new Connector' />"
+			
+			if(obj['hits'] > 0){
+				var thisHits = "Yes"
+			}else{
+				var thisHits = "No"
+			}
 
-
-
-			var img = "<img style='width:32px; margin-left:32px' class='squaresmenuslot fleft squaresmenu_addconnector' onclick='addGraphConnector(\""+connectors.indexPatterntox(obj['indexPattern'], "handle")+"\")' alt='showConnectors' title='Create new Connector' />"
-
-			$("#square_"+id+"_table").find('tbody').append("<tr><td>"+obj['indexPattern']+"</td><td>"+obj['status']+"</td><td>"+obj['hits']+"</td><td>"+img+"</td><tr>");
+			$("#square_"+id+"_table").find('tbody').append("<tr><td>"+obj['name']+"</td><td>"+obj['status']+"</td><td>"+thisHits+"</td><td>"+newImg+"</td><td>"+deleteImg+"</td><tr>");
 
 		})
 
@@ -206,8 +252,19 @@ function graph_intro(id, data){
 
 		// thisString = "asdasd"
 		// $("#square_bodyhtml_"+id).html(thisString);
+		
+		
+	
+	
+	
+	
 	}	
 
+
+
+
+
 }
+
 
 

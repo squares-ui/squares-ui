@@ -14,10 +14,9 @@ graphs_functions_json.add_graphs_json({
 
 async function elastic_completeform_piechart(id, targetDiv){
 
-	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
-	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
-	var thisMappings = await getSavedMappings(dst, indexPattern)
-
+	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
+	var thisIndex = "*"
+	var thisMappings = await getSavedMappings(thisDst, thisIndex)
 
 	var dropdownFields = []
 	
@@ -75,26 +74,27 @@ async function elastic_completeform_piechart(id, targetDiv){
 		],
 		"value":{}
 	}	
-
-	if(retrieveSquareParam(id,"Cs",false) !== undefined){
+	
+	var thisCs = retrieveSquareParam(id,"Cs",false)
+	if(thisCs !== undefined){
 		
 		jsonform.value = {}
 		jsonform.value['x_arr'] = []
-		if(retrieveSquareParam(id,"Cs",false)['array'] !== null ){
-			_.each(retrieveSquareParam(id,"Cs",false)['array'], function(key,num){
+		if(thisCs['array'] !== null ){
+			_.each(thisCs['array'], function(key,num){
 				jsonform.value['x_arr'].push({"field": key})
 			})
 		}else{
 			jsonform.value['x_arr'].push({})
 		}
 		
-		if(retrieveSquareParam(id,"Cs",false)['x_null']){
+		if(thisCs['x_null']){
 			jsonform.form[1]['value'] = 1
 			
 		}
 
-		if(retrieveSquareParam(id,"Cs",false)['x_scale']){
-			jsonform.form[2]['value'] = retrieveSquareParam(id,"Cs",false)['x_scale']
+		if(thisCs['x_scale']){
+			jsonform.form[2]['value'] = thisCs['x_scale']
 		}
 
 	}else{
@@ -105,27 +105,23 @@ async function elastic_completeform_piechart(id, targetDiv){
 		jsonform.form[1]['value'] = 1
 
 		jsonform.form[2]['value'] = "log"
-
-
 	}
 
 
 	$(targetDiv).jsonForm(jsonform)
 
-
-
-
 }
 
 
-function elastic_populate_piechart(id){
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+async function elastic_populate_piechart(id){
+	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+
+	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
+	var thisIndex = "*"
 
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var timesArray = [[from, to]]
-
-	var Ds = clickObjectsToDataset(id)
 
 	var fields = []
 	_.each(retrieveSquareParam(id,"Cs",true)['array'], function(key,num){
@@ -138,6 +134,7 @@ function elastic_populate_piechart(id){
 	var incTime = true
 	var urlencode = false
 	var filter = combineScriptFilter(id)
+	var maxAccuracy = true
 
 	// var handle = retrieveSquareParam(id, 'CH')
 	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
@@ -145,8 +142,27 @@ function elastic_populate_piechart(id){
 	var promises = []
 	var handle = retrieveSquareParam(id, 'CH')
 
-	query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, filter)
-	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "all") )
+	// query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, filter)
+
+
+	var query = await elasticQueryBuildderToRuleThemAllandOr(
+		id, 
+		timesArray, 
+		limit,
+		incTime,
+		filter,
+		false,
+		"",
+		true,
+		maxAccuracy,
+		fields, 
+		stats, 
+		statField	
+	)
+
+
+
+	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all") )
 	
 	return Promise.all(promises)
 

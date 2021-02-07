@@ -1,46 +1,333 @@
-
-
 //////////////////////////////////////////
 //////////////////////////////////////////
-/// supporing functions
+/// Functions to build the complex Elastic queries
 //////////////////////////////////////////
 //////////////////////////////////////////
 
-// function elastic_version(handle){
-// 	// API calls differ, this helps code adjust
 
-// 	var dst = connectors.handletox(handle, "dst")
 
-// 	$.ajax({
-// 		type: "GET",
-// 		contentType: "application/json",
-// 		url: 'http://'+dst+'/',
-// 		dataType: "json",
+async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, incTime, filter, aggsTerm, aggsTermTime, aggsRanges, maxAccuracy, fields, stats, statField){
+	ee(" -> "+arguments.callee.name+"("+id+")");
+	
+	//// basic
+	// id: 12
+	// timesArray: [[epoch, epoch], [], ]
+	// dataset: {"compare":{}, "notcompare":{}}
+	// orNest: {}
+	// limit: 1000
+	// incTime: true
+	// filter: "doc['@timestamp'].value.getMonth()"
+	
+	//// aggs
+	// aggsTerm: boolean
+	// aggsTermTime: "getMonth()"
+	// aggsRanges: boolean 
+	// aggsRangesInput: <<uses timeArray as input>>
+	
+	// maxAccuracy: boolean
+	// fields: ["copntinent.name", "city.name", ""]	
+	// stats: true
+	// statField: "destination.port"
+
+	if(aggsTerm && aggsRanges){
+		alert("elasticQueryBuildderToRuleThemAllandOr: pick aggsTerm || aggsRanges")
+		return
+	}
+
+	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
+	var indexPattern = "*"	  
+	var thisMappings = await getSavedMappings(thisDst, indexPattern, true)
+
+
+
+	// initate recursive loop with empty data
+	allPaths = elasticNestCalculator(retrieveSquareParam(id, "Ps", false), [], [])
+
+	// intersection to find the IDs that appears in every path (typically the first x, and the last x)
+	commonSquares = _.intersection.apply(_, allPaths)
+	commonSquares.push(id)
+	// qq(commonSquares)  // =>   [1,2]
+
+
+	// find squares unique to a path
+	orPaths = []
+	_.each(allPaths, function(path){
+		orPaths.push(_.difference(path, commonSquares))
+	})
+	// qq(orPaths) // => [[3,4],[5,6]]
+	
+
+
+	////////////////////////////////
+	// create basics
+	////////////////////////////////
+	var query = 
+	{
+		"query":{
+			"bool":{
+				"must":[],
+				"must_not":[]
+				
+			}
+		},
+		"aggs":{
+			"time_ranges":{}
+		},
+		"size": limit
+	}
+
+
+	////////////////////////////////
+	// add query time ranges as the first Must
+	////////////////////////////////
+
+	// only add times if this query is being used by Squares.  If we are building a query for pivot, don't include this
+	if(incTime == true){
+		jsonTimeRanges = []
+		_.each(timesArray, function(timeRange){
+			var from = moment.unix(timeRange[0]).format()
+			var to = moment.unix(timeRange[1]).format()
+
+			// Add time ranges to the SHOULD
+			var shouldObj = {"range":{"@timestamp":{}}}
+			shouldObj['range']['@timestamp']['gte'] = from
+			shouldObj['range']['@timestamp']['lt'] = to
+			jsonTimeRanges.push(shouldObj)
+		})
+		query.query.bool.must.push({"bool": {"minimum_should_match": 1,"should": jsonTimeRanges}})
+	}
+
+	
+	////////////////////////////////
+	// add common Must comments (typically the first, or last, squares in the chain)
+	////////////////////////////////
+	_.each(commonSquares, function(id){
+		// the Must for all squares
+		var thisDs = retrieveSquareParam(id, "Ds", false)
+		if(thisDs){
+			thisDs = JSON.parse(atob(thisDs))
+			if(thisDs.hasOwnProperty("compare")){
+				_.each(thisDs['compare'], function(comp){
+					query.query.bool.must.push(elasticPrepKeyword(_.keys(comp)[0], _.values(comp)[0], thisMappings))
+				})
+			}
+		}
+
+		// the Must_not for all squares
+		var thisDs = retrieveSquareParam(id, "Ds", false)
+		if(thisDs){
+			thisDs = JSON.parse(atob(thisDs))
+			if(thisDs.hasOwnProperty("notexist")){
+				_.each(thisDs['notexist'], function(comp){
+					query.query.bool.must_not.push({"exists": {"field": comp}})
+				})
+			}
+		}
+
+		// filters
+		var thisFi = retrieveSquareParam(id, "Fi", false)
+		if(thisFi){
+			query.query.bool.filter = {"script": {"script":thisFi}}
+		}
+
+	})
+	
+
+	////////////////////////////////
+	// aggs, by time range (inbetween dates) or by time term (e.g. group by day of week)
+	////////////////////////////////
+	if(aggsTerm){
+		query.aggs.time_ranges = {
+			"terms": {
+				"size": GLB.dftAggregationSize,
+				"script": {
+					"source": "doc['@timestamp'].value."+aggsTermTime
+				}
+			}
+		}
+
+	}else if(aggsRanges){
+
+		query.aggs.time_ranges = {
+			"range": {
+				"field": "@timestamp",
+				"ranges": []
+			}
+		}
+		_.each(timesArray, function(timeRange){
+			var from = moment.unix(timeRange[0]).format()
+			var to = moment.unix(timeRange[1]).format()
+			// also add time ranges to the aggregate bucket sizes
+			var aggObj = {"from":from, "to":to}
+			query['aggs']['time_ranges']['range']['ranges'].push(aggObj)
+	
+		})
+	}
+
+	
+	////////////////////////////////
+	// AGGS
+	////////////////////////////////
+	if(fields.length>0){
+		var agg = {}
+		var node = agg
+		for(var i = 0 ; i < fields.length ; i++){
+
+			node['field'] = {}
+			node['field']['terms'] = {}
+
+			if(await hasFieldKeyword(id, fields[i])){
+				node['field']['terms']['field'] = (fields[i]+".keyword")
+			}else{
+				node['field']['terms']['field'] = fields[i]
+			}
+
+
+			node['field']['terms']['size'] = 20
+			if(maxAccuracy){
+				node['field']['terms']['size'] = 2147483647	
+			}
+
+			if(fields.length > i+1){
+				// more fields, go deeper
+				// qq(fields.length +">"+ (i + 1))
+				node['field']['aggs'] = {}
+				node = node['field']['aggs']
+
+			}else if(stats == true){
+				// final field, append agg stats
+				// qq("'else' "+fields.length+ ", i:"+(i+1))
+
+				node['field']['aggs'] = {}
+				node['field']['aggs']['stats'] = {}
+				node['field']['aggs']['stats']['extended_stats'] = {}
+				node['field']['aggs']['stats']['extended_stats']['field'] = statField
+			}else{
+				// do nothing more?
+			}
+
+		}
+		query['aggs']['time_ranges']['aggs'] = agg
+	}
+
+	////////////////////////////////
+	// add "or" data querues, typically in the middle of square chains
+	////////////////////////////////
+	var theBigOr = {"bool":{"minimum_should_match": 1,"should": []}}
+	
+	_.each(orPaths, function(path){
+		
+		// qq("validating or:"+JSON.stringify(path))
+
+		var thisOr = {"bool":{ }}
+
+		_.each(path, function(id){
+			// qq("validating id:"+id)
+			var thisDs = retrieveSquareParam(id, "Ds", false)
+			
+			if(thisDs){
+				thisDs = JSON.parse(atob(thisDs))
+
+				// qq("----")
+				// qq(id)
+				// qq(thisDs)
+				if(thisDs.hasOwnProperty("compare")){
+					thisOr.bool.must = []
+					_.each(thisDs['compare'], function(comp){
+						thisOr.bool.must.push(elasticPrepKeyword(_.keys(comp)[0], _.values(comp)[0], thisMappings))
+					})
+				}
+
+				if(thisDs.hasOwnProperty("notexist")){
+					thisOr.bool.must_not = []
+					_.each(thisDs['notexist'], function(comp){
+						thisOr.bool.must_not.push({"exists": {"field": comp}})
+					})
+				}
+			}
+
+
+			var thisFi = retrieveSquareParam(id, "Fi", false)
+			if(thisFi){
+				thisOr.bool.filter = {"script": {"script":thisFi}}
+			}
+
+		})
+
+
+		theBigOr.bool.should.push(thisOr)
+
+
+	})
+	query.query.bool.must.push(theBigOr)
+
+	return query
+}
+
+
+
+
+function elasticNestCalculator(PrIds, path, theReturn){
+
+	// PrIds = [] or all parent Ids (master parent, and "or" parents)
+	// calculate arrays for each path to root square
+	// then _.intersection() for "common" requirements
+
+	_.each(PrIds, function(prId){
+		
+		path.push(prId)
+		
+		//is this prID a root?
+		var theParent = retrieveSquareParam(prId, "Pr", false)
+		if(theParent == "0" || !theParent){
+			// top of square, commit path and return
+			
+			theReturn.push(path)
+			
+			return theReturn
+
+		}else{
+			// keep going up
+			elasticNestCalculator(retrieveSquareParam(prId, "Ps", false), path, theReturn)
+			path = [];
+		}
+
 		
 
-// 		success: function (response) {
-// 			// ww(1, "setting elasticVersion for handle:"+handle)
-// 			connectors.setConnectorAttribute(handle, "elasticVersion", response['version']['number'])
-// 		},
-// 		error: function (xhr, status) {
-// 			switch(status) {
-// 				case 404: 
-// 					udpateScreenLog(dest+' 400: Malfored Query'); 
-// 					break; 
-// 				case 500: 
-// 					udpateScreenLog(dest+' Server error'); 
-// 					break; 
-// 				case 0: 
-// 					udpateScreenLog(dest+' Request aborted'); 
-// 					break; 
-// 				default: 
-// 					graphGraphError(id, "Connection timeout? CORS?")	
-// 					udpateScreenLog(dest+' Unknown error ' + status); 	
-// 					break
-// 			}
-// 		}
-//     });	
-// }
+	})
+
+	// an array of paths back to root square
+	// [[11,8,3,2,1],[10,9,3,2,1],[5,2,1],[6,4,2,1],[7,4,2,1]]
+	return theReturn
+	
+
+}
+
+function elasticPrepKeyword(key, val, mappings){
+	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+key+", "+val+")");
+	var miniObj = {}
+	if(_.contains(mappings.keywordFields, key)){
+		miniObj[key+".keyword"] = val			
+	}else{
+		miniObj[key] = val
+	}	
+	miniObj = {"term": miniObj}
+	
+	// miniObj = {"term": {"key.keyword":"value"}}
+	return miniObj;
+}
+
+
+
+
+
+//////////////////////////////////////////
+//////////////////////////////////////////
+///  Elastic API AJAX Post
+//////////////////////////////////////////
+//////////////////////////////////////////
+
+
 
 
 async function elastic_connector(dst, indexPattern, id, query, name){
@@ -70,6 +357,7 @@ async function elastic_connector(dst, indexPattern, id, query, name){
 			// Check if 1d aggs exist
 			if(response.hasOwnProperty("aggregations")){
 				aggsPass = false
+				
 				_.each(response.aggregations.time_ranges.buckets, function(bucket){
 					// check if 2d aggs exist
 					if(bucket.hasOwnProperty("field")){
@@ -100,7 +388,7 @@ async function elastic_connector(dst, indexPattern, id, query, name){
 			}else{			
 				// throw "No Results Matching this Visualisation"
 				responseData['data'] = null
-				responseData['error'] = "Nothing to render "
+				responseData['error'] = "Nothing to render"
 			}
 		
 		}else{
@@ -121,61 +409,116 @@ async function elastic_connector(dst, indexPattern, id, query, name){
 }
 
 
-
-function clickObjectsToDataset(id, compare, notexist){
-	// input array of compare/notexist from square and all parents
-	// return a nice object
+function elastic_test_connector(id, name, dst){
+	// query for 0 records, but see if we can connect, used for health testing
 	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
-	var prettyObject = {}
-	prettyObject['compare'] = []
-	prettyObject['notexist'] = []
+	var query = {"size":0, "_source":[]}
 
-	//qq(retrieveSquareParam(id,"Cs",true))
+	var queryBodyJSON = JSON.stringify(query);
 	
-	
-	
-	var cumulative = calcDs(id, [])
-	
-	
-	// loop each square's dataset
-	_.each(cumulative, function(obj, i){
+	return new Promise((resolve, reject) => {
 		
-		// each square can have multi dimensional compare
-		_.each(obj['compare'], function(obj2,key2){
-			prettyObject['compare'].push(obj2)
-		})
+		$.ajax({
+			type: "POST",
+			contentType: "application/json",
+			url: 'http://'+dst+'/*/_search?',
+			dataType: "json",
+			data: queryBodyJSON,
 
-		// each square can have multi dimensional compare
-		_.each(obj['notexist'], function(obj2,key2){
-			prettyObject['notexist'].push(obj2)
-		})
-
+			success: function (response) {
+					
+				// saveRawData(id, validdata, index, response);
+				resolve({"id":id, "name": name, "dst": dst, "data":response})
+			},
+			error: function (xhr, status) {
+				// Any ajax error should still resolve (not reject) as the process is not broken for "test_connector"
+				
+				switch(status) {
+					case 404: 
+						resolve({"id":id, "name": name, "dst": dst, "data":{"error":"404"}})
+						// reject (status+' remote path not found')
+						break; 
+					case 500: 
+						resolve({"id":id, "name": name, "dst": dst, "data":{"error":"500"}})
+						// reject (status+' Server error')
+						break; 
+					case 0: 
+						resolve({"id":id, "name": name, "dst": dst, "data":{"error":"unknown"}})	
+						// udpateScreenLog('#'+id+' Request aborted'); 
+						// reject (status+' Request aborted')
+						break; 
+					default: 
+						resolve({"id":id, "name": name, "dst": dst, "data":{"error": "Timeout"}})
+						// udpateScreenLog('#'+id+' Unknown error ' + status); 	
+						// reject (status+' Unknown error ' + status)
+						break
+				}
+			}
+		});
 	})
-
-	return prettyObject
-
 }
 
-function combineScriptFilter(id){
-	// query.bool.filter.script.script: "doc['@timestamp'].value.getMinute()==18 || doc['@timestamp'].value.getMinute()==19"
 
-	var allParents = findParents(id)
-	var allFilters = []
 
-	_.each(allParents, function(parentID){
-		filter = retrieveSquareParam(parentID, "Fi", false )
-		if(filter !== undefined){
-			allFilters.push(filter )
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+// Mappings
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+async function elastic_prep_mappings(dst, indexPattern, id){
+	// scrape index definitions to know what fields exist in the mappings
+	// return all answers grouped by type allowing originating function to filter for results
+	// return {"long":["id","score"],"text":["name","details"], .... }
+	// common properties are date, keyword, text, long, ip, float, etc
+	// used for jsonform in edit_Square... however this should be moved over to elastic_return_mappings in the long run?
+
+	// XXX this should be cached?  Bad load to query every time
+	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+
+		var fields = {}
+		let data;
+
+		try{
+			data = await $.ajax({
+				type: "GET",
+				contentType: "application/json",
+				url: 'http://'+dst+'/'+indexPattern+"/_mapping/",
+				dataType: "json"
+			})
+			
+
+
+			fields = deepGetFieldNamesRecursive(data, {"allFields":[], "keywordFields":[] }, [])
+			
+
+			// Unique each array of fields
+			_.each(fields, function(obj,key){
+				fields[key] = _.uniq(obj)
+			})
+
+
+			// get a list of types
+			fields['fieldTypes'] = _.omit(_.keys(fields), "keywordFields", "allFields")
+
+			return fields
+
+		} catch (error) {
+			addPageStatus("critical", "Network error connecting to '"+dst+"' have you enabled CORS?")
+			addSquareStatus(id, "critical", "Network error connecting to '"+dst+"' have you enabled CORS?")
+
+			ww(0, "arguments.callee.name :"+JSON.stringify(error));
+			return null
 		}
-
-	})
-	allFilters.push(retrieveSquareParam(id, "Fi", false ))
-
-	return allFilters.join(" && ")
-
 }
-
 
 
 function deepGetFieldNamesRecursive(obj, tmp, path){
@@ -244,103 +587,34 @@ function deepGetFieldNamesRecursive(obj, tmp, path){
 	}
 	return tmp}
 
-async function elastic_prep_mappings(dst, indexPattern, id){
-	// scrape index definitions to know what fields exist in the mappings
-	// return all answers grouped by type allowing originating function to filter for results
-	// return {"long":["id","score"],"text":["name","details"], .... }
-	// common properties are date, keyword, text, long, ip, float, etc
-	// used for jsonform in edit_Square... however this should be moved over to elastic_return_mappings in the long run?
-
-	// XXX this should be cached?  Bad load to query every time
-	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
-
-		var fields = {}
-		let data;
-
-		try{
-			data = await $.ajax({
-				type: "GET",
-				contentType: "application/json",
-				url: 'http://'+dst+'/'+indexPattern+"/_mapping/",
-				dataType: "json"
-			})
-			
 
 
-			fields = deepGetFieldNamesRecursive(data, {"allFields":[], "keywordFields":[] }, [])
-			
-
-			// Unique each array of fields
-			_.each(fields, function(obj,key){
-				fields[key] = _.uniq(obj)
-			})
+//////////////////////////////////////////
+//////////////////////////////////////////
+///   Supporting elastic functions
+//////////////////////////////////////////
+//////////////////////////////////////////
 
 
-			// get a list of types
-			fields['fieldTypes'] = _.omit(_.keys(fields), "keywordFields", "allFields")
+function combineScriptFilter(id){
+	// query.bool.filter.script.script: "doc['@timestamp'].value.getMinute()==18 || doc['@timestamp'].value.getMinute()==19"
 
-			return fields
+	var allParents = findParents(id)
+	var allFilters = []
 
-		} catch (error) {
-			addPageStatus("critical", "Network error connecting to '"+dst+"' have you enabled CORS?")
-			addSquareStatus(id, "critical", "Network error connecting to '"+dst+"' have you enabled CORS?")
-
-			ww(0, "arguments.callee.name :"+JSON.stringify(error));
-			return null
+	_.each(allParents, function(parentID){
+		filter = retrieveSquareParam(parentID, "Fi", false )
+		if(filter !== undefined){
+			allFilters.push(filter )
 		}
-}
 
-
-
-
-function elastic_test_connector(id, dst, index){
-	// query for 0 records, but see if we can connect, used for health testing
-	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
-
-	var query = {"size":0, "_source":[]}
-
-	var queryBodyJSON = JSON.stringify(query);
-	
-	return new Promise((resolve, reject) => {
-		
-		$.ajax({
-			type: "POST",
-			contentType: "application/json",
-			url: 'http://'+dst+'/'+index+'/_search?',
-			dataType: "json",
-			data: queryBodyJSON,
-
-			success: function (response) {
-					
-				// saveRawData(id, validdata, index, response);
-				resolve({"id":id, "name":index, "data":response})
-			},
-			error: function (xhr, status) {
-				// Any ajax error should still resolve (not reject) as the process is not broken for "test_connector"
-				switch(status) {
-					case 404: 
-						resolve({"id":id, "name":index, "data":{}, "error":404})
-						reject (status+' remote path not found')
-						break; 
-					case 500: 
-						resolve({"id":id, "name":index, "data":{}, "error":500})
-						reject (status+' Server error')
-						break; 
-					case 0: 
-						resolve({"id":id, "name":index, "data":{}, "error":"unknown"})	
-						udpateScreenLog('#'+id+' Request aborted'); 
-						reject (status+' Request aborted')
-						break; 
-					default: 
-						resolve({"id":id, "name":index, "data":{}, "error": "Timeout"})
-						udpateScreenLog('#'+id+' Unknown error ' + status); 	
-						reject (status+' Unknown error ' + status)
-						break
-				}
-			}
-		});
 	})
+	allFilters.push(retrieveSquareParam(id, "Fi", false ))
+
+	return allFilters.join(" && ")
+
 }
+
 
 
 
@@ -420,15 +694,19 @@ function elasticToFlareLoop(data, dataout, scale){
 }
 
 
-function hasFieldKeyword(id, keyword){
+async function hasFieldKeyword(id, keyword){
 	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+keyword+")");
 
-	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
-	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
+	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
+	var thisIndex = "*"
+	
 
-	if(_.contains(masterMappings[dst][indexPattern].keywordFields, keyword)){
+
+	if(_.contains(masterMappings[thisDst][thisIndex].keywordFields, keyword)){
+		qq(keyword+".keyword")
 		return true
 	}else{
+		qq(keyword+".____")
 		return false
 	}
 }
@@ -436,92 +714,166 @@ function hasFieldKeyword(id, keyword){
 
 
 
-//////////////////////////////////////////
-//////////////////////////////////////////
-/// query builder supporing
-//////////////////////////////////////////
-//////////////////////////////////////////
 
 
 
 
-function elastic_must_add(query, dataset, mappings){
-	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+query+")");
 
-	// Compile all the Must, as in "Must exist" or "must compare"
-	// "Must" means a match of key value pairs
-	_.each(dataset['compare'], function(comp){
-		//filter.must.push({"term": equal})
 
-		var key = _.keys(comp)[0]
-		var val = _.values(comp)[0]
 
-		// if the key is 1d (e.g. sourceip) We just get the value
-		// if the key is 2d (e.g. destination_ip.countrycode2) we need to check index Mappings if it has the .keyword, which means going deep
-		var key2 = key.split(".").join(".properties.").split('.').reduce(stringDotNotation, mappings)
-		
-		var miniObj = {}
 
-		if(_.contains(mappings.keywordFields, key)){
-			
 
-			miniObj[key+".keyword"] = val			
-			miniObj = {"term": miniObj}
-			query['query']['bool']['must'].push(miniObj)
-			// qq("2d object using .keyword")
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// code grave yard
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		}else{
 
-			miniObj[key] = val
-			miniObj = {"term": miniObj}
-			query['query']['bool']['must'].push(miniObj)
-			// qq("NOT using .keyword")
-			
-		}	
-		
-		// qq(miniObj)
+async function elasticQueryBuildderAggScriptDayHour(id, timesArray, dataset, fields, limit, stats, statField, incTime, urlencode, aggTime, maxAccuracy, filter){
+	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	// timesArray = [["2020-05-30T14:00:00+01:00", "2020-05-30T14:00:59+01:00"], [...], ], 
+	// dataset = compare, not match, etc
+	// fields = ["field1", ].   Multiple fields for stacked aggs,
+	// limit = 1, though we are doing aggs, still output 1 real entry?
+	// stats = boolean, whether to include extended_stats (avg, mean, std_Dev)
+	// statfield = "field1", the field on which to do stats
+	// incTime = boolean, pivot to Elastic interface does need time.  Move this usecase out of here?
+	// urlenccode = boolean, pivot to Elastic interface does need time.  Move this usecase out of here?
+	// aggTimeScriptNames = date tiem function for Elastic e.g. "getHour"
+	// maxAccuracy = boolean, whether to use max(Int) size, or not
+
+	alert(arguments.callee.name+" in graveyard id:"+id)
+	return
+
+	var query = {
+		"query": {
+			"bool": {
+				"should": [
+					// array of time range 
+				],
+				"minimum_should_match": 1,
+				"must": [
+					// array of must (/match)
+				],
+				"must_not": [
+					// array of fields that should not be present
+				]
+			}
+		},
+		"aggs": {
+			"time_ranges": {
+				"terms": {
+					"size": GLB.dftAggregationSize,
+					"script": {
+						"source": "doc['@timestamp'].value."+aggTime
+					}
+				}
+			}
+		},
+		"size": limit
+	}
+	
+	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
+	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
+	var thisMappings = await getSavedMappings(dst, indexPattern, true)
+
+	////////////////////////////////
+	// max accuracy
+	////////////////////////////////
+	if(maxAccuracy){
+		query['aggs']['time_ranges']['terms']['size'] = 2147483647
+		// query['aggs']['time_ranges']['aggs']['time_ranges']['terms']['size'] = 2147483647
+	}else{
+		// do nothing, if size not declared it defaults
+	}
+
+
+
+	////////////////////////////////
+	// build range of times, 1+
+	////////////////////////////////
+
+	_.each(timesArray, function(timeRange){
+
+		var from = moment.unix(timeRange[0]).format()
+		var to = moment.unix(timeRange[1]).format()
+
+		// Add time ranges to the SHOULD
+		var shouldObj = {"range":{"@timestamp":{}}}
+		shouldObj['range']['@timestamp']['gte'] = from
+		shouldObj['range']['@timestamp']['lt'] = to
+		query['query']['bool']['should'].push(shouldObj)
 
 	})
+
+
+	////////////////////////////////
+	// MUST
+	////////////////////////////////
+	if(dataset['compare']){
+		query = elastic_must_add(query, dataset, thisMappings)
+	}
+
+	////////////////////////////////
+	// MUST_NOT
+	////////////////////////////////
+	if(dataset['notexist']){
+		query = elastic_mustNot_add(query, dataset)
+	}
+
+
+	////////////////////////////////
+	// Filter
+	////////////////////////////////
+	if(filter){
+		query['query']['bool']['filter'] = {"script":{"script":filter}}
+	}
 
 	return query;
-}
 
-function elastic_mustNot_add(query, dataset){
-	
-	// Compile "Mustnot" as in "must not exist" (or null)
-	//
-	_.each(dataset['notexist'], function(notex){
-		query['query']['bool']['must_not'].push({"exists": {"field": notex}})
-	})
 
-	return query
 }
 
 
+function elastic_version(handle){
+	// API calls differ, this helps code adjust
 
-function elasticMustMustNot(must, mustnot, timerange){
-	
-	// must = [{"field":"value"},{...}]
-	// mustnot = ["field1"","field2"]
-	// timerange = [epoch,epoch]
+	alert(arguments.callee.name+" in graveyard id:"+id)
+	return
 
-	//output is 
-	
+	var dst = connectors.handletox(handle, "dst")
+
+	$.ajax({
+		type: "GET",
+		contentType: "application/json",
+		url: 'http://'+dst+'/',
+		dataType: "json",
+		
+
+		success: function (response) {
+			// ww(1, "setting elasticVersion for handle:"+handle)
+			connectors.setConnectorAttribute(handle, "elasticVersion", response['version']['number'])
+		},
+		error: function (xhr, status) {
+			switch(status) {
+				case 404: 
+					udpateScreenLog(dest+' 400: Malfored Query'); 
+					break; 
+				case 500: 
+					udpateScreenLog(dest+' Server error'); 
+					break; 
+				case 0: 
+					udpateScreenLog(dest+' Request aborted'); 
+					break; 
+				default: 
+					graphGraphError(id, "Connection timeout? CORS?")	
+					udpateScreenLog(dest+' Unknown error ' + status); 	
+					break
+			}
+		}
+    });	
 }
-
-
-
-
-
-
-
-
-
-//////////////////////////////////////////
-//////////////////////////////////////////
-/// query builders
-//////////////////////////////////////////
-//////////////////////////////////////////
 
 
 
@@ -530,6 +882,10 @@ function elasticMustMustNot(must, mustnot, timerange){
 
 function elastic_query_builder(id, from, to, dataset, fields, limit, incTime = true, incNull = true, urlEncode, filter){
 	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	
+	alert(arguments.callee.name+" in graveyard id:"+id)
+	return
+
 
 	// examples of data
 	// dataset = {"compare:[], "notexist":[]}
@@ -705,6 +1061,9 @@ function elastic_query_builder(id, from, to, dataset, fields, limit, incTime = t
 
 function elastic_2d_aggregate(id, timesArray, thenBy, dataset, fields, limit, incTime = true, incNull = true){
 	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+
+	alert(arguments.callee.name+" in graveyard id:"+id)
+	return
 
 	// timesArray = [["2020-05-30T14:00:00+01:00", "2020-05-30T14:00:59+01:00"], [...], ]
 	// thenBy = "port"
@@ -902,6 +1261,9 @@ function elastic_2d_aggregate(id, timesArray, thenBy, dataset, fields, limit, in
 function elasticDeepAggsWithStags(id, from, to, dataset, fields, statField, limit, stats){
 	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
+	alert(arguments.callee.name+" in graveyard id:"+id)
+	return
+
 	//query = {
 //   "query": {
 //     "bool": {
@@ -1045,6 +1407,11 @@ function elasticQueryBuildderToRuleThemAll(id, timesArray, dataset, fields, limi
 	// incTime = boolean, pivot to Elastic interface does need time.  Move this usecase out of here?
 	// urlenccode = boolean, pivot to Elastic interface does need time.  Move this usecase out of here?
 
+	// qq(timesArray)
+
+	alert(arguments.callee.name+" in graveyard id:"+id)
+	return
+
 	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
 	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
 
@@ -1169,7 +1536,7 @@ function elasticQueryBuildderToRuleThemAll(id, timesArray, dataset, fields, limi
 	}
 	query['aggs']['time_ranges']['aggs'] = agg
 
-
+	
 	return query;
 
 	// {
@@ -1264,109 +1631,119 @@ function elasticQueryBuildderToRuleThemAll(id, timesArray, dataset, fields, limi
 
 
 
-
-
-
-
-async function elasticQueryBuildderAggScriptDayHour(id, timesArray, dataset, fields, limit, stats, statField, incTime, urlencode, aggTime, maxAccuracy, filter){
+function clickObjectsToDataset(id, compare, notexist){
+	// input array of compare/notexist from square and all parents
+	// return a nice object
 	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
-	// timesArray = [["2020-05-30T14:00:00+01:00", "2020-05-30T14:00:59+01:00"], [...], ], 
-	// dataset = compare, not match, etc
-	// fields = ["field1", ].   Multiple fields for stacked aggs,
-	// limit = 1, though we are doing aggs, still output 1 real entry?
-	// stats = boolean, whether to include extended_stats (avg, mean, std_Dev)
-	// statfield = "field1", the field on which to do stats
-	// incTime = boolean, pivot to Elastic interface does need time.  Move this usecase out of here?
-	// urlenccode = boolean, pivot to Elastic interface does need time.  Move this usecase out of here?
-	// aggTimeScriptNames = date tiem function for Elastic e.g. "getHour"
-	// maxAccuracy = boolean, whether to use max(Int) size, or not
 
-	var query = {
-		"query": {
-			"bool": {
-				"should": [
-					// array of time range 
-				],
-				"minimum_should_match": 1,
-				"must": [
-					// array of must (/match)
-				],
-				"must_not": [
-					// array of fields that should not be present
-				]
-			}
-		},
-		"aggs": {
-			"time_ranges": {
-				"terms": {
-					"size": GLB.dftAggregationSize,
-					"script": {
-						"source": "doc['@timestamp'].value."+aggTime
-					}
-				}
-			}
-		},
-		"size": limit
-	}
+	alert(arguments.callee.name+" in graveyard id:"+id)
+	return
+
+	var prettyObject = {}
+	prettyObject['compare'] = []
+	prettyObject['notexist'] = []
+
+	//qq(retrieveSquareParam(id,"Cs",true))
 	
-	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
-	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
-	var thisMappings = await getSavedMappings(dst, indexPattern, true)
+	
+	
+	var cumulative = calcDs(id, [])
+	
+	
+	// loop each square's dataset
+	_.each(cumulative, function(obj, i){
+		
+		// each square can have multi dimensional compare
+		_.each(obj['compare'], function(obj2,key2){
+			prettyObject['compare'].push(obj2)
+		})
 
-	////////////////////////////////
-	// max accuracy
-	////////////////////////////////
-	if(maxAccuracy){
-		query['aggs']['time_ranges']['terms']['size'] = 2147483647
-		// query['aggs']['time_ranges']['aggs']['time_ranges']['terms']['size'] = 2147483647
-	}else{
-		// do nothing, if size not declared it defaults
-	}
-
-
-
-	////////////////////////////////
-	// build range of times, 1+
-	////////////////////////////////
-
-	_.each(timesArray, function(timeRange){
-
-		var from = moment.unix(timeRange[0]).format()
-		var to = moment.unix(timeRange[1]).format()
-
-		// Add time ranges to the SHOULD
-		var shouldObj = {"range":{"@timestamp":{}}}
-		shouldObj['range']['@timestamp']['gte'] = from
-		shouldObj['range']['@timestamp']['lt'] = to
-		query['query']['bool']['should'].push(shouldObj)
+		// each square can have multi dimensional compare
+		_.each(obj['notexist'], function(obj2,key2){
+			prettyObject['notexist'].push(obj2)
+		})
 
 	})
 
+	return prettyObject
 
-	////////////////////////////////
-	// MUST
-	////////////////////////////////
-	if(dataset['compare']){
-		query = elastic_must_add(query, dataset, thisMappings)
-	}
-
-	////////////////////////////////
-	// MUST_NOT
-	////////////////////////////////
-	if(dataset['notexist']){
-		query = elastic_mustNot_add(query, dataset)
-	}
+}
 
 
-	////////////////////////////////
-	// Filter
-	////////////////////////////////
-	if(filter){
-		query['query']['bool']['filter'] = {"script":{"script":filter}}
-	}
+
+
+
+
+function elastic_must_add(query, dataset, mappings){
+	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+query+")");
+
+	alert(arguments.callee.name+" in graveyard id:"+id)
+	return
+
+	// Compile all the Must, as in "Must exist" or "must compare"
+	// "Must" means a match of key value pairs
+	_.each(dataset['compare'], function(comp){
+		//filter.must.push({"term": equal})
+
+		var key = _.keys(comp)[0]
+		var val = _.values(comp)[0]
+
+		// if the key is 1d (e.g. sourceip) We just get the value
+		// if the key is 2d (e.g. destination_ip.countrycode2) we need to check index Mappings if it has the .keyword, which means going deep
+		var key2 = key.split(".").join(".properties.").split('.').reduce(stringDotNotation, mappings)
+		
+		var miniObj = {}
+
+		if(_.contains(mappings.keywordFields, key)){
+			
+
+			miniObj[key+".keyword"] = val			
+			miniObj = {"term": miniObj}
+			query['query']['bool']['must'].push(miniObj)
+			// qq("2d object using .keyword")
+
+		}else{
+
+			miniObj[key] = val
+			miniObj = {"term": miniObj}
+			query['query']['bool']['must'].push(miniObj)
+			// qq("NOT using .keyword")
+			
+		}	
+		
+		// qq(miniObj)
+
+	})
 
 	return query;
+}
+
+function elastic_mustNot_add(query, dataset){
+	
+	alert(arguments.callee.name+" in graveyard id:"+id)
+	return
+
+	// Compile "Mustnot" as in "must not exist" (or null)
+	//
+	_.each(dataset['notexist'], function(notex){
+		query['query']['bool']['must_not'].push({"exists": {"field": notex}})
+	})
+
+	return query
+}
 
 
+
+function elasticMustMustNot(must, mustnot, timerange){
+	
+	alert(arguments.callee.name+" in graveyard id:"+id)
+	return
+
+	// must = [{"field":"value"},{...}]
+	// mustnot = ["field1"","field2"]
+	// timerange = [epoch,epoch]
+
+	//output is 
+	
 }
 

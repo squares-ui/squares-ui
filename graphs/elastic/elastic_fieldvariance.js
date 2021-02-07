@@ -59,31 +59,50 @@ async function elastic_completeform_fieldvariance(id, targetDiv){
 }
 
 
-function elastic_populate_fieldvariance(id){
+async function elastic_populate_fieldvariance(id){
 
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
+	var thisIndex = "*"
+
 	
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
-	var Ds = clickObjectsToDataset(id)
-	
-	//var fields = [];  // use this to see all fields in raw output
-	//var fields = ["@timestamp", "type", "client_ip", "method", "port", "server_response"];
-	var fields=["*"]
+	var timesArray = [[from, to]]
 
+	var fields = []
 	var limit = 100;
 	if(retrieveSquareParam(id,"Cs",false) !== undefined){
 		limit = retrieveSquareParam(id,"Cs",false)['x_size']
 	}
-	var filter = combineScriptFilter(id)
 
-	var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
+	var filter = combineScriptFilter(id)
+	var incTime = true
+	var maxAccuracy = true
+	var stats  = false
+	var statField = ""
+
+	// var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
+	var query = await elasticQueryBuildderToRuleThemAllandOr(
+		id, 
+		timesArray, 
+		limit,
+		incTime,
+		filter,
+		false,
+		"",
+		true,
+		maxAccuracy,
+		fields, 
+		stats, 
+		statField	
+	)
 
 	var handle = retrieveSquareParam(id, 'CH')
 	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
 
 	var promises = []
-	promises.push(elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "all"))
+	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all"))
 	return Promise.all(promises)
 
 }
@@ -92,9 +111,10 @@ function elastic_populate_fieldvariance(id){
 
 async function elastic_rawtoprocessed_fieldvariance(id, data){
 
-	var dst = connectors.handletox( retrieveSquareParam(id, 'CH'), "dst")
-	var indexPattern = connectors.handletox( retrieveSquareParam(id, 'CH'), 'indexPattern')
-	var thisMappings = await getSavedMappings(dst, indexPattern, true)
+	var thisCo = await nameToConnectors(retrieveSquareParam(id, 'Co', true))
+	var thisDst = thisCo['dst']
+	var indexPattern = "*"
+	var thisMappings = await getSavedMappings(thisDst, indexPattern, true)
 
 	if(retrieveSquareParam(id,"Cs",true) !== undefined){
 		

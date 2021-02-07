@@ -23,9 +23,9 @@ function process_editsquare(id, data){
 }
 
 
-function graph_editsquare(id){
+async function graph_editsquare(id){
 
-	
+
 	var aConnector = false
 	if(retrieveSquareParam(id, "Pr")==0){
 		aConnector = true;
@@ -69,10 +69,9 @@ function graph_editsquare(id){
 	clusterDiv = clusterSection.append("div")
 		.classed("fleft", true)
 
-
-
 	if(aConnector == true){	
 		
+		// Destination server ip:port
 		clusterDiv.append("img")
 			.classed("square_cluster_image", true)
 			.classed("fleft", true)
@@ -95,26 +94,25 @@ function graph_editsquare(id){
 					.classed("square_cluster_text", true)
 					.append("div")
 						.classed("fontsize", true)
-						.text("Index:")
+						.text("Connector Name:")
 				clusterDiv.append("div")
 					.append("select")
 						.classed("fontsize", true)
-						.attr("id", function(d){ return "square_index_dropdown_"+d.id })
-						.attr("name", function(d){ return "square_index_dropdown_"+d.id })
-				clusterDiv.append("div")
-						.classed("fontsize", true)
-						.attr("id", function(d){ return "square_index_dropdown_"+d.id})
+						.attr("id", function(d){ return "square_co_dropdown_"+d.id })
+						.attr("name", function(d){ return "square_co_dropdown_"+d.id })
+				// clusterDiv.append("div")
+				// 		.classed("fontsize", true)
+				// 		.attr("id", function(d){ return "square_co_dropdown_"+d.id})
 				
-				var justIndices = _.flatten(_.pluck(connectors.get_connectors(), 'indices'), true)
-				_.each(justIndices, function(index){
-					$('#square_index_dropdown_'+id).append($('<option>', { 
-						value: index['handle'],
-						text : index['indexDesc']
+				var justDst = await getAllSavedConnectors()
+				_.each(justDst, function(dst){
+					$('#square_co_dropdown_'+id).append($('<option>', { 
+						value: dst['name'],
+						text : dst['name']
 					}));					
-				})							
+				})		
 				
-				//$("#square_index_dropdown_"+id).val(connectors.handletox(retrieveSquareParam(id, "CH"), "indexPattern"));
-				$("#square_index_dropdown_"+id).val(retrieveSquareParam(id, "CH"));
+				$("#square_co_dropdown_"+id).val(retrieveSquareParam(id, "Co", true));
 
 
 
@@ -145,7 +143,7 @@ function graph_editsquare(id){
 					
 					// Does the graph type require ThreeJS, or is it enabled?
 					if(GLB.threejs.enabled = true || graphs_functions_json.retrieveGraphParam(connectors.handletox( retrieveSquareParam(d.id, 'CH'), "type"), selectValue , "requireThreeJS") == false){
-						window[graphs_functions_json.retrieveGraphParam(connectors.handletox( retrieveSquareParam(d.id, 'CH'), "type"), selectValue , "completeForm")](d.id, "#square_editformcustom_"+d.id)
+						window[graphs_functions_json.retrieveGraphParam("elastic", selectValue , "completeForm")](d.id, "#square_editformcustom_"+d.id)
 					}else{
 						alert("3d needed")
 					}
@@ -155,7 +153,7 @@ function graph_editsquare(id){
 		var mySelect = $('#square_graph_dropdown_'+id);
 		
 		
-		if(retrieveSquareParam(id, 'CH') == undefined){
+		if(retrieveSquareParam(id, 'Co') == undefined){
 			mySelect.append(
 				$('<option></option>').val("").html("Root Square has not Connector")
 			);
@@ -165,7 +163,7 @@ function graph_editsquare(id){
 				$('<option></option>').val("").html("")
 			);
 	
-			connector_type = connectors.handletox( retrieveSquareParam(id, 'CH') , "type");
+			connector_type = "elastic"
 			//qq("connector_type for "+id+" found as:"+connector_type+" toshortnamelist:"+graphs_functions_json.typeToShortnameList(connector_type));
 			$.each(graphs_functions_json.typeToShortnameList(connector_type), function(i, v){
 				mySelect.append(
@@ -187,8 +185,8 @@ function graph_editsquare(id){
 
 			// if we had a graph type, shoudl we also auto draw the "custom fields" options?
 			selectValue = retrieveSquareParam(id, "Gt", true)
-			if(graphs_functions_json.retrieveGraphParam(connectors.handletox( retrieveSquareParam(id, 'CH'), "type"), selectValue , "completeForm")){
-				window[graphs_functions_json.retrieveGraphParam(connectors.handletox( retrieveSquareParam(id, 'CH'), "type"), selectValue , "completeForm")](id, "#square_editformcustom_"+id)
+			if(graphs_functions_json.retrieveGraphParam("elastic", selectValue , "completeForm")){
+				window[graphs_functions_json.retrieveGraphParam("elastic", selectValue , "completeForm")](id, "#square_editformcustom_"+id)
 			}
 
 		}
@@ -202,7 +200,6 @@ function graph_editsquare(id){
 			.attr("id", function(d){ return "square_editformcustom_"+d.id})
 
 	}
-
 
 
 
@@ -259,39 +256,39 @@ function graph_editsquare(id){
 
 	}else{
 		var pairing = clusterDiv.append("div")
-				pairing.append("div")
-					.classed("fleft", true)
-					.classed("fontsize", true)
-					.classed("squaretextleft", true)
-					.text("Window end (local):");
-				
-				pairing.append("div")
-					.classed("fleft", true)
-					.append("input")
-					.classed("fontsize", true)
-						.attr("id", function(d){ return "square_We_text_"+d.id} )
-						.attr("name", function(d){ return "square_We_text_"+d.id} )
-
-				
-				pairing.append("div")
-						.classed("clr", true)
-		
-				//push existing date to the textbox
-				var stringFormat = "YYYY-MM-DD[T]HH:mm:ss"
-				var thisWe = retrieveSquareParam(id, "We", true)
-				if(thisWe !== null && thisWe != 0){	
-					thisString = moment(thisWe, "X").format(stringFormat);
-					$("#square_We_text_"+id).val(thisString);
-				}
+			pairing.append("div")
+				.classed("fleft", true)
+				.classed("fontsize", true)
+				.classed("squaretextleft", true)
+				.text("Window end (local):");
 			
+			pairing.append("div")
+				.classed("fleft", true)
+				.append("input")
+				.classed("fontsize", true)
+					.attr("id", function(d){ return "square_We_text_"+d.id} )
+					.attr("name", function(d){ return "square_We_text_"+d.id} )
 
-				flatpickr("#square_We_text_"+id, {
-					time_24hr: true,
-					enableTime: true,
-					dateFormat: "Y-m-d H:i:S",
-				});
+			
+			pairing.append("div")
+					.classed("clr", true)
+	
+			//push existing date to the textbox
+			var stringFormat = "YYYY-MM-DD[T]HH:mm:ss"
+			var thisWe = retrieveSquareParam(id, "We", true)
+			if(thisWe !== null && thisWe != 0){	
+				thisString = moment(thisWe, "X").format(stringFormat);
+				$("#square_We_text_"+id).val(thisString);
+			}
+		
 
-		}
+			flatpickr("#square_We_text_"+id, {
+				time_24hr: true,
+				enableTime: true,
+				dateFormat: "Y-m-d H:i:S",
+			});
+
+	}
 
 	var pairing = clusterDiv.append("div")
 			pairing.append("div")
@@ -321,7 +318,6 @@ function graph_editsquare(id){
 	}else{
 		$("#square_Ws_dropdown_"+id).val(retrieveSquareParam(id, "Ws", false));
 	}
-
 
 
 	clusterSection.append("div")
@@ -363,9 +359,47 @@ function graph_editsquare(id){
 		}
 
 		
+	clusterSection.append("div")
+		.classed("clr", true)
 
 
+	
+	if(aConnector == false){	
+		// Additional data source path squares
+		var clusterSection = thisForm.append("div")
+			.classed("square_cluster_section", true)
+			
+			var clusterDiv = clusterSection.append("div")
+				.classed("fleft", true);
+				
+				clusterDiv.append("img")
+					.classed("square_cluster_image", true)
+					.classed("fleft", true)
+					.attr("src", "./images/061_b.png")
 
+			clusterDiv = clusterSection.append("div")
+				.classed("square_cluster_text", true)
+				.classed("fleft", true);
+
+				clusterDiv.append("div")
+					.classed("square_cluster_text", true)
+					.append("div")
+						.classed("fontsize", true)
+						.html("Additional data Feeds Parent Squares (IDs comma separated): ")
+
+				clusterDiv.append("div")
+					.classed("square_cluster_text", true)
+					.append("input")
+					.classed("fontsize", true)
+					.attr("id", function(d){ return "square_Ps_input_"+d.id })
+					.attr("name", function(d){ return "square_Ps_input_"+d.id })
+			
+
+			// create a clone of the array (using Slice), then drop the first Parent (as not an "or" parent)
+			var parentIDs = retrieveSquareParam(id, "Ps", false).slice(1)
+			$("#square_Ps_input_"+id).val(parentIDs);
+
+	}
 
 
 
