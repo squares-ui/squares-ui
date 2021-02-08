@@ -12,7 +12,7 @@ graphs_functions_json.add_graphs_json({
 
 function populate_graphdefinition(id){
 
-	promises = []
+	promises = [id]
 	return Promise.all(promises)
 
 }

@@ -15,7 +15,7 @@ async function populate_describesquare(id){
 
 
 
-	var promises = []
+	var promises = [id]
 	// var thisCo = await nameToConnectors(retrieveSquareParam(id, 'Co', true))
 	
 	// if(thisCo['type'] == "elastic"){

@@ -14,8 +14,7 @@ graphs_functions_json.add_graphs_json({
 function populate_editsquare(id){
 	// no back end data to fetch, but tell the system we're ready
 	//ww(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+","+name+")");
-	alert("iaiosduasoidnasoidas")
-	var promises = []
+	var promises = [id]
 	return Promise.all(promises)
 
 }

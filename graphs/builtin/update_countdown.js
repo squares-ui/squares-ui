@@ -63,7 +63,7 @@ function populate_updatecountdown(id){
 
 	// no back end data to fetch, but tell the system we're ready
 	// process_updatecountdown(id)
-	promises = []
+	promises = [id]
 	return Promise.all(promises)
 
 

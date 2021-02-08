@@ -16,7 +16,7 @@ function populate_templates(id){
 	// no back end data to fetch, but tell the system we're ready
 	//ww(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+","+name+")");
 	
-	promises = []
+	promises = [id]
 	return Promise.all(promises)
 
 
