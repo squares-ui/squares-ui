@@ -1,5 +1,5 @@
 graphs_functions_json.add_graphs_json({
-	"builtin_graphs":{
+	"builtin":{
 		"Templates":{
 			"populate":"populate_templates", 
 			"rawtoprocessed":"process_templates",

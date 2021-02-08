@@ -111,7 +111,7 @@ async function elastic_populate_rawoutput(id){
 	var handle = retrieveSquareParam(id, 'CH')
 	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
 
-	var promises = []
+	var promises = [id]
 	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all"))
 	return Promise.all(promises)
 

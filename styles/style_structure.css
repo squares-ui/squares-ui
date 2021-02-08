@@ -153,6 +153,8 @@
 
 							}
 							.square_xhtml{
+							}
+							.square_yoverflow{
 								overflow-y: scroll;
 							}
 

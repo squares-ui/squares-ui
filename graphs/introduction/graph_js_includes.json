@@ -1,0 +1,9 @@
+{
+	"graphs":[
+		"./introduction/intro.js",
+		"./introduction/instructions.js",
+		"./introduction/list_servers.js",
+		"./introduction/add_servers.js",
+		"./introduction/youtube.js"
+	]
+}

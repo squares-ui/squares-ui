@@ -139,7 +139,7 @@ async function elastic_populate_piechart(id){
 	// var handle = retrieveSquareParam(id, 'CH')
 	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
 	
-	var promises = []
+	var promises = [id]
 	var handle = retrieveSquareParam(id, 'CH')
 
 	// query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, filter)

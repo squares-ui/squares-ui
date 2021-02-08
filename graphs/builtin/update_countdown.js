@@ -1,5 +1,5 @@
 graphs_functions_json.add_graphs_json({
-	"builtin_graphs":{
+	"builtin":{
 		"UpdateCountdown":{
 			"completeForm": "completeform_updatecountdown",
 			"populate":"populate_updatecountdown", 

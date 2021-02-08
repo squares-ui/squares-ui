@@ -1,0 +1,10 @@
+{
+	"graphs":[
+		"./builtin/describe_square.js",
+		"./builtin/edit_square.js",
+		"./builtin/square_definition.js",
+		"./builtin/templates.js",
+		"./builtin/update_countdown.js"
+		
+	]
+}

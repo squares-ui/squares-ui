@@ -95,19 +95,21 @@ var graphs_functions_json = {
 	retrieveGraphParam: function(type, graphshort, value){
 		// IN : type of connector, <short> name of the graph, the type of field you want back
 		// OUT : name of function to call
-		////ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"['"+type+"']['"+graphshort+"']['"+value+"']");
+		// ee(" -> "+arguments.callee.name+"['"+type+"']['"+graphshort+"']['"+value+"']");
 
-
-		if(graphshort === null || this.local_json["builtin_graphs"] === undefined){
+		if(graphshort === null ){
 			// no graph set, so relax
 			return null;
-		}else if(typeof this.local_json["builtin_graphs"][graphshort] !== 'undefined'){
-			// see if you are using a builtin_graph
-			// XXX this interceptions seems a cheap workaround, better way to detect?
-			return this.local_json["builtin_graphs"][graphshort][value];
+
+		}else if(typeof this.local_json["builtin"][graphshort] !== 'undefined'){
+			// if the GraphType is a "builtin" then hijack and return.  
+			// this allows "builtin" graphs to be present in any technology square chain 
+			return this.local_json["builtin"][graphshort][value];
+
 		}else if(typeof this.local_json[type][graphshort][value] !== null){
 			// see if you are using a specific graph
 			return this.local_json[type][graphshort][value];
+	
 		}else{
 			ww(0, "graphs_functions_json.retrieveGraphParam, <value> does not exist");
 			return false;
@@ -471,7 +473,7 @@ function showTemplateDiv(id){
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	clearSquareBody(id);
-	window[graphs_functions_json.retrieveGraphParam("builtin_graphs", "Templates", "graph") ](id);
+	window[graphs_functions_json.retrieveGraphParam("builtin", "Templates", "graph") ](id);
 	
 
 }
@@ -1297,20 +1299,17 @@ function scaleSquare(id){
 // User has Loaded page/Dragged a box/Duplicated a box/Edited a square/other
 async function drawinBoxes(ids){
 	// IN : Array of Integers
-	
-	// ee(" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
+	ee(" -> "+arguments.callee.name+"("+JSON.stringify(ids)+")");
 
-	// update the status icon
-	// setSquareStatus(id, "normal")
+
 	for (var i in ids){
+		
 		let id = ids[i]
 		// qq("drawinBoxes("+id+")")
 
 		renderSquareStatus(id)
 	
 		////// draw the bottom text
-
-		//	var item = url.squares[squarearraysearch(ids[i])];
 		var thisDate = new Date();
 		var thisEpoch = Math.floor(thisDate.getTime() / 1000); 
 		
@@ -1335,105 +1334,109 @@ async function drawinBoxes(ids){
 		$("#square_WeWs_"+id).text(squareStart + " ( +"+squareDiff+" ) "+squareEnd);
 
 
+
 		var theResult = await checkSavedDataIsMine(id)
 		var theData = await getSavedData(id, "processed", "")
 
+		var thisCo = await nameToConnectors(retrieveSquareParam(id, 'Co', true))
+		var thisType = thisCo['type']
 		var thisGT = retrieveSquareParam(id, "Gt")
-		// var thisCH = retrieveSquareParam(id, 'CH', true)
-		// var thisDst = connectors.handletox(thisCH, "dst")
-		// var thisIndex = connectors.handletox(thisCH, 'indexPattern')
 
-		if(theResult && theData && retrieveSquareParam(id, "Gt")!=="intro"){
-			// Hash checks out, and data exists
-			// qq("drawinBoxes("+id+"): hash checks out and processed data exists")
+
+		if(theResult && theData){
+			// Hash checks out, data exists OR 
+			// qq("drawinBoxes("+id+"): saved data is good")
 			callTheGraph(id, true);
-
-		// }else if (getMappingsData(id) == null){
-			// graphGraphError(id, "Network error connecting to '"+thisDst+"':<br /># Have you enabled CORS?<br /># Have you enabled inbound 9200? <br /># Check 'https://github.com/squares-ui/squares-ui' for instructions.")
 		
 		}else{
-			// qq("drawinBoxes("+id+"): hash fail or no data")
+			
+			// qq("drawinBoxes("+id+"): new data required")
 
 			// delete all saved data, , get raw data, save it, raw_to_processed, save it,
 			deleteStoredData([id])
-			.catch(e => ww(0, e));
+				.catch(e => ww(0, e));
 			
 			//save new hash
 			saveNewData(id, "hash", "", createSquareHash(id))
-			.catch(e => ww(0, e));
-
-
+				.catch(e => ww(0, e));
 			
-			
+			// qq("pre .then for id:"+id)
 
 			// raw to processed
-			window[graphs_functions_json.retrieveGraphParam("elastic", thisGT , "populate") ](id)
-			
-				.then(async function(values){
-			
-					var dataToProgess = false
-					_.each(values, function(value){						
+			window[graphs_functions_json.retrieveGraphParam(thisType, thisGT , "populate") ](id)
+			.then(async function(values){
+				
+				// JS Promise only returns one variable.  So the square 'id' is smuggled in the first Promise.
+				// extract and shift, then re calculate connector, type, graph type, etc
+				let thisId = values[0]
+				values.shift()
+				var thisCo = await nameToConnectors(retrieveSquareParam(thisId, 'Co', true))
+				var thisType = thisCo['type']
+				var thisGT = retrieveSquareParam(thisId, "Gt")
+
+				var dataToProgess = false
+				_.each(values, function(value){	
+
+					if(value['data'] !== null){
 						
-						if(value['data'] !== null){
-							
-							// qq(value)
-							
-							// set a marker that something was found
-							dataToProgess = true
+						// qq(value)
+						
+						// set a marker that something was found
+						dataToProgess = true
 
-							// save the raw data?
-							if(GLB.saveRawData == true){
-								saveNewData(value.id, "raw", value.name, value.data)
-							}
-							
-							// set square health status
-							if(value.hasOwnProperty("status") && value['status'].length > 0){
-								addSquareStatus(id, "warning", value['status'])
-							}
-
-							if(value['data'].hasOwnProperty("hits") && value['data']['hits']['total']['value'] == 10000){
-								addSquareStatus(id, "warning", "Max hit count reached (10,000)")
-							}
-
-							// add basic stats to the graph
-							if(value['data'].hasOwnProperty("took")){
-								addSquareStatus(id, "info", "took "+value['data']['took']+"ms")
-							}
-
-							if(value['data'].hasOwnProperty("hits")){
-								addSquareStatus(id, "info", value['data']['hits']['total']['value']+" hits")
-							}
-							
-							
-							if(value['data'].hasOwnProperty("aggregations")){
-								aggTotal = 0
-								_.each(value['data']['aggregations']['time_ranges']['buckets'], function(bucket){
-									aggTotal += bucket['doc_count']
-								})
-								addSquareStatus(id, "info", aggTotal+" aggs")
-							}
-
+						// save the raw data?
+						if(GLB.saveRawData == true){
+							saveNewData(value.id, "raw", value.name, value.data)
 						}
-					})
-					
-					// Does data exist?  Or maybe the graph requires no Promises (e.g. UpdateCountdown)
-					if(dataToProgess || values.length==0){
-						thisGT = retrieveSquareParam(id, "Gt")
-						thisType = "elastic"
-						// qq("drawing '"+graphs_functions_json.retrieveGraphParam(thisType, thisGT , "rawtoprocessed")+"' for id:"+id)
-						procData = await window[graphs_functions_json.retrieveGraphParam(thisType, thisGT , "rawtoprocessed") ](id, values)
 						
-						saveNewData(id, "processed", "", procData)
-						.catch(e => ww(0, "saveNewData: id:"+id+"m, error:"+e));
+						// set square health status
+						if(value.hasOwnProperty("status") && value['status'].length > 0){
+							addSquareStatus(thisId, "warning", value['status'])
+						}
 
+						if(value['data'].hasOwnProperty("hits") && value['data']['hits']['total']['value'] == 10000){
+							addSquareStatus(thisId, "warning", "Max hit count reached (10,000)")
+						}
+
+						// add basic stats to the graph
+						if(value['data'].hasOwnProperty("took")){
+							addSquareStatus(thisId, "info", "took "+value['data']['took']+"ms")
+						}
+
+						if(value['data'].hasOwnProperty("hits")){
+							addSquareStatus(thisId, "info", value['data']['hits']['total']['value']+" hits")
+						}
 						
-
-						callTheGraph(id, true);
-					}else{
-						// Only report the issue of the first Promise error?  Better way to represent errors of each Promise?
-						graphGraphError(id, JSON.stringify(values[0].error))
+						
+						if(value['data'].hasOwnProperty("aggregations")){
+							aggTotal = 0
+							_.each(value['data']['aggregations']['time_ranges']['buckets'], function(bucket){
+								aggTotal += bucket['doc_count']
+							})
+							addSquareStatus(thisId, "info", aggTotal+" aggs")
+						}
 					}
 				})
+				
+				// Does data exist?  Or maybe the graph requires no Promises (e.g. UpdateCountdown)
+				if(dataToProgess || values.length==0){
+					
+					var thisFunc = graphs_functions_json.retrieveGraphParam(thisType, thisGT , "rawtoprocessed")
+
+					qq("drawing '"+thisFunc+"' for id:"+thisId)
+					
+					procData = await window[graphs_functions_json.retrieveGraphParam(thisType, thisGT , "rawtoprocessed") ](thisId, values)
+					
+					saveNewData(thisId, "processed", "", procData)
+						.catch(e => ww(0, "saveNewData: id:"+thisId+"m, error:"+e));
+			
+					callTheGraph(thisId, true);
+				}else{
+					// Only report the issue of the first Promise error?  Better way to represent errors of each Promise?
+					qq("not drawing '"+thisFunc+"' for id:"+thisId)
+					graphGraphError(thisId, JSON.stringify(values[0].error))
+				}
+			})
 
 
 		}
@@ -1448,9 +1451,11 @@ async function callTheGraph(id, nudgeChildren){
 	// ee(" -> "+arguments.callee.name+"("+id+", "+nudgeChildren+")");
 	clearSquareBody(id);
 
+	var thisCo = await nameToConnectors(retrieveSquareParam(id, 'Co', true))
+	var thisType = thisCo['type']
 
 	// call the function that is defined as "graph" for the graph type of this square
-	var theDynamicGraphFunction = graphs_functions_json.retrieveGraphParam("elastic", retrieveSquareParam(id, "Gt") , "graph");
+	var theDynamicGraphFunction = graphs_functions_json.retrieveGraphParam(thisType, retrieveSquareParam(id, "Gt") , "graph");
 	
 	//qq("for id:"+id+" graph type is "+theDynamicGraphFunction)
 
@@ -1462,7 +1467,7 @@ async function callTheGraph(id, nudgeChildren){
 		// qq(graphs_functions_json.retrieveGraphParam(connectors.handletox( retrieveSquareParam(id, 'CH'), "type"), retrieveSquareParam(id, "Gt") , "requireThreeJS"))
 		// qq("checked 3d: "+id)
 
-		if(graphs_functions_json.retrieveGraphParam("elastic", retrieveSquareParam(id, "Gt") , "requireThreeJS") == true && GLB.threejs.enabled == false){
+		if(graphs_functions_json.retrieveGraphParam(thisType, retrieveSquareParam(id, "Gt") , "requireThreeJS") == true && GLB.threejs.enabled == false){
 			// ThreeJS not enabled in config file
 			
 			graphGraphError(id, "Square Type '"+retrieveSquareParam(id, "Gt")+"' requires ThreeJS enabling in config")
@@ -1511,7 +1516,7 @@ async function callTheGraph(id, nudgeChildren){
 function graphGraphError(id, msg, imagePath="./squares-ui-icons/159687-interface-icon-assets/png/cancel.png"){
 	// ee(" -> graphGraphError ("+id+", "+msg+")");
 
-	// this isn't a graph type "/graphs/builtin_graphs/error" as it's not permanent, e.g. shouldn't be saved in the URL on load.  It's a temp error
+	// this isn't a graph type "/graphs/builtin/error" as it's not permanent, e.g. shouldn't be saved in the URL on load.  It's a temp error
 
 	// remove the "loading" div in a square
 	clearSquareBody(id);
@@ -2230,7 +2235,7 @@ var newConnectors  = Dexie.async(function* (name, dst, type, templates) {
 var getAllSavedConnectors = Dexie.async(function* () {
 	
 	try {
-		var bob = yield dbConnectors.dbConnectors.toArray()
+		var bob = yield dbConnectors.dbConnectors.toArray()		
 		return bob
 
 	} catch (error) {
@@ -2254,6 +2259,16 @@ var nameToConnectors = Dexie.async(function* (name) {
 	// ee("getSavedMappings ("+dst+", "+indexPattern+")"); 
 	try {
 		var bob = yield dbConnectors.dbConnectors.get({name: name})
+		return bob
+		
+	} catch (error) {
+		ww(9, "nameToConnectors :"+error);
+	}
+})
+var typeToConnectors = Dexie.async(function* (type) {
+	// ee("getSavedMappings ("+dst+", "+indexPattern+")"); 
+	try {
+		var bob = yield dbConnectors.dbConnectors.get({type: type})
 		return bob
 		
 	} catch (error) {
@@ -2812,16 +2827,21 @@ async function editNewConnector(id){
 	drawSquares(updateDataList);
 
 	
-	thisCo = await nameToConnectors(retrieveSquareParam(id, 'Co', true))
-	thisDst = thisCo['dst']
-	thisType = thisCo['type']
-	thisIndex = "*"
-
-	var value = await elastic_prep_mappings(thisDst, thisIndex, id)				
-	saveMappingsData(thisDst, thisIndex, value)
-	await saveMappingsDataIndexeddb(thisDst, thisIndex, value)
-	await deleteStoredData(updateDataList)
+	var thisCo = retrieveSquareParam(id, 'Co', true)
 	
+	if(thisCo['type'] == "elastic"){
+		
+		thisDst = thisCo['dst']
+		thisType = thisCo['type']
+		thisIndex = "*"
+
+		var value = await elastic_prep_mappings(thisDst, thisIndex, id)				
+		saveMappingsData(thisDst, thisIndex, value)
+		await saveMappingsDataIndexeddb(thisDst, thisIndex, value)
+		await deleteStoredData(updateDataList)
+	
+	}
+
 	drawinBoxes(updateDataList);
 	
 	
@@ -2831,14 +2851,19 @@ async function editNewConnector(id){
 }
 
 
+function dumpURLToConsole(){
+	_.each(url.squares, function(square){
+		qq(square)
+	})
 
+}
 
 function editMe(id){
 
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	clearSquareBody(id);
-	window[graphs_functions_json.retrieveGraphParam("builtin_graphs", "EditSquare", "graph") ](id);
+	window[graphs_functions_json.retrieveGraphParam("builtin", "EditSquare", "graph") ](id);
 
 
 }
@@ -3269,7 +3294,7 @@ function compileGraphs(){
 					// multiple of these, finishing at different times, so after each load so if any left to do.  If not, populate graphs?
 					if(jsStilltoLoad===0){
 						//ww(7, "jsStilltoLoad = "+jsStilltoLoad+"!!!!!!!!");
-						ww(5, "compileGraphs() finished all downloads");
+						// ww(5, "compileGraphs() finished all downloads");
 						
 
 						compileConnectors();
@@ -3314,21 +3339,39 @@ async function initialLoad(){
 	drawSquares(tmpEveryID);
 
 
+	// plant the "built in" type
+	// bob.push({"name": , "dst":"", "templates":"", "type": "builtin"})
+	var connectors = await getAllSavedConnectors()
+	
+	checkBuiltin = _.where(connectors, {"type": "builtin"})
+	if(checkBuiltin.length < 1){
+		await newConnectors("Builtin", "", "builtin", [])
+	}
+	checkIntroduction = _.where(connectors, {"type": "introduction"})
+	if(checkIntroduction.length < 1){
+		await newConnectors("Introduction", "", "introduction", [])
+	}
+	
+
 	// ww(5,"***Prepare Mappings ***");
 	for(var i in tmpEveryID){
 		
 		var id = tmpEveryID[i]
 		
-		// only get Mappings if the square has a connector handle (i.e. not inherinting squares)
-		if(retrieveSquareParam(id, 'Co', false)){
 
-			thisCH = retrieveSquareParam(id, 'CH', true)
-			thisCo = await nameToConnectors(retrieveSquareParam(id, 'Co', true))
-			thisDst = thisCo['dst']
-			thisType = thisCo['type']
-			thisIndex = "*"
+		// only get Mappings if the square has a connector handle (i.e. not inherinting squares)
+		var thisCo = retrieveSquareParam(id, 'Co', false)
+		
+
+		if(thisCo && thisCo != "builtin"){
+
+			// thisCH = retrieveSquareParam(id, 'CH', true)			
+			var thisCo = await nameToConnectors(retrieveSquareParam(id, 'Co', true))
+			var thisDst = thisCo['dst']
 			
-			if(thisType === "elastic"){
+			var thisIndex = "*"
+			
+			if(thisCo['type'] === "elastic"){
 				
 				value = await elastic_prep_mappings(thisDst, thisIndex, id)		
 				saveMappingsData(thisDst, thisIndex, value)
@@ -3484,36 +3527,15 @@ function onLoad(){
 
 		url = {}
 		url.v = "1"
-		url.squares =  [{
-					"id": 1,
-					"Pr": [0],
-					"Gt": "intro",
-					"Wi": [],
-					"x": -800,
-					"y": -800
-				}, {
-					"id": 2,
-					"Pr": [1],
-					"Gt": "intro",
-					"Wi": [],
-					"x": 950,
-					"y": 50
-				}, {
-					"id": 3,
-					"Pr": [1],
-					"Gt": "intro",
-					"Wi": [],
-					"x": 250,
-					"y": 1200
-				}, {
-					"id": 4,
-					"Pr": [3],
-					"Gt": "intro",
-					"Wi": [],
-					"x": 900,
-					"y": 50
-				}
-			]
+
+		url.squares = []
+		url.squares.push({"id":1,"Pr":[0],"Gt":"intro","Wi":[],"x":-800,"y":-800,"Co":"Introduction"})
+		url.squares.push({"id":2,"Pr":[1],"Gt":"instructions","Wi":[],"x":-950,"y":600})
+		url.squares.push({"id":3,"Pr":[1],"Gt":"addServers","Wi":[],"x":0,"y":850})
+		url.squares.push({"id":4,"Pr":[3],"Gt":"listServers","Wi":[],"x":0,"y":800})
+		url.squares.push({"id":5,"Pr":[1],"Gt":"youtube","Wi":[],"x":950,"y":550,"Cs":{"link":"iShTunNyuKo"}})
+		
+
 		url['Zt'] = "translate(1530,863) scale(0.57)"
 	
 			qq("tim")
@@ -3543,7 +3565,7 @@ function onLoad(){
 
 	}else{
 
-		qq("loading Three components")
+		// qq("loading Three components")
  		$.getScript('./Three/three.js', function() { 
 			 
 			// // qq("three.js loaded, loading further libraries") 

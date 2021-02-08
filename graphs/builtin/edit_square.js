@@ -1,5 +1,5 @@
 graphs_functions_json.add_graphs_json({
-	"builtin_graphs":{
+	"builtin":{
 		"EditSquare":{
 			"populate":"populate_editsquare", 
 			"rawtoprocessed":"process_editsquare",
@@ -14,11 +14,13 @@ graphs_functions_json.add_graphs_json({
 function populate_editsquare(id){
 	// no back end data to fetch, but tell the system we're ready
 	//ww(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+","+name+")");
+	alert("iaiosduasoidnasoidas")
 	var promises = []
 	return Promise.all(promises)
 
 }
 function process_editsquare(id, data){
+	alert("asopiud9oasdjaslkd")
 	return "empty"
 }
 
@@ -48,6 +50,9 @@ async function graph_editsquare(id){
 	
 	var square = workspaceDiv.selectAll('#square_'+id);
 
+	var thisCo = await nameToConnectors(retrieveSquareParam(id, 'Co', true))
+	var thisType = thisCo['type']
+	var thisGT = retrieveSquareParam(id, "Gt")
 	
 	// square
 	// 		form
@@ -142,8 +147,12 @@ async function graph_editsquare(id){
 					$("#square_editformcustom_"+id).empty()
 					
 					// Does the graph type require ThreeJS, or is it enabled?
-					if(GLB.threejs.enabled = true || graphs_functions_json.retrieveGraphParam(connectors.handletox( retrieveSquareParam(d.id, 'CH'), "type"), selectValue , "requireThreeJS") == false){
-						window[graphs_functions_json.retrieveGraphParam("elastic", selectValue , "completeForm")](d.id, "#square_editformcustom_"+d.id)
+					if(GLB.threejs.enabled = true || graphs_functions_json.retrieveGraphParam(thisType, selectValue , "requireThreeJS") == false){
+						// should the newly chosen graph type be "completeForm" processed
+						var isCompleteForm = graphs_functions_json.retrieveGraphParam(thisType, selectValue , "completeForm")
+						if(isCompleteForm){
+							window[isCompleteForm](d.id, "#square_editformcustom_"+d.id)
+						}
 					}else{
 						alert("3d needed")
 					}
@@ -163,7 +172,7 @@ async function graph_editsquare(id){
 				$('<option></option>').val("").html("")
 			);
 	
-			connector_type = "elastic"
+			connector_type = thisType
 			//qq("connector_type for "+id+" found as:"+connector_type+" toshortnamelist:"+graphs_functions_json.typeToShortnameList(connector_type));
 			$.each(graphs_functions_json.typeToShortnameList(connector_type), function(i, v){
 				mySelect.append(
@@ -185,8 +194,8 @@ async function graph_editsquare(id){
 
 			// if we had a graph type, shoudl we also auto draw the "custom fields" options?
 			selectValue = retrieveSquareParam(id, "Gt", true)
-			if(graphs_functions_json.retrieveGraphParam("elastic", selectValue , "completeForm")){
-				window[graphs_functions_json.retrieveGraphParam("elastic", selectValue , "completeForm")](id, "#square_editformcustom_"+id)
+			if(graphs_functions_json.retrieveGraphParam(thisType, selectValue , "completeForm")){
+				window[graphs_functions_json.retrieveGraphParam(thisType, selectValue , "completeForm")](id, "#square_editformcustom_"+id)
 			}
 
 		}

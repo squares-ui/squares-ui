@@ -87,7 +87,8 @@ async function elastic_populate_calHeatMap(id){
 
 	//######
 
-	var promises = []
+	var promises = [id]
+	
 	var handle = retrieveSquareParam(id, 'CH')
 
 

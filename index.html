@@ -94,7 +94,7 @@
 		<img class='squaresmenuslot fleft squaresmenu_addconnector' onclick='addGraphConnector(null)' alt='showConnectors' title='Create new Connector' />
 		<img class='squaresmenuslot fleft squaresmenu_zoom' onclick='panzoom(); ' alt='Pan Zoom' title='Pan Zoom' />
 		<!-- <img class='squaresmenuslot fleft squaresmenu_update' onclick='updaterefresh(); alertify.log("URL Refreshed")' alt='Refresh' title='Reload URL' /> -->
-		<img class='squaresmenuslot fleft squaresmenu_log'   onclick='qq(url); alertify.log("URL Logged to Console")' alt='Log' title='Dump Squares config to Console' />
+		<img class='squaresmenuslot fleft squaresmenu_log'   onclick='dumpURLToConsole(); alertify.log("URL Logged to Console")' alt='Log' title='Dump Squares config to Console' />
 		<img class='squaresmenuslot fleft squaresmenu_flush' onclick='deleteAllStoredData()' alt='Flush Data' title="Delete cached data, but don't disrupt page" />
 		<img class='squaresmenuslot fleft squaresmenu_status' id='pageStatus' name='pageStatus' onclick='' alt='Status' title="Status" />
 
@@ -119,8 +119,6 @@
 </div>
 
 <div id='hoverInfo'></div>
-
-
 
 
 </body>

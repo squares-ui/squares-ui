@@ -1,5 +1,5 @@
 graphs_functions_json.add_graphs_json({
-	"builtin_graphs":{
+	"builtin":{
 		"SquareDefinition":{
 			"populate":"populate_graphdefinition", 
 			"rawtoprocessed":"process_graphdefinition",
@@ -60,7 +60,7 @@ function graph_graphdefinition(id, data){
 	mySelect.append(
 		$('<option></option>').val(null).html("--System Graphs--")
 	);
-	$.each(graphs_functions_json.typeToShortnameList("builtin_graphs"), function(i, v){
+	$.each(graphs_functions_json.typeToShortnameList("builtin"), function(i, v){
 		mySelect.append(
 			$('<option></option>').val(v).html(v)
 		);
