@@ -145,7 +145,7 @@ async function graph_listServers(id, data){
 	$("#square_"+id+"_table").append("<tbody></tbody");
 	_.each(data, function(obj,i){
 		
-		var newImg = "<img style='width:32px; margin-left:32px' class='squaresmenuslot fleft squaresmenu_addconnector' onclick='addGraphConnector(\""+obj['name']+"\")' alt='showConnectors' title='Create new Connector' />"
+		var newImg = "<img style='width:32px; margin-left:32px' class='squaresmenuslot fleft squaresmenu_addconnector' onclick='addGraphConnector({'Co':'"+obj['name']+"'})' alt='showConnectors' title='Create new Connector' />"
 		var deleteImg = "<img style='width:32px; margin-left:32px' class='squaresmenuslot fleft square_menu_icon_delete' onclick='deleteConnectors(\""+obj['name']+"\"); reloadData([4])' alt='showConnectors' title='Create new Connector' />"
 		
 		if(obj['hits'] > 0){

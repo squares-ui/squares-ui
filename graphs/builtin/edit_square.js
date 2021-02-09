@@ -19,7 +19,7 @@ function populate_editsquare(id){
 
 }
 function process_editsquare(id, data){
-	alert("asopiud9oasdjaslkd")
+	
 	return "empty"
 }
 
@@ -49,9 +49,9 @@ async function graph_editsquare(id){
 	
 	var square = workspaceDiv.selectAll('#square_'+id);
 
-	var thisCo = await nameToConnectors(retrieveSquareParam(id, 'Co', true))
-	var thisType = thisCo['type']
-	var thisGT = retrieveSquareParam(id, "Gt")
+	var thisType = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "type")			
+
+	
 	
 	// square
 	// 		form
