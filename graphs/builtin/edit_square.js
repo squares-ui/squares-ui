@@ -111,10 +111,12 @@ async function graph_editsquare(id){
 				
 				var justDst = await getAllSavedConnectors()
 				_.each(justDst, function(dst){
-					$('#square_co_dropdown_'+id).append($('<option>', { 
-						value: dst['name'],
-						text : dst['name']
-					}));					
+					if(dst['name'] != "Builtin"){
+						$('#square_co_dropdown_'+id).append($('<option>', { 
+							value: dst['name'],
+							text : dst['name']
+						}));					
+					}
 				})		
 				
 				$("#square_co_dropdown_"+id).val(retrieveSquareParam(id, "Co", true));

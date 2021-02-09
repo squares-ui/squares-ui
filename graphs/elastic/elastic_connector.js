@@ -7,7 +7,7 @@
 
 
 async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, incTime, filter, aggsTerm, aggsTermTime, aggsRanges, maxAccuracy, fields, stats, statField){
-	ee(" -> "+arguments.callee.name+"("+id+")");
+	// ee(" -> "+arguments.callee.name+"("+id+")");
 	
 	//// basic
 	// id: 12
@@ -703,10 +703,10 @@ async function hasFieldKeyword(id, keyword){
 
 
 	if(_.contains(masterMappings[thisDst][thisIndex].keywordFields, keyword)){
-		qq(keyword+".keyword")
+		// qq(keyword+".keyword")
 		return true
 	}else{
-		qq(keyword+".____")
+		// qq(keyword+".____")
 		return false
 	}
 }
