@@ -41,6 +41,7 @@ async function graph_editsquare(id){
 			.classed("box_binding", true)
 			.classed("square_body", true)
 			.classed("square_xhtml", true)
+			.classed("square_yoverflow", true)
 			// .classed("y_overflow", true)
 		.on("mousedown", function() { d3.event.stopPropagation(); });
 

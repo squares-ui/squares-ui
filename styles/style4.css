@@ -1,3 +1,7 @@
+/* ################################ */
+/* ######  Basics */
+/* ################################ */
+
 .fleft{float:left;border-style:none;border-width:1px;}
 .fright{float:right;}
 .ffull{float:left;}
@@ -23,41 +27,9 @@ div{
 
 
 
-
-
-	#screenLog{
-		grid-area: 2 / 2 / 3 / 3;
-		overflow-y: scroll;		
-	}
-
-
-
-
-#transparent_screen{
-	display:none;
-	position:absolute;
-	left:0;
-	top:0;
-	background: rgba(255,255,255,.8);
-	width:100%;
-	height:100%;
-	z-index: 19;
-}
-
-
-.top_spacing{
-	padding-top:400px;
-}
-
-.hoverform{
-
-}
-.arrowhead1{
-
-}
-.arrowhead2{
-
-}
+/* ################################ */
+/* ######  Lines between Squares */
+/* ################################ */
 .path_all{
 	fill:none;
 	stroke-width:10;
@@ -77,12 +49,12 @@ div{
 	fill: purple;	
 
 }
-.line_half1{
+/* .line_half1{
 
 }
 .line_half2{
 
-}
+} */
 .line_colour_one{
 	stroke:	#C4A000;
 }
@@ -107,6 +79,11 @@ div{
 
 
 
+/* ################################ */
+/* ######  Squares */
+/* ################################ */
+
+
 .square_cluster_section{
 	padding-top:20px;
 	padding-bottom:10px;
@@ -121,8 +98,8 @@ div{
 	overflow-wrap: break-word;
 }
 .square_cluster_image{
-	padding-left:40px;x
-	height: 90px;
+	padding-left:40px;
+	height: 40px;
 }
 
 .square_sysmessage{
@@ -132,19 +109,6 @@ div{
 .squaretextleft{
 	width:350px
 }
-
-#hoverInfo{
-	position:absolute;
-	z-index: 100;
-	display:block;
-	padding:2px;
-	color: black;
-	background: white;
-	border: 1px solid red;
-  font: 6px sans-serif;
-
-}
-
 
 /*  Used for "loading" "no data" etc  */
 .square_dft_message{
@@ -164,7 +128,7 @@ div{
 	text-align:left;
 	/* float:left; */
 	/* width:40%; */
-	color: #black;
+	color: black;
 	font-size:32px;
 	padding-top:30px;
 	padding-bottom:20px;
@@ -174,27 +138,38 @@ div{
 }
 .square_aboutMe_body{
 	text-align:left;
-	color: #black;
+	color: black;
 	font-size:32px;
-	width:*;
+	/* width: ; */
 	padding-left:40px;
 }
 
-
-.limitedalertify{
-	width:600px; 
+.square_rawoutput{
+	font-size:24px;
 	word-wrap: break-word;
+	/* width:100%; */
+	text-align:left;
+	margin-bottom:20px;
+	background-color: #ffffff;
+	overflow: initial;
+	border: initial;
+	border-bottom-color: rgb(204, 204, 204);
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+}	
+
+#hoverInfo{
+	position:absolute;
+	z-index: 100;
+	display:block;
+	padding:2px;
+	color: black;
+	background: white;
+	border: 1px solid red;
+  font: 6px sans-serif;
+
 }
 
-.box-shadow{
-	0px 0px 22px 8px blue;
-}
-
-.canvas{
-	display:none;
-	/* width:100%;
-	height:100%; */
-}
 
 .box_binding{
     box-sizing: border-box;
@@ -202,8 +177,16 @@ div{
     -webkit-box-sizing: border-box;
 }
 
+
+
+/* ################################ */
+/* ######  Square content */
+/* ################################ */
+
+
+
 .fontsize{
-	color: #black;
+	color: black;
 	font-size:30px;
 }
 
@@ -214,6 +197,7 @@ select {
 select option {
 	background: white;
 }
+
 textarea {
 	background: white;
 	width: 90%;
@@ -221,13 +205,6 @@ textarea {
 	font-size:30px;
 }
 /* CSS specific to squares/graphs.  Move to separate file? */
-
-.bluebar {
-  fill: steelblue;
-}
-.redbar {
-  fill: #b446b4;
-}
 
 
 .graph_info_title{
@@ -244,6 +221,24 @@ textarea {
   text-anchor: middle;
 }
 
+
+/* updateCountdown */
+.graph_updater_centertext{
+	font-size:48px;
+	color: #121b2a;
+	height:24%;
+}
+
+
+.cloudText {
+	font-family: Impact;
+}
+
+/* ################################ */
+/* ######  To sort out */
+/* ################################ */
+
+
 .steelblue{
 	color:#84d3e2;
 }
@@ -253,11 +248,7 @@ textarea {
   font: 14px sans-serif;
   text-anchor: end;
 }
-.graph_updater_centertext{
-	font-size:48px;
-	color: #121b2a;
-	height:24%;
-}
+
 
 .y_overflow{
 	/* https://bugs.chromium.org/p/chromium/issues/detail?id=568614 */
@@ -288,26 +279,6 @@ path.arc{
   fill: #121b2a;
 }
 
-.fill_col_1{
-	colour:#6e9aa4;
-	fill:#6e9aa4
-}
-.fill_col_2{
-	color: #121b2a;
-	fill: #121b2a;
-}
-
-.outline_col_2{
-	fill: none;
-	stroke: #121b2a;
-	stroke-width:5;
-}
-
-
-.editSquareJsonForm{
-	
-}
-
 
 
 .bar rect {
@@ -322,25 +293,6 @@ path.arc{
 }	
 
 
-.square_rawoutput{
-	font-size:24px;
-	word-wrap: break-word;
-	/* width:100%; */
-	text-align:left;
-	margin-bottom:20px;
-	background-color: #ffffff;
-	overflow: initial;
-	border: initial;
-	border-bottom-color: rgb(204, 204, 204);
-    border-bottom-style: solid;
-    border-bottom-width: 1px;
-}	
-
-.form-group{
-	/* JSONform components */
-	/* margin-top:10px;
-	margin-bottom:10px; */
-}
 
 .btn{
 	display: inline-block;
@@ -370,6 +322,55 @@ table, td th {
 }
 
 
-.cloudText {
-	font-family: Impact;
+
+/* ####################### */
+/* ######  CSS Graveyard   */
+/* ####################### */
+
+/*
+
+#transparent_screen{
+	display:none;
+	position:absolute;
+	left:0;
+	top:0;
+	background: rgba(255,255,255,.8);
+	width:100%;
+	height:100%;
+	z-index: 19;
 }
+
+.top_spacing{
+	padding-top:400px;
+}
+
+.hoverform{
+
+}
+.arrowhead1{
+
+}
+.arrowhead2{
+
+}
+
+.canvas{
+	display:none;
+	width:100%;
+	height:100%;
+}
+
+
+.limitedalertify{
+	width:600px; 
+	word-wrap: break-word;
+}
+
+.form-group{
+	JSONform components
+	margin-top:10px;
+	margin-bottom:10px; 
+}
+
+
+*/

@@ -214,14 +214,22 @@ function elastic_graph_treemapdimensions(id, data){
 	// https://bl.ocks.org/ganezasan/52fced34d2182483995f0ca3960fe228
 
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
+
+
+
+
 	var square = squareContainer
 		.append("xhtml:div") 
-		.attr("id", function(d){ return "square_"+d.id })
+			.attr("id", function(d){ return "square_"+d.id })
+			.classed("box_binding", true)
+			.classed("square_body", true)
+			.classed("square_xhtml", true)			
 			.style("position", "relative")
-			.style("width", "100%")
-			.style("height", "100%")
-			.style("left", 0 + "px")
-			.style("top", 0 + "px")
+			// .style("left", 0 + "px")
+			// .style("top", 0 + "px")
+
+			
+		.on("mousedown", function() { d3.event.stopPropagation(); })
 
 	var height = document.getElementById("square_"+id).clientHeight;
 	var width  = document.getElementById("square_"+id).clientWidth;
@@ -258,8 +266,8 @@ function elastic_graph_treemapdimensions(id, data){
   	.enter().append("div")
 		.style("left", (d) => d.x0 + "px")
 		.style("top", (d) => d.y0 + "px")
-		.style("width", (d) => Math.max(0, d.x1 - d.x0 - 1) + "px")
-		.style("height", (d) => Math.max(0, d.y1 - d.y0  - 1) + "px")
+		.style("width", (d) => Math.max(0, d.x1 - d.x0 ) + "px")
+		.style("height", (d) => Math.max(0, d.y1 - d.y0) + "px")
 		.style("background", function(d) { 
 			while (d.depth > 1) d = d.parent; return colorScale(d.data.name);
 		})

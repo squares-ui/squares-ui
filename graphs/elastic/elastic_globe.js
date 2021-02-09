@@ -303,7 +303,7 @@ function elastic_graph_globe(id, data){
 			.classed("box_binding", true)
 			.classed("square_body", true)
 			.classed("square_xhtml", true)
-			.classed("y_overflow", true)
+			// .classed("y_overflow", true)
 			.attr("width", "1000")
 		.on("mousedown", function() { d3.event.stopPropagation(); })
 	var height = document.getElementById("square_"+id).clientHeight;

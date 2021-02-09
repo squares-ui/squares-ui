@@ -35,7 +35,7 @@ async function elastic_completeform_trend(id, targetDiv){
 				"title": "Window Slide",
 				"type": "string",
 				"enum": [
-					"TheWindowSize", "Daily", "Weekly"
+					"TheWindowSize", "Daily", "Weekly", "Fracture"
 				]
 			},
 			"x_windows":{
@@ -88,12 +88,19 @@ async function elastic_populate_trend(id, data){
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
 	var thisIndex = "*"
+	
+	var thisWe = calcGraphTime(id, 'We', 0)
+	var to = thisWe
+	var from = thisWe + retrieveSquareParam(id, "Ws", true)
+	
+	var thisCs = retrieveSquareParam(id,"Cs",true)
 
-	var to = calcGraphTime(id, 'We', 0)
-	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var timesArray = []
-	var windowSlide = retrieveSquareParam(id,"Cs",true)['x_windowSlide']
+
+	var windowSlide = thisCs['x_windowSlide']	
 	var windowSize = 0;
+	var windowCount = thisCs['x_windows']
+
 	if(windowSlide == "TheWindowSize"){
 		windowSize = (to-from)
 	}else if(windowSlide == "Daily"){
@@ -102,13 +109,24 @@ async function elastic_populate_trend(id, data){
 		windowSize = 60*60*24*7
 	}else if(windowSlide == "Monthly"){
 		windowSize = 60*60*24*7*28
+	}else if(windowSlide == "Fracture"){
+		windowSize = ((to-from)/windowCount)
 	}
-	for (var i = 0 ; i < retrieveSquareParam(id,"Cs",true)['x_windows'] ; i++){
-		timesArray.push([from - (i*windowSize), to - (i*windowSize)])
+
+	// for (var i = 0 ; i < windowCount ; i++){
+	// 	timesArray.push([from - (i*windowSize), to - (i*windowSize)])
+	// }
+
+	// var newTo = to
+	for (var i = 0 ; i < windowCount ; i++){
+		
+		newTo = to - (i*windowSize)
+		timesArray.push([newTo - windowSize, newTo])
+		// newTo = newTo - windowSize
 	}
 
 
-	var fields = [retrieveSquareParam(id,"Cs",true)['x_field']]
+	var fields = [thisCs['x_field']]
 	var limit = 1;
 	var stats = false
 	var statField = ""
@@ -158,6 +176,9 @@ function elastic_rawtoprocessed_trend(id, data){
 	// dataOut['timeMin'] = data[0]['from_as_string']
 	dataOut['ticks'] = []
 
+	var highestTo = data[0]['to']
+	var lowestFrom = data[0]['from']
+
 	_.each(data, function(timerange){
 
 		// miniObj = {"name": result['key'], "data":[]}
@@ -174,10 +195,19 @@ function elastic_rawtoprocessed_trend(id, data){
 		})
 
 		dataOut['ticks'].push(timerange['from_as_string'])
-		// dataOut['timeMax'] = timerange['from_as_string'] // the last bucket time range
+
+		
+		// find extent of this query overall, helps with xAxis tick format later
+		if(timerange['from'] < lowestFrom){
+			lowestFrom = timerange['from']
+		}
+		if(timerange['to'] > highestTo){
+			highestTo = timerange['to']
+		}
 	})
 
-
+	dataOut['timeDiff'] = (highestTo - lowestFrom)/1000
+	dataOut['keyCount'] = data.length
 	
 
 	_.each(dataMid, function(values,field){
@@ -216,7 +246,7 @@ function elastic_graph_trend(id, data){
 			.classed("box_binding", true)
 			.classed("square_body", true)
 			.classed("square_xhtml", true)
-			.classed("y_overflow", true)
+			
 		.on("mousedown", function() { d3.event.stopPropagation(); })
 
 	var margin = {top: 10, right: 110, bottom: 30, left: 60}
@@ -226,9 +256,6 @@ function elastic_graph_trend(id, data){
 	var g = square.append("g")
     .attr("transform",
           "translate(" + margin.left + "," + margin.top + ")");
-
-	// var data = retrieveSquareParam(id, 'processeddata')
-	var windows = parseInt(retrieveSquareParam(id,"Cs",true)['x_windows'])
 
 	//calculate count range once
 	var dataCount = []
@@ -257,28 +284,26 @@ function elastic_graph_trend(id, data){
 	})
 		
 
-	// scale for dates
+	// xAxis
 	var xBottom = d3.scaleTime()
 		.domain(  
 			//d3.extent(_.map(data[0]['data'], function(obj){ return new Date(obj['from_as_string']) }))
 			[new Date(data['ticks'][0]), new Date(data['ticks'][data['ticks'].length-1])]
 		)
 		.rangeRound([0, width - margin.right])
-		
-
-
-	// Scale of dates across the bottom
 	const xAxisBottom = d3.axisBottom(xBottom)
-		.tickFormat(d3.timeFormat("%b %d %H:%m"))
-		// .tickValues(tickValues)
-		
-
-
+		// .tickFormat(d3.timeFormat("%b %d %H:%m"))
+		.tickFormat(function(date){
+			if (data['timeDiff'] >= 604800) {
+			  return d3.timeFormat('%b %d')(date);
+			} else {
+			  return d3.timeFormat('%a %H:%m')(date);
+			}
+		  })
+		.ticks(data['keyCount'])
 	g.append('g')
 		.attr('transform', 'translate(0,' + height + ')')
 		.call(xAxisBottom)
-
-
 
 
 	// y Scale of hits
@@ -295,20 +320,31 @@ function elastic_graph_trend(id, data){
 		.call(yAxis); 
 
 
+
 	// the lines function
 	const line = d3.line()
 		//.x(d => x(d.from_as_string))
 		.x(function(d){ 
 			return xBottom(new Date(d.from_as_string))
 		})
-		.y(function(d){
-			
+		.y(function(d){			
 			return y(d.count)
 		})
 
-
 	
+	// Gridline
+	var gridlines = d3.axisTop()
+		.tickFormat("")
+		.tickSize(-height)
+		.ticks(data['keyCount'])
+		.scale(xBottom);
 
+	g.append("g")
+		.attr("class", "grid")
+		.call(gridlines);
+
+
+		
 	// Data Line lines
 	g.selectAll()
 		.data(data['data'])
@@ -340,7 +376,7 @@ function elastic_graph_trend(id, data){
 		});
 
 
-// Data Line circle
+	// Data Line circle
 	g.selectAll()
 		.data(data['data']).enter()
 	.append("circle")
