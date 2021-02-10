@@ -50,22 +50,22 @@ https://grid.layoutit.com/
 	/* Screen menu */
 	#menu{						
 		/* border-bottom: 1px solid grey; */
+		height:70px;
 		width: 50%;
 		margin: 0 auto;				
 		
 		/* Grid allows auto alignment of all '.squaresmenuslot' inside */
-		display: grid;
-		grid-template-rows: 40px;
-		grid-template-columns: repeat( auto-fit, minmax(40px, 2fr) );
-		z-index:500;
+		/* display: grid; */
+		/* grid-template-rows: 40px; */
+		/* grid-template-columns: repeat( auto-fit, minmax(10px, 2fr) ); */
+		/* z-index:500; */
 		position:relative;
 		
 	}
 
 
 		/* Main menu icons */
-		.squaresmenuslot{			
-			
+		.squaresmenuslot{						
 			height:100%;
 			display:block;
 			width: auto;

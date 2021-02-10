@@ -5,6 +5,13 @@
 
 	<title>SQUARES-UI</title>
 
+	<!-- Three.js takes ~1s, so use defer -->
+	<script src="./Three/three.js" defer></script> 
+	<script src="./lib/stats.js" defer></script> 
+	<script src="./lib/threex.rendererstats.js" defer></script> 
+	<script src="./myThree.js" defer></script> 
+
+
 	<script type="text/javascript">
 		// Add \<script src="./graphs/*****.js"\>\</script\> Below
 		var import_graphs = new Array();
@@ -80,37 +87,39 @@
 
 <div id="bigwrapper">
 
-
-	<!-- Menu on top as it's floating -->
-	<div id="menu" class="squares_segment">
-		<img class='squaresmenuslot  squaresmenu_wipereset'  onclick='wipereset()' alt='Reset' title='Clean and refresh page'/>
-		<img class='squaresmenuslot  squaresmenu_addconnector' onclick='addGraphConnector(null)' alt='showConnectors' title='Create new Connector' />
-		<img class='squaresmenuslot  squaresmenu_zoom' onclick='panzoom(); ' alt='Pan Zoom' title='Pan Zoom' />
-		<!-- <img class='squaresmenuslot fleft squaresmenu_update' onclick='updaterefresh(); alertify.log("URL Refreshed")' alt='Refresh' title='Reload URL' /> -->
-
-		<img class='squaresmenuslot  squaresmenu_status' id='pageStatus' name='pageStatus' onclick='' alt='Status' title="Status" />
-
-		
-		<img class='squaresmenuslot  squaresmenu_log'   onclick='dumpURLToConsole(); alertify.log("URL Logged to Console")' alt='Log' title='Dump Squares config to Console' />
-		<img class='squaresmenuslot  squaresmenu_flush' onclick='deleteAllStoredData()' alt='Flush Data' title="Delete cached data, but don't disrupt page" />
-		
-		<img class='squaresmenuslot  squaresmenu_countelements' onclick='udpateScreenLog(
-			"Squares: "+url.squares.length + " " +
-			"G: "+document.getElementsByTagName("g").length + " " +
-			"Text: "+document.getElementsByTagName("text").length + " " +
-			"Path: "+document.getElementsByTagName("path").length + " " +
-			"DIV: "+document.getElementsByTagName("div").length + " " +
-			"SVG: "+document.getElementsByTagName("svg").length + " "
-		)' alt='Count Elements' title='Performance test: count all elements to log Window' />	
-	
-	</div>
-
-
 	<!-- Then workspace underneath -->
 	<div id="workspace" class="squares_segment">
 		<svg version="1.1" xmlns="http://www.w3.org/2000/svg" id="workspaceDiv" stroke-opacity="0.3"> </svg> 
 		<!-- ThreeJS canvas is inserted here when requred-->
 	</div> 
+
+	<!-- Menu on top as it's floating -->
+	<div id="menu" class="squares_segment">
+		<img src="./squares-ui-icons/159122-technology-icon-collection/svg/browser-17.svg" class='squarePageMenuIcon fleft' onclick='wipereset()' alt='Reset' title='Clean and refresh page'/>
+		<img src="./squares-ui-icons/159122-technology-icon-collection/svg/browser-8.svg" class='squarePageMenuIcon fleft' onclick='addGraphConnector(null)' alt='showConnectors' title='Create new Connector' />
+		<img src="./squares-ui-icons/159122-technology-icon-collection/svg/browser-30.svg" class='squarePageMenuIcon fleft' onclick='panzoom(); ' alt='Pan Zoom' title='Pan Zoom' />
+		<!-- <img class='squarePageMenuIcon fleft squaresmenu_update' onclick='updaterefresh(); alertify.log("URL Refreshed")' alt='Refresh' title='Reload URL' /> -->
+
+		<img src="./squares-ui-icons/159122-technology-icon-collection/svg/browser-29.svg" class='squarePageMenuIcon fleft' id='pageStatus' name='pageStatus' onclick='' alt='Status' title="Status" />
+
+		
+		<img src="./squares-ui-icons/159122-technology-icon-collection/svg/browser-23.svg" class='squarePageMenuIcon fleft'   onclick='dumpURLToConsole(); alertify.log("URL Logged to Console")' alt='Log' title='Dump Squares config to Console' />
+		<img src="./squares-ui-icons/159122-technology-icon-collection/svg/browser-4.svg" class='squarePageMenuIcon fleft' onclick='deleteAllStoredData()' alt='Flush Data' title="Delete cached data, but don't disrupt page" />
+		
+		<img src="./squares-ui-icons/159122-technology-icon-collection/svg/browser-15.svg" class='squarePageMenuIcon fleft' onclick='udpateScreenLog(
+							"Squares: "+url.squares.length + " " +
+						"G: "+document.getElementsByTagName("g").length + " " +
+						"Text: "+document.getElementsByTagName("text").length + " " +
+						"Path: "+document.getElementsByTagName("path").length + " " +
+						"DIV: "+document.getElementsByTagName("div").length + " " +
+						"SVG: "+document.getElementsByTagName("svg").length + " "
+					)' alt='Count Elements' title='Performance test: count all elements to log Window' />	
+	    
+
+	
+	</div>
+
+
 
 
 	<!-- Screenlog, likely hidden -->

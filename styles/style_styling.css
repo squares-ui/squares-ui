@@ -49,6 +49,11 @@ body{
 	border-bottom:1px solid #d7d6d4;			
 	border-left:1px solid #d7d6d4;			
 	border-right:1px solid #d7d6d4;			
+    
+	display: flex;
+    justify-content:space-evenly;
+	
+
 }
 
 
@@ -97,8 +102,22 @@ body{
 
 .squaresmenuslot{			
 	justify-self: center;
-	border:5px;
+	/* border:5px; */
 }
+
+.square_menu_icon{
+    height:46px;
+    width:46px;
+}
+
+.squarePageMenuIcon{			
+	border:5px;
+	height:100%;
+	
+	
+}
+
+
 
 /* ################################ */
 /* ######  Lines (connect Squares) */
@@ -248,7 +267,10 @@ body{
     -webkit-box-sizing: border-box;
 }
 
-
+.imageListServers{
+	width:48px;
+	padding-left:12px;
+}
 
 /* ################################ */
 /* ######  Square content */

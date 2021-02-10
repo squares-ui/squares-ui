@@ -145,8 +145,8 @@ async function graph_listServers(id, data){
 	$("#square_"+id+"_table").append("<tbody></tbody");
 	_.each(data, function(obj,i){
 		
-		var newImg = "<img style='width:32px; margin-left:32px' class='squaresmenuslot fleft squaresmenu_addconnector' onclick='addGraphConnector({'Co':'"+obj['name']+"'})' alt='showConnectors' title='Create new Connector' />"
-		var deleteImg = "<img style='width:32px; margin-left:32px' class='squaresmenuslot fleft square_menu_icon_delete' onclick='deleteConnectors(\""+obj['name']+"\"); reloadData([4])' alt='showConnectors' title='Create new Connector' />"
+		var newImg = "<img src='./squares-ui-icons/159122-technology-icon-collection/svg/browser-8.svg' class='squaresmenuslot imageListServers' onclick='addGraphConnector({'Co':'"+obj['name']+"'})' alt='showConnectors' title='Create new Connector' />"
+		var deleteImg = "<img src='./squares-ui-icons/126466-multimedia-collection/svg/garbage.svg' class='squaresmenuslot imageListServers' onclick='deleteConnectors(\""+obj['name']+"\"); reloadData([4])' alt='deleteConnectors' title='Delete Connector' />"
 		
 		if(obj['hits'] > 0){
 			var thisHits = "Yes"
@@ -154,7 +154,7 @@ async function graph_listServers(id, data){
 			var thisHits = "No"
 		}
 
-		$("#square_"+id+"_table").find('tbody').append("<tr><td>"+obj['name']+"</td><td>"+obj['status']+"</td><td>"+thisHits+"</td><td>"+newImg+"</td><td>"+deleteImg+"</td><tr>");
+		$("#square_"+id+"_table").find('tbody').append("<tr><td>"+obj['name']+"</td><td>"+obj['status']+"</td><td>"+thisHits+"</td><td style='border:0px; padding:0px;'>"+newImg+"</td><td style='border:0px; padding:0px;' >"+deleteImg+"</td><tr>");
 
 	})
 
