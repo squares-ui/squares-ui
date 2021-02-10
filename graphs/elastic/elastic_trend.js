@@ -178,6 +178,7 @@ function elastic_rawtoprocessed_trend(id, data){
 
 	var highestTo = data[0]['to']
 	var lowestFrom = data[0]['from']
+	var windowSize = (data[0]['to'] - data[0]['from'])/1000
 
 	_.each(data, function(timerange){
 
@@ -194,6 +195,8 @@ function elastic_rawtoprocessed_trend(id, data){
 		
 		})
 
+
+		// String version for d3 graph vertical lines/clicks
 		dataOut['ticks'].push(timerange['from_as_string'])
 
 		
@@ -204,11 +207,12 @@ function elastic_rawtoprocessed_trend(id, data){
 		if(timerange['to'] > highestTo){
 			highestTo = timerange['to']
 		}
+
 	})
 
 	dataOut['timeDiff'] = (highestTo - lowestFrom)/1000
 	dataOut['keyCount'] = data.length
-	
+	dataOut['windowSize'] = windowSize
 
 	_.each(dataMid, function(values,field){
 		// mini array
@@ -309,7 +313,7 @@ function elastic_graph_trend(id, data){
 	// y Scale of hits
 	var y = d3.scaleLog()
 		.domain([   
-			1, _.max(dataCount)+10
+			1, _.max(dataCount)*1.2
 		])
 		.range([height, 0])
 		.clamp(true)
@@ -332,39 +336,39 @@ function elastic_graph_trend(id, data){
 		})
 
 	
-	// Gridline
+	// Vertical gridline
 	var gridlines = d3.axisTop()
 		.tickFormat("")
 		.tickSize(-height)
 		.ticks(data['keyCount'])
 		.scale(xBottom);
-
 	g.append("g")
 		.attr("class", "grid")
 		.call(gridlines);
 
 
-		
-	// Data Line lines
-	g.selectAll()
+
+
+	var dataSeries = g.selectAll()
 		.data(data['data'])
-	.enter()
-		.append('path')
+		.enter()	
+
+
+	// Data Line lines
+	dataSeries.append('path')
 		.attr('fill',  function(d) { 
 			return colorScale(d.name)
 		})
 		.attr('stroke', function(d) { 
 			return colorScale(d.name)
 		})
-		.attr('stroke-width', 10)
+		.attr('stroke-width', 6)
 		.datum(d => d.data)
 		.attr('d', line);
 
 
 	// Data Line Title 
-	g.selectAll()
-		.data(data['data']).enter()
-	.append('text')
+	dataSeries.append('text')
 		.html(d => d.name)
 		.attr('fill', d => d.color)
 		.attr('alignment-baseline', 'middle')
@@ -376,18 +380,17 @@ function elastic_graph_trend(id, data){
 		});
 
 
+		
 	// Data Line circle
-	g.selectAll()
-		.data(data['data']).enter()
-	.append("circle")
+	dataSeries.append("circle")
 		.attr('cx', width - margin.right)
 		.attr('cy', function(d){
-			// alert(JSON.stringify(d.data))
+			// qq("---")
+			// qq(JSON.stringify(d.data))
+			// qq(_.last(d.data)['count'])
 			return y(_.last(d.data)['count'])
 		})
-
-
-		.attr('r', 8)
+		.attr('r', 4)
 		.style("fill", function(d) { 
 			return colorScale(d.name)
 		})
@@ -401,8 +404,48 @@ function elastic_graph_trend(id, data){
 			clickObject.compare.push(miniobj)	
 			clickObject = btoa(JSON.stringify(clickObject));
 			childFromClick(id, {"y": 1000, "Ds": clickObject} );
+		})
 
+
+
+	// flattern data into 1 array for adding to chart 
+	var masterPoints = []
+	_.each(data['data'], function (series){
+		_.each(series['data'], function(point){
+			var myDate = new Date(point['from_as_string']);
+			masterPoints.push({"key":series['name'], "from_as_string":new Date(point['from_as_string']), "count":point['count'], "epoch":(myDate.getTime()/1000) })
+		
+			
+		})
 	})
+		
+	var graphPoints = g.selectAll()
+		.data(masterPoints)
+		.enter()	
+	
+	graphPoints.append("circle")
+		.attr('cx', function(d){			
+			return xBottom(d['from_as_string'])
+		})
+		.attr('cy', function(d){						
+			return y(d['count'])
+		})
+		.attr('r', 4)
+		.style("fill", function(d) { 
+			return colorScale(d.key)
+		})
+		.on("click", function(d){ 
+			var clickObject = {"compare":[]}
+			var key = retrieveSquareParam(id, 'Cs', true)['x_field']
+			var miniobj = {}
+			
+			miniobj[key] = d.key
+			
+			clickObject.compare.push(miniobj)	
+			clickObject = btoa(JSON.stringify(clickObject));
+			childFromClick(id, {"y": 1000, "Ds": clickObject, "Wi":[d.epoch,-1*data['windowSize'],0]} );
+		})
+
 
 	
 	// xaxis ticks clickability
