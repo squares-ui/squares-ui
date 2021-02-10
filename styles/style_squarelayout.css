@@ -1,0 +1,98 @@
+/* Great Resources https://grid.layoutit.com/ */
+
+
+#squaregroup{
+}
+	
+	#linegroup{
+	}
+
+	/* SVG Group (g) for this particular square */
+	.square_main{				
+		border-radius: 20px;
+		-webkit-box-shadow: 5px 7px 18px 4px rgba(0,0,0,0.15), inset 0 0 2px #444;
+		-moz-box-shadow: 5px 7px 18px 4px rgba(0,0,0,0.15), inset 0 0 2px #444;
+		box-shadow: 5px 7px 18px 4px rgba(0,0,0,0.15), inset 0 0 2px #444;
+	}
+
+		/* To have a DIV, we need a ForeignObject inside the SVG Group */
+		.square_foreignObject{						
+			width:1000px;
+			height:1000px;						
+		}
+	
+			/* master DIV of the square, allows the 'Brick' Structure */
+			.square_container{
+				height:100%;
+				width:100%;
+				/* this lays out the square body and square menu */
+				display: grid;
+				grid-template-columns: 0.2fr 1fr;
+				grid-template-rows: 0.2fr 0.2fr 5.0fr 0.2fr 0.2fr;
+				gap: 0px 0px;
+				grid-template-areas:
+					"square_menu_filter square_menu_filter"
+					"square_menu_WeWs_id square_menu_WeWs_times"
+					"square_body square_body"
+					"square_menu_icons square_menu_icons"
+					"square_menu_info square_menu_info";
+				}
+
+				
+				.square_menu{
+					width: 100%;
+				}
+
+					.menu_invisible{
+						/* visibility:hidden; */
+						/*visibility:visible;*/
+					}
+					.square_menu_text{									
+					}
+
+				/* Shows the Ds/filters applied to square */
+				.square_menu_filter{
+					grid-area: square_menu_filter; 
+				}
+
+
+
+				.square_menu_WeWs_id{
+					grid-area: square_menu_WeWs_id
+				}
+				.square_menu_WeWs_times{
+					grid-area: square_menu_WeWs_times;
+					text-align:right;
+				}
+
+				.square_body{
+					grid-area: square_body; 
+					height:100%;
+					width:100%;		
+				}
+					.square_content{
+
+					}
+					.square_xhtml{								
+					}
+					.square_yoverflow{
+						overflow-y: scroll;
+					}
+
+
+
+				.square_menu_info{
+					grid-area: square_menu_info; 
+					display:none;
+				}
+
+				.square_menu_icons{
+					grid-area: square_menu_icons; 
+					display: grid;
+					grid-template-columns: repeat( auto-fit, minmax(30px, 1fr) );
+				}
+					.square_menu_icon{
+					}
+
+					.square_generic_text{
+					}

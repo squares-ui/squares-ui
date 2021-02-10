@@ -9,8 +9,6 @@
 		// Add \<script src="./graphs/*****.js"\>\</script\> Below
 		var import_graphs = new Array();
 	</script>
-	
-	
 
 	<script src="./lib/jquery-3.0.0.min.js"></script> 
 	<script src="./lib/d3.v4.min.js" charset="utf-8"></script>
@@ -45,16 +43,15 @@
 
 	<script src="./config.js"></script>
 
+	<!-- styling -->
+	<!-- most "standard" first, allowing following customisataions to take preference is desired -->
+	<link href="./styles/style_pagelayout.css" rel="stylesheet" type="text/css">
+	<link href="./styles/style_squarelayout.css" rel="stylesheet" type="text/css">
+	<link href="./styles/style_styling.css" rel="stylesheet" type="text/css">
+	<link href="./styles/style_theme.css" rel="stylesheet" type="text/css">
 	
-	<link href="./styles/style4.css" rel="stylesheet" type="text/css">
-	<link href="./styles/style_structure.css" rel="stylesheet" type="text/css">
-	<!-- <link href="./styles/colours_oblivion.css" rel="stylesheet" type="text/css"> -->
 	<link href="./styles/bootstrap.css" rel="stylesheet" type="text/css">
 	
-	<link href="./styles/squares-ui.css" rel="stylesheet" type="text/css">
-	<link href="./styles/theme.css" rel="stylesheet" type="text/css">
-	<link href="./styles/user.css" rel="stylesheet" type="text/css">
-
 	<link rel="stylesheet" href="./alertify.js-0.3.11/themes/alertify.core.css" />
 	<link rel="stylesheet" href="./alertify.js-0.3.11/themes/alertify.default.css" id="toggleCSS" />	
 	
@@ -83,38 +80,41 @@
 
 <div id="bigwrapper">
 
-	<div id="workspacecontainer" class="squares_segment">
-		<svg version="1.1" xmlns="http://www.w3.org/2000/svg" id="workspaceDiv" stroke-opacity="0.3"> </svg> 
-		<!-- canvas inserted here -->
-	</div> 
-	
 
-	<div id="menu" class="squares_segment fleft">
-		<img class='squaresmenuslot fleft squaresmenu_wipereset'  onclick='wipereset()' alt='Reset' title='Clean and refresh page'/>
-		<img class='squaresmenuslot fleft squaresmenu_addconnector' onclick='addGraphConnector(null)' alt='showConnectors' title='Create new Connector' />
-		<img class='squaresmenuslot fleft squaresmenu_zoom' onclick='panzoom(); ' alt='Pan Zoom' title='Pan Zoom' />
+	<!-- Menu on top as it's floating -->
+	<div id="menu" class="squares_segment">
+		<img class='squaresmenuslot  squaresmenu_wipereset'  onclick='wipereset()' alt='Reset' title='Clean and refresh page'/>
+		<img class='squaresmenuslot  squaresmenu_addconnector' onclick='addGraphConnector(null)' alt='showConnectors' title='Create new Connector' />
+		<img class='squaresmenuslot  squaresmenu_zoom' onclick='panzoom(); ' alt='Pan Zoom' title='Pan Zoom' />
 		<!-- <img class='squaresmenuslot fleft squaresmenu_update' onclick='updaterefresh(); alertify.log("URL Refreshed")' alt='Refresh' title='Reload URL' /> -->
-		<img class='squaresmenuslot fleft squaresmenu_log'   onclick='dumpURLToConsole(); alertify.log("URL Logged to Console")' alt='Log' title='Dump Squares config to Console' />
-		<img class='squaresmenuslot fleft squaresmenu_flush' onclick='deleteAllStoredData()' alt='Flush Data' title="Delete cached data, but don't disrupt page" />
-		<img class='squaresmenuslot fleft squaresmenu_status' id='pageStatus' name='pageStatus' onclick='' alt='Status' title="Status" />
 
+		<img class='squaresmenuslot  squaresmenu_status' id='pageStatus' name='pageStatus' onclick='' alt='Status' title="Status" />
 
-		<img class='squaresmenuslot fleft squaresmenu_countelements' onclick='udpateScreenLog(
-			"Squares: "+url.squares.length + " " +
-		    "G: "+document.getElementsByTagName("g").length + " " +
-		    "Text: "+document.getElementsByTagName("text").length + " " +
-		    "Path: "+document.getElementsByTagName("path").length + " " +
-		    "DIV: "+document.getElementsByTagName("div").length + " " +
-		    "SVG: "+document.getElementsByTagName("svg").length + " "
-		)' alt='Count Elements' title='Performance test: count all elements to log Window' />
 		
-	</div>
-
+		<img class='squaresmenuslot  squaresmenu_log'   onclick='dumpURLToConsole(); alertify.log("URL Logged to Console")' alt='Log' title='Dump Squares config to Console' />
+		<img class='squaresmenuslot  squaresmenu_flush' onclick='deleteAllStoredData()' alt='Flush Data' title="Delete cached data, but don't disrupt page" />
+		
+		<img class='squaresmenuslot  squaresmenu_countelements' onclick='udpateScreenLog(
+			"Squares: "+url.squares.length + " " +
+			"G: "+document.getElementsByTagName("g").length + " " +
+			"Text: "+document.getElementsByTagName("text").length + " " +
+			"Path: "+document.getElementsByTagName("path").length + " " +
+			"DIV: "+document.getElementsByTagName("div").length + " " +
+			"SVG: "+document.getElementsByTagName("svg").length + " "
+		)' alt='Count Elements' title='Performance test: count all elements to log Window' />	
 	
-
-	<div id="screenLog" class="squares_segment fleft square_menu_text">
-		No Logs
 	</div>
+
+
+	<!-- Then workspace underneath -->
+	<div id="workspace" class="squares_segment">
+		<svg version="1.1" xmlns="http://www.w3.org/2000/svg" id="workspaceDiv" stroke-opacity="0.3"> </svg> 
+		<!-- ThreeJS canvas is inserted here when requred-->
+	</div> 
+
+
+	<!-- Screenlog, likely hidden -->
+	<div id="screenLog" class="squares_segment square_menu_text"></div>
 
 </div>
 

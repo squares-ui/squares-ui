@@ -10,25 +10,97 @@
 html{
 	overflow: hidden;
 }
-body{
-	margin:0px;
-	color:black;
-	font-family: Impact;
-	background-color:black;
-	height:100vh;
-	background: white;
-	overflow: hidden;
-}
+
 div{
 	font-family: courier;
-
 }
-
 
 
 
 /* ################################ */
-/* ######  Lines between Squares */
+/* ######  Main page styling  (only style, not structure) */
+/* ################################ */
+
+/*
+white - on top
+f3f2ef - bodies
+d7d6d4 - borders
+*/
+
+body{
+	margin:0px;
+	/* color:black; */
+	font-family: Impact;
+	/* background-color:black; */
+	/* height:100vh; */
+	overflow: hidden;
+}
+
+
+#workspace{
+	background: #f3f2ef;	
+}
+
+
+#menu{		
+	background-color: white;
+	padding-bottom:10px;
+	border-bottom:1px solid #d7d6d4;			
+	border-left:1px solid #d7d6d4;			
+	border-right:1px solid #d7d6d4;			
+}
+
+
+
+.square_menu_text{
+	color: black;
+	font-size:20px;
+}
+
+.square_body{
+	text-align: center;
+	background: white;
+	border: 3px solid #d7d6d4;
+	
+}
+
+.square_menu_info{
+	text-align:center;
+	color: black;
+	font-size:30px;
+	/* background-color: white; */
+	overflow-wrap: break-word;
+	word-wrap: break-word;
+}
+
+.square_menu_icons{
+	text-align:center;
+	color: black;
+	font-size:20px;
+}
+
+.square_menu_icon{
+	padding-left: 5px;
+	padding-right: 5px;
+	margin: 5px;
+	line-height: 50px;
+	justify-self: center;
+}
+
+
+.square_generic_text{
+	color: black;
+	font-size:24px;
+}
+
+
+.squaresmenuslot{			
+	justify-self: center;
+	border:5px;
+}
+
+/* ################################ */
+/* ######  Lines (connect Squares) */
 /* ################################ */
 .path_all{
 	fill:none;
@@ -71,8 +143,6 @@ div{
 	stroke:	#5C3566;
 }
 
-.square_shine{
-}
 .square_padded{
 	padding:20px;
 }
@@ -80,7 +150,7 @@ div{
 
 
 /* ################################ */
-/* ######  Squares */
+/* ######  Squares Body */
 /* ################################ */
 
 

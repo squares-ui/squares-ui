@@ -214,10 +214,6 @@ function elastic_graph_treemapdimensions(id, data){
 	// https://bl.ocks.org/ganezasan/52fced34d2182483995f0ca3960fe228
 
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
-
-
-
-
 	var square = squareContainer
 		.append("xhtml:div") 
 			.attr("id", function(d){ return "square_"+d.id })

@@ -1,0 +1,81 @@
+/* 
+Great Resources
+https://css-tricks.com/the-shapes-of-css/
+https://grid.layoutit.com/ 
+*/
+
+
+
+/* Everything inside bigwrapper */
+#bigwrapper{
+	position:absolute;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+ 
+}
+
+	/* Theme for sections of the main page */
+	.squares_segment{		
+		
+	}
+	
+	/* Visual holder for the main "work space" */
+	#workspace{
+		width:100%;
+		height:100%;
+		position:absolute;
+		top:0px;
+		
+		
+	}
+
+
+		/* SVG that handles all the squares */
+		#workspaceDiv{		
+			width:100%;
+			height:100%;
+			
+		}
+
+			
+		/* Canvas: sits on top of the squares to render ThreeJS pixels, but aligned perfectly */
+		#threejscanvas{
+			left: 0px;
+			pointer-events: none;
+			position: absolute;  /* keeps the graph on top */
+		}
+
+
+	/* Screen menu */
+	#menu{						
+		/* border-bottom: 1px solid grey; */
+		width: 50%;
+		margin: 0 auto;				
+		
+		/* Grid allows auto alignment of all '.squaresmenuslot' inside */
+		display: grid;
+		grid-template-rows: 40px;
+		grid-template-columns: repeat( auto-fit, minmax(40px, 2fr) );
+		z-index:500;
+		position:relative;
+		
+	}
+
+
+		/* Main menu icons */
+		.squaresmenuslot{			
+			
+			height:100%;
+			display:block;
+			width: auto;
+			
+		}
+
+		
+	#screenLog{
+		grid-area: screenLog;
+		overflow-y: scroll;		
+		display:none;
+	}
+	

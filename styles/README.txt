@@ -1,16 +1,15 @@
-# CSS ordering
-squares-ui applies the CSS files in order, with derclarations in the last file taking precedence
-Therefore it is advised you make changes in the last file, do not tamper with the first.
+"./styles/style_pagelayout.css"
+The layout of the overall page, purely structure. 
+!It is unlikely/unadvisable that users make changes here.
 
-# squares-ui.css
-Do not change !
-This is the platform CSS, mostly structure
-If you wish to make changes, it is advised to make them in "user.css"
+"./styles/style_squarelayout.css"
+The layout AND styling of Squares, their local menu, "Ds/filter" bar, body content, etc.
+!It is unlikely/unadvisable that users make changes here.
 
+"./styles/style_styling.css"
+Remaining styling of page styling
+It is possible for users to make changes here.
 
-# theme.css
-This is the complete style, rather than change this, consider building your own entire theme.css
-
-
-# user.css
-Here you can make any changes, this is good for changes to colours, fonts etc.
+"./styles/style_theme.css"
+All user tweaking and styling can safely be done here.
+The majority of user customisations should be made here.

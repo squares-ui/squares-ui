@@ -15,7 +15,7 @@ var gridLines = 0x45656;
 var masterAmbientLight = new THREE.AmbientLight( 0xffffff );
 
 var masterCamera = new THREE.PerspectiveCamera(45, 1, 1, 15000);
-cameraDist = 1.4
+var cameraDist = 1.4
 masterCamera.position.x = grid_size*cameraDist;
 masterCamera.position.y = grid_size*cameraDist;
 masterCamera.position.z = grid_size*cameraDist;
@@ -84,7 +84,7 @@ function render_Three(){
 		// check if it's offscreen. If so skip it
 		var element = threeScenes[prop].userData.elementt;
 		let rect_square = element.getBoundingClientRect();
-		let render_space = document.getElementById("workspacecontainer").getBoundingClientRect();
+		let render_space = document.getElementById("workspace").getBoundingClientRect();
 		//let screen = document.documentElement.getBoundingClientRect();
 		
 		//qq(rect_square.left +" > " +(threeRenderer.domElement.clientWidth*1) + " > "+(threeRenderer.domElement.clientWidth*yourPixelRatio) + " > "+ (threeRenderer.domElement.clientWidth*3) )
@@ -180,8 +180,8 @@ function zz_onDocumentMouseMove( event ) {
 }
 
 function updateSize_Three() {
-	var SCREEN_WIDTH = $("#workspacecontainer").innerWidth(), 
-		SCREEN_HEIGHT = $("#workspacecontainer").innerHeight();
+	var SCREEN_WIDTH = $("#workspace").innerWidth(), 
+		SCREEN_HEIGHT = $("#workspace").innerHeight();
 	threeRenderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT,  false );
 }
  
