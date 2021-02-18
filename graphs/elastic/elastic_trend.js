@@ -414,8 +414,6 @@ function elastic_graph_trend(id, data){
 		_.each(series['data'], function(point){
 			var myDate = new Date(point['from_as_string']);
 			masterPoints.push({"key":series['name'], "from_as_string":new Date(point['from_as_string']), "count":point['count'], "epoch":(myDate.getTime()/1000) })
-		
-			
 		})
 	})
 		
@@ -443,7 +441,7 @@ function elastic_graph_trend(id, data){
 			
 			clickObject.compare.push(miniobj)	
 			clickObject = btoa(JSON.stringify(clickObject));
-			childFromClick(id, {"y": 1000, "Ds": clickObject, "Wi":[d.epoch,-1*data['windowSize'],0]} );
+			childFromClick(id, {"y": 1000, "Ds": clickObject, "Wi":[d.epoch+data.windowSize,-1*data['windowSize'],0]} );
 		})
 
 

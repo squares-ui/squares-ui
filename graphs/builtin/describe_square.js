@@ -16,47 +16,47 @@ async function populate_describesquare(id){
 
 
 	var promises = [id]
-	// var thisCo = await nameToConnectors(retrieveSquareParam(id, 'Co', true))
+	var thisCo = await nameToConnectors(retrieveSquareParam(id, 'Co', true))
 	
-	// if(thisCo['type'] == "elastic"){
+	if(thisCo['type'] == "elastic"){
 
-	// 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
-	// 	var thisIndex = "*"
+		var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
+		var thisIndex = "*"
 
-	// 	var to = calcGraphTime(id, 'We', 0)
-	// 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
-	// 	var timesArray = [[from, to]]
+		var to = calcGraphTime(id, 'We', 0)
+		var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
+		var timesArray = [[from, to]]
 
-	// 	var fields = []
+		var fields = []
 
-	// 	var limit = 1;
-	// 	var stats = false
-	// 	var statField = null
-	// 	var incTime = true
-	// 	var urlencode = false
-	// 	var filter = retrieveSquareParam(id,"Fi",true)
+		var limit = 1;
+		var stats = false
+		var statField = null
+		var incTime = true
+		var urlencode = false
+		var filter = retrieveSquareParam(id,"Fi",true)
 
-	// 	var handle = retrieveSquareParam(id, 'CH')
-	// 	var maxAccuracy = true
+		var handle = retrieveSquareParam(id, 'CH')
+		var maxAccuracy = true
 
-	// 	// query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, filter)
-	// 	var query = await elasticQueryBuildderToRuleThemAllandOr(
-	// 		id, 
-	// 		timesArray, 
-	// 		limit,
-	// 		incTime,
-	// 		filter,
-	// 		false,
-	// 		"",
-	// 		true,
-	// 		maxAccuracy,
-	// 		fields, 
-	// 		stats, 
-	// 		statField	
-	// 	)
+		// query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, filter)
+		var query = await elasticQueryBuildderToRuleThemAllandOr(
+			id, 
+			timesArray, 
+			limit,
+			incTime,
+			filter,
+			false,
+			"",
+			true,
+			maxAccuracy,
+			fields, 
+			stats, 
+			statField	
+		)
 
-	// 	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all") )
-	// }
+		promises.push(elastic_connector(thisDst, thisIndex, id, query, "all") )
+	}
 	
 	return Promise.all(promises)
 
@@ -64,7 +64,7 @@ async function populate_describesquare(id){
 async function process_describesquare(id, data){
 	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
-	return ""
+	return data = data[0]['data']['hits']['total']['value']
 	
 }
 
@@ -96,13 +96,16 @@ async function graph_describesquare(id, data){
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(id)+") aConnector="+aConnector);
 
 	// Connector
-	var clusterSection = square.append("div")
-		.classed("square_cluster_section", true)
 
-	var clusterDiv = clusterSection.append("div")
-		.classed("fleft", true)
 
 	if(aConnector == true){	
+
+		var clusterSection = square.append("div")
+		.classed("square_cluster_section", true)
+
+		var clusterDiv = clusterSection.append("div")
+			.classed("fleft", true)
+			
 		clusterDiv.append("img")
 			.classed("square_cluster_image", true)
 			.classed("fleft", true)
@@ -121,14 +124,17 @@ async function graph_describesquare(id, data){
 				.classed("square_cluster_text", true)
 				.append("div")
 					.classed("fontsize", true)
-					.text(thisCo['name']);
-
-
-					
+					.text(thisCo['name']);				
 
 	}else{
 
-		// when a square has no type, and nor do it's parents, we draw a simplified "describe me" 
+		
+		var clusterSection = square.append("div")
+		.classed("square_cluster_section", true)
+
+		var clusterDiv = clusterSection.append("div")
+			.classed("fleft", true)
+			
 		
 		clusterDiv.append("img")
 			.classed("square_cluster_image", true)
@@ -159,20 +165,50 @@ async function graph_describesquare(id, data){
 			.append("div")
 				.classed("fontsize", true)
 				.text(retrieveSquareParam(id, "Gt"));
-
-
-
-
-
-		clusterDiv.append("div")
-			.classed("clr", true)
-
+	
 
 	}
 	
 	clusterSection.append("div")
                 .classed("clr", true)
 	
+
+	// Hits : 
+	var clusterSection = square.append("div")
+	.classed("square_cluster_section", true)
+
+	var clusterDiv = clusterSection.append("div")
+		.classed("fleft", true)
+		
+	clusterDiv.append("img")
+		.classed("square_cluster_image", true)
+		.classed("fleft", true)
+		.attr("src", "./images/070_b.png")
+
+	clusterDiv = clusterSection.append("div")
+		.classed("fleft", true)
+		.classed("square_cluster_text", true)
+
+		clusterDiv.append("div")
+			.classed("square_cluster_text", true)
+			.append("div")
+				.classed("fontsize", true)
+				.text("Hits:")
+
+		if(data == 10000){
+			dataString = "> 10,000"
+		}else{
+			dataString = data
+		}
+
+			clusterDiv.append("div")
+		.classed("square_cluster_text", true)
+		.append("div")
+			.classed("fontsize", true)
+			.text(dataString);	
+
+	clusterSection.append("div")
+	.classed("clr", true)
 
 	// We Ws
 	var clusterSection = square.append("div")

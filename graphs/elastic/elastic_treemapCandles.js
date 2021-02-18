@@ -434,16 +434,12 @@ function elastic_graph_treemapCandle(id, data){
 
 
 function treeToFlat(id, data){
-
-	// qq("--------------treetoFlat")
 	return treeToFlatRecursive(id, data['data'], data, [], [])
-
 }
 
 function treeToFlatRecursive(id, dataNode, childrenNode, returnList, clickArray){
 	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name);
 	
-
 	if(childrenNode.hasOwnProperty("children")){
 		
 		for ( var i = 0 ; i < childrenNode['children'].length; i++){

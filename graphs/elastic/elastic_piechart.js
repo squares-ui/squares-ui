@@ -55,10 +55,9 @@ async function elastic_completeform_piechart(id, targetDiv){
 		"form": [
 			{
 				"type": "array",
-					"notitle": true,
-					"items": [{
-					"key": "x_arr[]",				 	  		
-					
+				"notitle": true,
+				"items": [{
+					"key": "x_arr[]"
 				}], 
 			},
 			{
@@ -67,10 +66,10 @@ async function elastic_completeform_piechart(id, targetDiv){
 				"notitle": true,
 			},
 			{
-					"key":"x_scale",
-					"inlinetitle": "Scale",
-					"notitle": true,
-				}
+				"key":"x_scale",
+				"inlinetitle": "Scale",
+				"notitle": true,
+			}
 		],
 		"value":{}
 	}	
@@ -88,10 +87,7 @@ async function elastic_completeform_piechart(id, targetDiv){
 			jsonform.value['x_arr'].push({})
 		}
 		
-		if(thisCs['x_null']){
-			jsonform.form[1]['value'] = 1
-			
-		}
+
 
 		if(thisCs['x_scale']){
 			jsonform.form[2]['value'] = thisCs['x_scale']

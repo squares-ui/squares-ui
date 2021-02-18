@@ -7,7 +7,8 @@
 
 
 async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, incTime, filter, aggsTerm, aggsTermTime, aggsRanges, maxAccuracy, fields, stats, statField){
-	// ee(" -> "+arguments.callee.name+"("+id+")");
+	ee(" -> "+arguments.callee.name+"("+id+")");
+	qqq = false
 	
 	//// basic
 	// id: 12
@@ -42,11 +43,12 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 
 	// initate recursive loop with empty data
 	allPaths = elasticNestCalculator(retrieveSquareParam(id, "Ps", false), [], [])
+	// for id=15 : [[14, 13, 12, 1], [2, 1]]
 
 	// intersection to find the IDs that appears in every path (typically the first x, and the last x)
-	commonSquares = _.intersection.apply(_, allPaths)
+	commonSquares = _.intersection.apply(_, allPaths)  // => [1]
 	commonSquares.push(id)
-	// qq(commonSquares)  // =>   [1,2]
+	// qq(commonSquares)  // =>   [1,15]
 
 
 	// find squares unique to a path
@@ -54,7 +56,8 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	_.each(allPaths, function(path){
 		orPaths.push(_.difference(path, commonSquares))
 	})
-	// qq(orPaths) // => [[3,4],[5,6]]
+	// qq(orPaths) // =>  [[14,13,12],[2]]
+
 	
 
 
@@ -82,6 +85,7 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	////////////////////////////////
 
 	// only add times if this query is being used by Squares.  If we are building a query for pivot, don't include this
+	qqq && qq("elasticQueryBuildderToRuleThemAllandOr id:"+id+" timeframes")
 	if(incTime == true){
 		jsonTimeRanges = []
 		_.each(timesArray, function(timeRange){
@@ -101,6 +105,7 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	////////////////////////////////
 	// add common Must comments (typically the first, or last, squares in the chain)
 	////////////////////////////////
+	qqq && qq("elasticQueryBuildderToRuleThemAllandOr id:"+id+" MUST common to every path "+JSON.stringify(commonSquares))
 	_.each(commonSquares, function(id){
 		// the Must for all squares
 		var thisDs = retrieveSquareParam(id, "Ds", false)
@@ -108,6 +113,7 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 			thisDs = JSON.parse(atob(thisDs))
 			if(thisDs.hasOwnProperty("compare")){
 				_.each(thisDs['compare'], function(comp){
+					qq("adding Must id:"+id+", comp:"+JSON.stringify(comp))
 					query.query.bool.must.push(elasticPrepKeyword(_.keys(comp)[0], _.values(comp)[0], thisMappings))
 				})
 			}
@@ -136,6 +142,7 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	////////////////////////////////
 	// aggs, by time range (inbetween dates) or by time term (e.g. group by day of week)
 	////////////////////////////////
+	qqq && qq("elasticQueryBuildderToRuleThemAllandOr id:"+id+" agg by time frames")
 	if(aggsTerm){
 		query.aggs.time_ranges = {
 			"terms": {
@@ -168,6 +175,7 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	////////////////////////////////
 	// AGGS
 	////////////////////////////////
+	qqq && qq("elasticQueryBuildderToRuleThemAllandOr id:"+id+" agg by query")
 	if(fields.length>0){
 		var agg = {}
 		var node = agg
@@ -213,9 +221,12 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	////////////////////////////////
 	// add "or" data querues, typically in the middle of square chains
 	////////////////////////////////
-	var theBigOr = {"bool":{"minimum_should_match": 1,"should": []}}
+	qqq && qq("elasticQueryBuildderToRuleThemAllandOr id:"+id+" MUST for OR paths")
+	var theBigOr = {}
 	
-	_.each(orPaths, function(path){
+	//theBigOr = {"bool":{"minimum_should_match": 1,"should": []}}   // only build this if a paths has critiera, otherwise we have empty clauses in queries
+	
+	_.each(orPaths.reverse(), function(path){
 		
 		// qq("validating or:"+JSON.stringify(path))
 
@@ -255,11 +266,21 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 		})
 
 
-		theBigOr.bool.should.push(thisOr)
-
+		if(thisOr.bool.hasOwnProperty("must") && thisOr.bool.must.length>0){
+			if(!theBigOr.hasOwnProperty("bool")){
+				theBigOr.bool = {}
+				theBigOr.bool.minimum_should_match = 1
+				theBigOr.bool.should = []
+			}
+			theBigOr.bool.should.push(thisOr)		
+		}
 
 	})
-	query.query.bool.must.push(theBigOr)
+	
+	qqq && qq("elasticQueryBuildderToRuleThemAllandOr id:"+id+" timeframes")
+	if(theBigOr.hasOwnProperty("bool")){
+		query.query.bool.must.push(theBigOr)
+	}
 
 	return query
 }
@@ -355,7 +376,7 @@ async function elastic_connector(dst, indexPattern, id, query, name){
 			var aggsPass = true
 							
 			// Check if 1d aggs exist
-			if(response.hasOwnProperty("aggregations")){
+			if(response.hasOwnProperty("aggs")){
 				aggsPass = false
 				
 				_.each(response.aggregations.time_ranges.buckets, function(bucket){
@@ -883,7 +904,7 @@ function elastic_version(handle){
 function elastic_query_builder(id, from, to, dataset, fields, limit, incTime = true, incNull = true, urlEncode, filter){
 	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	
-	alert(arguments.callee.name+" in graveyard id:"+id)
+	alert("Code graveyard aasdqwdwertdr id:"+id)
 	return
 
 

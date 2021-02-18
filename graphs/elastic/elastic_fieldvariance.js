@@ -150,6 +150,7 @@ async function elastic_rawtoprocessed_fieldvariance(id, data){
 
 		// message is noisy, and simply replicates the indexed data
 		delete aggregatedKeys['message']
+		delete aggregatedKeys['log.full']
 
 		// loop through findings, push to master aggregate 'dataMid'
 		_.each(aggregatedKeys, function(arr, key){

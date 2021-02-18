@@ -1,149 +1,133 @@
 graphs_functions_json.add_graphs_json({
 	"elastic":{
-		"FieldVariance":{
-			"completeForm": "elastic_completeform_fieldvariance",			
-			"processForm": "elastic_processform_fieldvariance",			
-			"populate": "elastic_populate_fieldvariance",
-			"rawtoprocessed":"elastic_rawtoprocessed_fieldvariance",
-			"graph":"elastic_graph_fieldvariance",
-			"about": "Sample records and show which fields are in",
+		"filter":{
+			"completeForm": "elastic_completeform_filter",			
+			"processForm": "elastic_processform_filter",			
+			"populate": "elastic_populate_filter",
+			"rawtoprocessed":"elastic_rawtoprocessed_filter",
+			"graph":"elastic_graph_filter",
+			"about": "",
 		}
 	}
 });
 
-function elastic_completeform_fieldvariance(id, targetDiv){
+async function elastic_completeform_filter(id, targetDiv){
 
 
-	dst = connectors_json.handletodst( retrieveSquareParam(id, 'CH'))
-	connectionhandle = connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index')
+	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
+	var thisIndex = "*"
+	var thisMappings = await getSavedMappings(thisDst, thisIndex)
 
-	elastic_get_fields(dst, connectionhandle, id)
-		.then(function(results){
+	var dropdownFields = []
 	
-			const jsonform = {
-				"schema": {
-				  "x_size": {
-					"type": "string",
-					"title": "SampleSize",
-					
-					
-				  }
-				},
-				"form": [
-				  {
-					"key": "x_size"
-			
-				  }
-				],
-				"value":{
-					"x_size": "105"
-				}
-                
+	_.each(thisMappings, function(val, key){  _.each(val, function(val2){  dropdownFields.push(val2)  })}) 
+	dropdownFields = _.sortBy(dropdownFields, function(element){ return element})
+
+	const jsonform = {
+		"schema": {
+			"x_key": {
+				"title": "Key",
+				"type": "string",
+				"enum": dropdownFields
+			},
+			"x_val": {
+				"title": "Value",
+				"type": "string"
 			}
-
-			if(retrieveSquareParam(id,"Cs",false) !== undefined){
-				if(retrieveSquareParam(id,"Cs",false)['x_size'] !== null){
-					jsonform.value.x_size = retrieveSquareParam(id,"Cs",false)['x_size']
-				}
+		},
+		"value":{"x_key":null, "x_val":null},
+		"form":	[
+			{
+				"key":"x_key",
+			},
+			{
+				"key":"x_val",
 			}
-
-			$(targetDiv).jsonForm(jsonform)
-
-		})
+		]
+	  }	
 
 
+	  
+ 	var thisCs = retrieveSquareParam(id,"Cs",false)
+	if(thisCs !== undefined){
+		jsonform.value["x_key"] = thisCs['x_key']
+		jsonform.value["x_val"] = thisCs['x_val']
+	}
 
+	$(targetDiv).jsonForm(jsonform)
 
 }
 
 
-function elastic_populate_fieldvariance(id){
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+async function elastic_populate_filter(id){
+	
+	//	"filter" type  has a dataset in the Cs, so need to apply that to normal place in the square = Ds
+	// is this the right place to do this?
+	var thisCs = retrieveSquareParam(id,"Cs",true)
+	// var clickObject = {"y": 1000, "Gt":"PieChart", "Cs":{"array":[key]}}
+	miniObject = {}
+	miniObject[thisCs['x_key']] = thisCs['x_val']
+	url.squares[squarearraysearch(id)].Ds = btoa(JSON.stringify({"compare":[miniObject] }))
+
+	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
+	var thisIndex = "*"
+
 	
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
-	var Ds = calcDs(id, []);
-	
-	//var fields = [];  // use this to see all fields in raw output
-	//var fields = ["@timestamp", "type", "client_ip", "method", "port", "server_response"];
-	var fields=["*"]
+	var timesArray = [[from, to]]
 
+	var fields = []
 	var limit = 100;
 	if(retrieveSquareParam(id,"Cs",false) !== undefined){
 		limit = retrieveSquareParam(id,"Cs",false)['x_size']
 	}
 
-	var query = elastic_query_builder(from, to, Ds, fields, limit, null);
+	var filter = combineScriptFilter(id)
+	var incTime = true
+	var maxAccuracy = true
+	var stats  = false
+	var statField = ""
 
-	elastic_connector(connectors_json.handletodst( retrieveSquareParam(id, 'CH')), connectors_json.handletox( retrieveSquareParam(id, 'CH'), 'index'), id, query);
+	// var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
+	var query = await elasticQueryBuildderToRuleThemAllandOr(
+		id, 
+		timesArray, 
+		limit,
+		incTime,
+		filter,
+		false,
+		"",
+		true,
+		maxAccuracy,
+		fields, 
+		stats, 
+		statField	
+	)
+
+	var handle = retrieveSquareParam(id, 'CH')
+	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
+
+	var promises = [id]
+	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all"))
+	return Promise.all(promises)
+
 }
 
 
 
-function elastic_rawtoprocessed_fieldvariance(id){
+function elastic_rawtoprocessed_filter(id, data){
 
-	// {"hits":{"hits":{"_source":{"answers:"value"}}}}
-	var data = retrieveSquareParam(id, 'rawdata_'+'');
-	
-	// dataMid = {"answers":["a", "b", "a"]}
-	var dataMid = {}
+	var dataOut = "bob"
 
-	// dataMid2 = {"answers":["a", "b"]}
-	var dataMid2 = {}
-
-	// {"answers":{"populated":"80", "variance":"0.2"}}
-	var dataOut = {}
-	
-	////////////////////
-
-	var totalRows = _.size(data)
-
-	//populate every field from every record into one big array
-	_.each(data, function(obj,key){
-		_.each(obj['_source'],function(obj,key){
-			if(!(key in dataMid)){
-				dataMid[key] = []
-			}
-			dataMid[key].push(obj)
-		})
-	})
-
-	// .message is noisy, and simply replicates the indexed data
-	delete dataMid['message']
-
-	// with flattened obj, we can look how often each key was populated
-	_.each(dataMid,function(obj,key){
-		if(!(key in dataOut)){
-			dataOut[key] = {}
-		}
-		dataOut[key].occurancePercentage = Math.ceil((_.size(obj) / totalRows ) * 100)
-		dataOut[key].occurance = Math.ceil(_.size(obj))
-	})	
-
-
-	// now flatten/sort/uniq each key to find uniqueness
-	dataMid2 = {}
-	_.each(dataMid,function(obj,key){
-		dataMid2[key] = _.uniq(_.sortBy(_.flatten(dataMid[key], function(num){ return num}  )  ))
-
-	})
-	
-	//now find variance
-	_.each(dataMid2,function(obj,key){
-		if(!(key in dataOut)){
-			dataOut[key] = {}
-		}
-		dataOut[key].variancePercentage = Math.ceil((_.size(obj) / totalRows ) * 100)
-		dataOut[key].variance = Math.ceil(_.size(obj))
-	})
-
-	saveProcessedData(id, '', dataOut);
+	return dataOut;
 }
 
 
-function elastic_graph_fieldvariance(id){
+async function elastic_graph_filter(id, data){
 	
-	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
@@ -159,33 +143,121 @@ function elastic_graph_fieldvariance(id){
 	var height = document.getElementById("square_"+id).clientHeight;
 	var width  = document.getElementById("square_"+id).clientWidth;
 	
-	var data = retrieveSquareParam(id, 'processeddata');
-	
-	var table = d3.select("#square_"+id).append("table")
-		.classed("tablesorter", true)
-		.attr("id", "square_"+id+"_table")
 
-	
 
-	var header = table.append("thead").append("tr");
-	header
-		.selectAll("th")
-		.data(["Field", "Occurance %", "Variance %"])
-		.enter()
-		.append("th")
-		.text(function(d) { return d; });
 
-	$("#square_"+id+"_table").append("<tbody></tbody");
-	//$("#square_"+id+"_table").find('tbody').append("<tr><td>111</td><td>111</td><td>111</td></tr>");
-	_.each(data, function(obj,key){
-		$("#square_"+id+"_table").find('tbody').append("<tr><td onclick='childFromClick("+retrieveSquareParam(id,"Pr",false)+", {\"y\": 1000, \"Gt\":\"Pie Chart\", \"Cs\":{\"x_field\":\""+key+"\"}}) ' >"+key+"</td><td>"+obj['occurance']+" ("+obj['occurancePercentage']+"%)</td><td>"+obj['variance']+" ("+obj['variancePercentage']+"%)</td><tr>");
+	// Hits of parent
+	dataOfParent = await getSavedData(retrieveSquareParam(id, "Pr", false), "raw", "all")
+	dataOfParent = dataOfParent['hits']['total']['value']
+	var dataOfParentString = dataOfParent
+	if(dataOfParent == 10000){
+		dataOfParentString = "> 10,000"
+	}
 
-	})
+	var clusterSection = square.append("div")
+	.classed("square_cluster_section", true)
 
-	$("#square_"+id+"_table").tablesorter({
-		sortList: [[1,1], [2,1]]
+	var clusterDiv = clusterSection.append("div")
+		.classed("fleft", true)
 		
-	});
+	// clusterDiv.append("img")
+	// 	.classed("square_cluster_image", true)
+	// 	.classed("fleft", true)
+	// 	.attr("src", "./images/070_b.png")
+
+	clusterDiv = clusterSection.append("div")
+		.classed("fleft", true)
+		.classed("square_cluster_text", true)
+
+		clusterDiv.append("div")
+			.classed("square_cluster_text", true)
+			.append("div")
+				.classed("fontsize", true)
+				.text("Hits Pre Filter:")
+
+			clusterDiv.append("div")
+		.classed("square_cluster_text", true)
+		.append("div")
+			.classed("fontsize", true)
+			.text(dataOfParentString);	
+
+	clusterSection.append("div")
+	.classed("clr", true)
+
+
+	// "Filter"
+	var filterString = JSON.stringify(atob(retrieveSquareParam(id, "Ds", false)))
+	
+	var clusterSection = square.append("div")
+	.classed("square_cluster_section", true)
+
+	var clusterDiv = clusterSection.append("div")
+		.classed("fleft", true)
+		
+	// clusterDiv.append("img")
+	// 	.classed("square_cluster_image", true)
+	// 	.classed("fleft", true)
+	// 	.attr("src", "./images/070_b.png")
+
+	clusterDiv = clusterSection.append("div")
+		.classed("fleft", true)
+		.classed("square_cluster_text", true)
+
+		clusterDiv.append("div")
+			.classed("square_cluster_text", true)
+			.append("div")
+				.classed("fontsize", true)
+				.text("Filter:")
+
+			clusterDiv.append("div")
+		.classed("square_cluster_text", true)
+		.append("div")
+			.classed("fontsize", true)
+			.text(filterString);	
+
+	clusterSection.append("div")
+	.classed("clr", true)
+
+
+	// Hits after filter
+	dataOfMine = await getSavedData(id, "raw", "all")
+	dataOfMine = dataOfMine['hits']['total']['value']
+	var dataOfMineString = dataOfMine
+	if(dataOfMine == 10000){
+		dataOfMineString = "> 10,000"		
+	}
+
+
+	var clusterSection = square.append("div")
+	.classed("square_cluster_section", true)
+
+	var clusterDiv = clusterSection.append("div")
+		.classed("fleft", true)
+		
+	// clusterDiv.append("img")
+	// 	.classed("square_cluster_image", true)
+	// 	.classed("fleft", true)
+	// 	.attr("src", "./images/070_b.png")
+
+	clusterDiv = clusterSection.append("div")
+		.classed("fleft", true)
+		.classed("square_cluster_text", true)
+
+		clusterDiv.append("div")
+			.classed("square_cluster_text", true)
+			.append("div")
+				.classed("fontsize", true)
+				.text("Hits Post Filter:")
+
+			clusterDiv.append("div")
+		.classed("square_cluster_text", true)
+		.append("div")
+			.classed("fontsize", true)
+			.text(dataOfMineString + " (%"+Math.floor((dataOfMine/dataOfParent)*100)+")");	
+
+	clusterSection.append("div")
+	.classed("clr", true)
+
 
 }
 
