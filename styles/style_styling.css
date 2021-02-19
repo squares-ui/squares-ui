@@ -114,10 +114,11 @@ body{
 	border:5px;
 	height:100%;
 	
-	
 }
 
-
+.squarePageMenuIconDevMode{			
+	background-color:#F08080;
+}
 
 /* ################################ */
 /* ######  Lines (connect Squares) */

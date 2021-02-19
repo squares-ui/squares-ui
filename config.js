@@ -8,6 +8,7 @@
 
 // odd balls
 var GLB = Object ();
+GLB.devMode = false;
 GLB.demoMode = false;
 GLB.screenLogMax = 10;
 GLB.drawLineBezier = false;
