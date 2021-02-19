@@ -18,7 +18,7 @@ async function elastic_completeform_calHeatMap(id, targetDiv){
 
 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
 	var thisIndex = "*"
-	var thisMappings = await getSavedMappings(thisDst, thisIndex)
+	var thisMappings = await getMappingsData(thisDst, thisIndex)
 
 	var dropdownFields = []
 
@@ -197,42 +197,6 @@ async function elastic_populate_calHeatMap(id){
 
 function elastic_rawtoprocessed_calHeatMap(id, data){
 	
-
-	// // fetch processed data
-	// getSavedData(id, 'processeddata_month')
-	// .catch(error => alert(error))
-	// .then(function(data){
-	// 	// has processed data been created already?
-	// 	if(data==null){
-	// 		let dataout = []
-	// 		// no processed data, so get raw data for processing
-	// 		getSavedData(id, 'rawdata_getMonthValue')
-	// 		.catch(error => alert(error))
-	// 		.then(function(data){
-	// 			// if aggregations exist, then data was found
-	// 			if(data && data.hasOwnProperty('aggregations')){
-	// 				for(i = 1; i < 13; i++){
-	// 					var isFound;
-	// 					isFound = _.find(data['aggregations']['time']['buckets'], function(obj){ 				
-	// 						return obj['key'] == i; 
-	// 					});
-	// 					if(isFound === undefined){
-	// 						dataout.push({"key":i, "doc_count":0})
-	// 					}else{
-	// 						dataout.push(isFound)
-	// 					}
-	// 				}
-	// 			}else{
-	// 				// no matches, just compile a list of 000000
-	// 				for(i = 1; i < 13; i++){
-	// 					dataout.push({"key":i, "doc_count":0})
-	// 				}
-	// 			}
-	// 			saveProcessedData(id, '_month', dataout);
-	// 		})
-	// 	}
-	// })
-	// fetch processed data
 
 	var dataout = {}
 

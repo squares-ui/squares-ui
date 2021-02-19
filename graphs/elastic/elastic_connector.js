@@ -10,10 +10,7 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	ee(" -> "+arguments.callee.name+"("+id+")");
 	qqq = false
 
-	
-	if(GLB.demoMode){
-		return {}
-	}
+
 
 
 	//// basic
@@ -392,7 +389,7 @@ function elasticPrepKeyword(key, val, mappings){
 
 
 async function elastic_connector(dst, indexPattern, id, query, name){
-	// ee(" -> "+arguments.callee.name+"("+JSON.stringify(id)+", "+indexPattern+", "+id+", "+query+", "+name+")");
+	ee(" -> "+arguments.callee.name+"("+JSON.stringify(id)+", "+indexPattern+", "+id+", "+query+", "+name+")");
 
 
 	var queryBodyJSON = JSON.stringify(query);
@@ -400,15 +397,12 @@ async function elastic_connector(dst, indexPattern, id, query, name){
 	var responseData = {"id":id, "name":name, "error": null}
 
 
-	if(GLB.demoMode){
-		// find precanned data and return that, 
-		responseData['data'] = responseElasticData(retrieveSquareParam(id, "Gt", true), name)
-		qq(responseData)
-		return responseData		
 
+	// In demo mode, just reply with "yes it works"
+	if(GLB.demoMode){		
+		responseData.data = {"took":1,"timed_out":false,"_shards":{"total":1,"successful":1,"skipped":0,"failed":1,"failures":[]},"hits":{"total":{"value":1,"relation":"eq"},"max_score":null,"hits":[]}}		
+		return(responseData)
 	}
-
-
 
 
 	
@@ -486,12 +480,11 @@ async function elastic_connector(dst, indexPattern, id, query, name){
 
 function elastic_test_connector(id, name, dst){
 	// query for 0 records, but see if we can connect, used for health testing
-	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
-
-
-	
+	// In demo mode, just reply with "yes it works"
 	if(GLB.demoMode){
+		qq("Faking test_connector for id"+id)
 		return new Promise((resolve, reject) => {
 			fakeResponse = {"took":4,"timed_out":false,"_shards":{"total":65,"successful":64,"skipped":0,"failed":1,"failures":[]},"hits":{"total":{"value":0,"relation":"eq"},"max_score":null,"hits":[]}}
 			resolve({"id":id, "name": name, "dst": dst, "data":fakeResponse})
@@ -599,9 +592,8 @@ async function elastic_prep_mappings(dst, indexPattern, id){
 
 		} catch (error) {
 			addPageStatus("critical", "Network error connecting to '"+dst+"' have you enabled CORS?")
-			addSquareStatus(id, "critical", "Network error connecting to '"+dst+"' have you enabled CORS?")
 
-			ww(0, "arguments.callee.name :"+JSON.stringify(error));
+			ww(0, "arguments.callee.name, id:"+id+",  "+JSON.stringify(error));
 			return null
 		}
 }

@@ -16,7 +16,7 @@ async function elastic_completeform_scatterPlot(id, targetDiv){
 	
 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
 	var thisIndex = "*"
-	var thisMappings = await getSavedMappings(thisDst, thisIndex)
+	var thisMappings = await getMappingsData(thisDst, thisIndex)
 
 	// ["allFields","keywordFields","date","keyword","text","ip","half_float","geo_point","long","boolean","integer","float","[object Object]","fieldTypes"]
 

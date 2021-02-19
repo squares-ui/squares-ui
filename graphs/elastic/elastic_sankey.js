@@ -17,7 +17,7 @@ async function elastic_completeform_sankey(id, targetDiv){
 
 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
 	var thisIndex = "*"
-	var thisMappings = await getSavedMappings(thisDst, thisIndex)
+	var thisMappings = await getMappingsData(thisDst, thisIndex)
 
 
 	var dropdownFields = []
