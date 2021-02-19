@@ -4,6 +4,7 @@
 		"./introduction/instructions.js",
 		"./introduction/list_servers.js",
 		"./introduction/add_servers.js",
-		"./introduction/youtube.js"
+		"./introduction/youtube.js",
+		"./introduction/demoMode.js"
 	]
 }

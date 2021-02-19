@@ -9,7 +9,13 @@
 async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, incTime, filter, aggsTerm, aggsTermTime, aggsRanges, maxAccuracy, aggFields, stats, statField, outputFields, existFields){
 	ee(" -> "+arguments.callee.name+"("+id+")");
 	qqq = false
+
 	
+	if(GLB.demoMode){
+		return {}
+	}
+
+
 	//// basic
 	// id: 12
 	// timesArray: [[epoch, epoch], [], ]
@@ -29,6 +35,7 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	// fields: ["copntinent.name", "city.name", ""]	
 	// stats: true
 	// statField: "destination.port"
+
 
 	if(aggsTerm && aggsRanges){
 		alert("elasticQueryBuildderToRuleThemAllandOr: pick aggsTerm || aggsRanges")
@@ -480,6 +487,15 @@ async function elastic_connector(dst, indexPattern, id, query, name){
 function elastic_test_connector(id, name, dst){
 	// query for 0 records, but see if we can connect, used for health testing
 	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+
+
+
+	
+	if(GLB.demoMode){
+		fakeResponse = {"took":4,"timed_out":false,"_shards":{"total":65,"successful":64,"skipped":0,"failed":1,"failures":[]},"hits":{"total":{"value":0,"relation":"eq"},"max_score":null,"hits":[]}}
+		return resolve({"id":id, "name": name, "dst": dst, "data":fakeResponse})
+	}
+
 
 	var query = {"size":0, "_source":[]}
 
