@@ -493,7 +493,7 @@ function elastic_test_connector(id, name, dst){
 	
 	if(GLB.demoMode){
 		fakeResponse = {"took":4,"timed_out":false,"_shards":{"total":65,"successful":64,"skipped":0,"failed":1,"failures":[]},"hits":{"total":{"value":0,"relation":"eq"},"max_score":null,"hits":[]}}
-		return resolve({"id":id, "name": name, "dst": dst, "data":fakeResponse})
+		resolve({"id":id, "name": name, "dst": dst, "data":fakeResponse})
 	}
 
 
