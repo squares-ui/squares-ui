@@ -8,18 +8,18 @@
 
 // odd balls
 var GLB = Object ();
-GLB.devMode = false;
-GLB.demoMode = false;
-GLB.screenLogMax = 10;
+GLB.devMode = false;  // static, change this at will for a few extra buttons
+GLB.demoMode = false;  // is changed on page load
+// GLB.screenLogMax = 10;
 GLB.drawLineBezier = false;
 GLB.zoomLevels=[0.75, 1, 1.2, 1.5, 2];
+
 // 0 = "EMERGCY", 1 = "Alert"...  "Critical", "Error ", "Warning", "Notice ", "Informa", "Debug  "];
 // lower qqLogging means less logging
 GLB.qqLogging = 7;
 GLB.hidesquaremenus = false;
 GLB.saveRawData = true // Code can pass data straight through to render, but saving helps debug
-
-GLB.useStrict = false;  // global strictness
+GLB.useStrict = true;  // global strictness
 
 
 //govern the definitions of a visual square

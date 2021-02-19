@@ -90,9 +90,14 @@ async function graph_demoMode(id, data){
 		<div class='fleft'><h2>The square below this is a Root Square, feel free to start building blocks from here.</h2></div>		
 		<div class='clr'></div>
 		
-		<div class='fleft'><h2>To properly experience Squares-UI, visit the GitHub page to learn how to pull the projuect local and conenct to your Security Onion.</h2></div>		
+		<div class='fleft'><h2>To learn Squares-UI watch the youtube Video opposite.</h2></div>		
 		<div class='clr'></div>
-	`
+
+		<div class='fleft'><h2>To properly use Squares-UI, visit the <a href='https://github.com/squares-ui/squares-ui'>GitHub</a> page to learn how to pull the project local and connect to your Security Onion.</h2></div>		
+		<div class='clr'></div>
+
+
+		`
 	theBody.html(thisString);
 
 
