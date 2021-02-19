@@ -1,5 +1,6 @@
 {
 	"graphs":[
+		"./elastic/elastic_dummyData.js",
 		"./elastic/elastic_connector.js",
 		"./elastic/elastic_cloud.js",
 		"./elastic/elastic_treemap_dimensions.js",
@@ -13,8 +14,8 @@
 		"./elastic/elastic_calheatmap.js",
 		"./elastic/elastic_filter.js",
 		"./elastic/elastic_aster.js",
-		"./elastic/elastic_scatterPlot.js",
-		"./elastic/elastic_tsnejs.js"
+		"./elastic/elastic_scatterPlot.js"
+		
 	],
 	"wip":[
 		"./elastic/elastic_3d_grouped_normal.js",
@@ -22,7 +23,7 @@
 		"./elastic/elastic_barchart_scalar.js",
 		"./elastic/elastic_timemap.js",
 		"./elastic/elastic_3d_ordinal.js",
-		
+		"./elastic/elastic_tsnejs.js",
 		"./elastic/elastic_3d_heatmap.js"
 	]
 }

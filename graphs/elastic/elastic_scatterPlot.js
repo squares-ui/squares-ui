@@ -41,7 +41,7 @@ async function elastic_completeform_scatterPlot(id, targetDiv){
 				"enum": dropdownFields
 			},
 			"x_y": {
-				"title": "Y Axis",
+				"title": "Y Axis (height)",
 				"type": "string",
 				"enum": dropdownFields
 			},			
@@ -49,11 +49,6 @@ async function elastic_completeform_scatterPlot(id, targetDiv){
 				"title": "Z Azis",
 				"type": "string",
 				"enum": dropdownFields
-			},
-			"x_field": {
-				"type": "string",
-				"title": "Group by?", 
-				"enum": dropdownFieldsKey
 			},
 			"x_null": {
 				"title": "Include null/undefined ?",
@@ -70,16 +65,10 @@ async function elastic_completeform_scatterPlot(id, targetDiv){
 	var thisCs = retrieveSquareParam(id,"Cs",false)
 	if(thisCs !== undefined){
 
-		if(thisCs['x_field'] !== null ){
-			jsonform.value["x_field"] = thisCs['x_field']
-			
-		}
-		
 		if(thisCs['x_x'] !== null ){
 			jsonform.value["x_x"] = thisCs['x_x']
 			
 		}
-
 		if(thisCs['x_y'] !== null ){
 			jsonform.value["x_y"] = thisCs['x_y']
 			
@@ -92,6 +81,7 @@ async function elastic_completeform_scatterPlot(id, targetDiv){
 			jsonform.value['x_null'] = 1
 			
 		}
+	
 	}
 
 
@@ -113,21 +103,28 @@ async function elastic_populate_scatterPlot(id, data){
 
 
 	var fields = []
+
+	var outputFields = []
 	var thisCs = retrieveSquareParam(id,"Cs",true)
-	fields.push(thisCs['x_x'])
-	fields.push(thisCs['x_y'])
-	fields.push(thisCs['x_z'])
-	if(thisCs['x_field'] != ""){
-		fields.push(thisCs['x_field'])
+	outputFields.push(thisCs['x_x'])
+	outputFields.push(thisCs['x_y'])
+	outputFields.push(thisCs['x_z'])
+
+	var existFields = []
+	if(!thisCs['x_null']){
+		existFields.push(thisCs['x_x'])
+		existFields.push(thisCs['x_y'])
+		existFields.push(thisCs['x_z'])		
 	}
 
-
-	var limit = 1;
+	var limit = 10000;
 	var stats = false
 	var statField = null
 	var incTime = true
 	var filter = combineScriptFilter(id)
 	var maxAccuracy = true
+
+
 
 	var query = await elasticQueryBuildderToRuleThemAllandOr(
 		id, 
@@ -137,11 +134,13 @@ async function elastic_populate_scatterPlot(id, data){
 		filter,
 		false,
 		"",
-		true,
+		false,
 		maxAccuracy,
 		fields, 
 		stats, 
-		statField	
+		statField,
+		outputFields,
+		existFields
 	)
 
 	// var handle = retrieveSquareParam(id, 'CH')
@@ -160,15 +159,15 @@ async function elastic_populate_scatterPlot(id, data){
 
 async function elastic_rawtoprocessed_scatterPlot(id, data){
 
-	var data = data[0]['data']['aggregations']['time_ranges']['buckets'][0]
+	var data = data[0]['data']['hits']['hits']
 	var thisCs = retrieveSquareParam(id,"Cs",true)
 	
 	var dataOut = {}
-	dataOut.range = {}	
-	dataOut.range.x = []
-	dataOut.range.y = []
-	dataOut.range.z = []
-
+	dataOut.data = {}	// output data
+	dataOut.scalar = {}  // if any axis is scalar
+	dataOut.domain = {"x": [], "y": [], "z": []}  // domain for any axis that is scalar
+	dataOut.max = 1  // highest key
+	dataOut.twod = {"xy":[], "yx":[], "yz":[]}  // bar charts against each 2d axis
 
 	// calculate which fields are scalar, and which are ordinal
 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
@@ -176,86 +175,81 @@ async function elastic_rawtoprocessed_scatterPlot(id, data){
 	var thisMappings = await getSavedMappings(thisDst, thisIndex)
 	var allScalar = _.flatten([thisMappings['half_float'], thisMappings['float'], thisMappings['long'], thisMappings['integer']])
 
+
 	var isScalar = {}
 	isScalar['x'] = false
 	if(_.contains(allScalar, thisCs['x_x'])){
-		isScalar['x'] = true
+		dataOut.scalar['x'] = true
 	}
 	isScalar['y'] = false
 	if(_.contains(allScalar, thisCs['x_y'])){
-		isScalar['y'] = true
+		dataOut.scalar['y'] = true
 	}
 	isScalar['z'] = false
 	if(_.contains(allScalar, thisCs['x_z'])){
-		isScalar['z'] = true
+		dataOut.scalar['z'] = true
 	}
 
 
 
+	_.each(data, function(row){
 
-	// qq("---")
-	// qq(data)
+		x = _.get(row._source, thisCs['x_x'].split("."))
+		y = _.get(row._source, thisCs['x_y'].split("."))
+		z = _.get(row._source, thisCs['x_z'].split("."))
 
-	_.each(data['field']['buckets'], function(x){
-		// qq("############## loop x")
-		// qq(x)
-		if(isScalar['x']){
-			//scalar
-			dataOut['range']['x'] = [_.min(x, function(key){ return key.doc_count; })['doc_count'], _.max(x, function(key){ return key.doc_count; })['doc_count']]
-		}else{
-			dataOut['range']['x'].push(x['key'])
+		
+		if(!dataOut.data.hasOwnProperty(x)){
+			dataOut.data[x] = {}
 		}
 
-		_.each(x['field']['buckets'], function(y){
-			// qq("############## loop y")
-			if(isScalar['y']){
-				//scalar
-				dataOut['range']['y'] = [_.min(y['field']['buckets'], function(key){ return key.doc_count; })['doc_count'], _.max(y['field']['buckets'], function(key){ return key.doc_count; })['doc_count']]
-			}else{
-				dataOut['range']['y'].push(y['key'])
-			}		
+		if(!dataOut.data[x].hasOwnProperty(y)){
+			dataOut.data[x][y] = {}
+		}
 
-			_.each(y['field']['buckets'], function(z){
-				// qq("############## loop z")
-				// qq(z)
-				if(isScalar['z']){
-					//scalar
-					dataOut['range']['z'] = [_.min(z['field']['buckets'], function(key){ return key.doc_count; })['doc_count'], _.max(z['field']['buckets'], function(key){ return key.doc_count; })['doc_count']]
-				}else{
-					dataOut['range']['z'].push(z['key'])
-				}	
+		if(!dataOut.data[x][y].hasOwnProperty(z)){
+			dataOut.data[x][y][z] = {"value":1}
+		}else{
+			dataOut.data[x][y][z]['value'] += 1
 
-				if(thisCs['x_field'] != ""){
-					// qq("id:"+id+" has group by "+thisCs['x_field'])
-
-					_.each(y['field']['buckets'], function(field){
-						// qq("############## loop field:"+field['key'])
-						
-
-					})
-					
-				}else{
-					// qq("id:"+id+" has NO group by")
-
-				}
-
-			})
-
-		})
+			// 
+			if(dataOut.data[x][y][z]['value'] > dataOut.max){
+				dataOut.max = dataOut.data[x][y][z]['value']
+			}
+		}
+		
+		dataOut.domain.x.push(x)
+		dataOut.domain.y.push(y)
+		dataOut.domain.z.push(z)
+		
 
 	})
 
+	if(dataOut.scalar['x']){
+		dataOut.domain.x = [_.min(dataOut.domain.x), _.max(dataOut.domain.x)]
+	}else{
+		dataOut.domain.x = _.uniq(dataOut.domain.x)
+	}
 
-	dataOut.data = data
+	if(dataOut.scalar['y']){
+		dataOut.domain.y = [_.min(dataOut.domain.y), _.max(dataOut.domain.y)]
+	}else{
+		dataOut.domain.y = _.uniq(dataOut.domain.y)
+	}
 
-	dataOut.range.x = _.uniq(dataOut.range.x)
-	dataOut.range.y = _.uniq(dataOut.range.y)
-	dataOut.range.z = _.uniq(dataOut.range.z)
+	if(dataOut.scalar['z']){
+		dataOut.domain.z = [_.min(dataOut.domain.z), _.max(dataOut.domain.z)]
+	}else{
+		dataOut.domain.z = _.uniq(dataOut.domain.z)
+	}
 
-	qq(isScalar)
-	qq(dataOut)
-
+	// qq(dataOut)
 	return dataOut
+	
+	// {"data":{"United States":{"dns":{"53":{"value":9849}},"ntp":{"123":{"value":50}}},"United Kingdom":{"ntp":{"123":{"value":65}}},"Germany":{"ntp":{"123":{"value":7}}},"Netherlands":{"ntp":{"123":{"value":15}}},"Canada":{"ntp":{"123":{"value":10}}},"Japan":{"ntp":{"123":{"value":1}}},"Ukraine":{"ntp":{"123":{"value":2}}},"Ireland":{"ntp":{"123":{"value":1}}}},
+	// "scalar":{"z":true},
+	// "domain":{"x":[],"y":[],"z":[53,123]},
+	// "max":9849}
 
 
 }
@@ -285,8 +279,10 @@ async function elastic_graph_scatterPlot(id, data){
 	
 	var thisCs = retrieveSquareParam(id,"Cs",true)
 	
-
-	var colorScale = d3.scaleOrdinal().range(GLB.color)
+	colRange = ["#ffe2aa","#ffa900"]
+	var linearColour = d3.scaleLinear()
+	.domain([0,data.max])
+	.range(colRange)
 
 
 	var scene = new THREE.Scene();
@@ -325,85 +321,119 @@ async function elastic_graph_scatterPlot(id, data){
 	scene.userData.elementt = element;
 
 
-	///// work out scales  (ordinal or scalar)
-	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
-	var thisIndex = "*"
-	var thisMappings = await getSavedMappings(thisDst, thisIndex)
 
-	var allScalar = _.flatten([thisMappings['half_float'], thisMappings['float'], thisMappings['long'], thisMappings['integer']])
-	if(_.contains(allScalar, thisCs['x_x'])){
-		qq("x_x is scalar")
+	var xScaleOffset = null;
+	if(data.scalar['x']){
 		var xScale = d3.scaleLinear()
 	}else{
-		qq("x_x is not scalear")
-		var xScale = d3.scaleLog()
+		var xScale = d3.scaleBand()
 	}
-	xScale.domain(data.range.x)
-	xScale.range([1, grid_size/2]);
+	xScale.domain(data.domain.x)
+	xScale.range([1, grid_size]);
+	if(!data.scalar['x']){
+		xScaleOffset = xScale.bandwidth() / 2
+	}
 
 
-	
-	if(_.contains(allScalar, thisCs['x_y'])){
-		qq("x_y is scalar")
+	var yScaleOffset = null;
+	if(data.scalar['y']){
 		var yScale = d3.scaleLinear()
 	}else{
-		qq("x_y is not scalear")
-		var yScale = d3.scaleLog()
+		var yScale = d3.scaleBand()
 	}
-	yScale.domain(data.range.y)
-	yScale.range([1, grid_size/2]);
-
-
+	yScale.domain(data.domain.y)
+	yScale.range([1, grid_size]);
+	if(!data.scalar['y']){
+		yScaleOffset = yScale.bandwidth() / 2
+	}
 	
-	if(_.contains(allScalar, thisCs['x_z'])){
-		qq("x_z is scalar")
+	var zScaleOffset = null;
+	if(data.scalar['z']){		
 		var zScale = d3.scaleLinear()
 	}else{
-		qq("x_z is not scalear")
-		var zScale = d3.scaleLog()
+		var zScale = d3.scaleBand()
 	}
-	zScale.domain(data.range.z)
-	zScale.range([1, grid_size/2]);
+	zScale.domain(data.domain.z)
+	zScale.range([1, grid_size]);
+	if(!data.scalar['z']){
+		zScaleOffset = zScale.bandwidth() / 2
+	}
 
-	qq(data.data)
-	qq(data.range)
 
-	_.each(data.data['field']['buckets'], function(x){
 
-		_.each(x['field']['buckets'], function(y){
+	const lineMaterial = new THREE.LineBasicMaterial({
+		color: 0x808080
+	});
 
-			_.each(y['field']['buckets'], function(z){
+	_.each(data.data, function(xv,xk){
 
-				_.each(z, function(z){
+		_.each(xv, function(yv, yk){
 
-					// qq(field)
-					// qq(x['doc_count'])
-					// qq(y['doc_count'])
-					// qq(z['doc_count'])
+			_.each(yv, function(zv, zk){
 
-					var markerGeometry = new THREE.CubeGeometry(50, 50, 50);
-					var material = new THREE.MeshBasicMaterial( { color: colorScale("bob") } );
-					var marker = new THREE.Mesh(markerGeometry, material);
+				// qq(xk+":"+yk+":"+zk+"="+zv['value'])
+				
+				var markerGeometry = new THREE.CubeGeometry(50, 50, 50);
+				var material = new THREE.MeshBasicMaterial( { color: linearColour(zv['value']) } );
+				var marker = new THREE.Mesh(markerGeometry, material);
 
-					marker.position.x = xScale(x['doc_count'])
-					marker.position.y = yScale(y['doc_count'])
-					marker.position.z = zScale(z)
+				
 
-					marker.squaresName = thisCs['x_x']+":"+x['key']+", "+thisCs['x_y']+":"+y['key']+", "+thisCs['x_z']+":"+z['key']+", count:"
+				var xWithOffset = xScale(xk)
+				if(!data.scalar['x']){
+					xWithOffset += xScaleOffset
+				}
 
-					qq("---")
-					qq(x['doc_count'])
-					qq(y['doc_count'])
-					qq(z['doc_count'])
-					qq(z)
-					
-					scene.add(marker);
-				})
+				var yWithOffset = yScale(yk)
+				if(!data.scalar['y']){
+					yWithOffset += yScaleOffset
+				}
+				
+				var zWithOffset = zScale(zk)
+				if(!data.scalar['z']){
+					zWithOffset += zScaleOffset
+				}
+
+
+				marker.position.x = xWithOffset
+				marker.position.y = yWithOffset
+				marker.position.z = zWithOffset
+
+
+
+
+				// qq(xk+":"+marker.position.x+",   "+yk+":"+marker.position.y+",   "+zk+":"+marker.position.z+",   value:"+zv['value'])
+				
+				let clickObject = {"compare":[]}
+				var miniObj = {}
+				miniObj[thisCs['x_x']] = xk
+				clickObject['compare'].push(miniObj)
+				miniObj = {}
+				miniObj[thisCs['x_y']] = yk
+				clickObject['compare'].push(miniObj)
+				miniObj = {}
+				miniObj[thisCs['x_z']] = zk
+				clickObject['compare'].push(miniObj)
+				
+				marker.squaresAction = function(){ childFromClick(id, {"y": 1000, "Ds": btoa(JSON.stringify(clickObject))} , {} ) };
+
+
+				marker.squaresName = xk+", "+yk+", "+zk+":"+zv['value']
+
+				scene.add(marker);
+
+				var points = [];
+				points.push( new THREE.Vector3( xWithOffset, yWithOffset, zWithOffset ) );
+				points.push( new THREE.Vector3( xWithOffset, 0, zWithOffset ) );
+
+				var geometry = new THREE.BufferGeometry().setFromPoints( points );
+
+				var line = new THREE.Line( geometry, lineMaterial );
+				scene.add( line );
 
 			})
 
 		})
-
 
 
 	})

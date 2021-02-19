@@ -128,9 +128,14 @@ async function elastic_populate_sankey(id){
 	// qq(Ds)
 	
 	var fields = []
+	var outputFields = []
+	var existFields = null
 	_.each(retrieveSquareParam(id,"Cs",true)['array'], function(key,num){
 		fields.push(key)
+		outputFields.push(key)
+
 	})
+
 
 	var limit = 10000;
 	
@@ -141,6 +146,8 @@ async function elastic_populate_sankey(id){
 	var statField = ""
 
 	// var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
+
+
 
 	var query = await elasticQueryBuildderToRuleThemAllandOr(
 		id, 
@@ -154,7 +161,9 @@ async function elastic_populate_sankey(id){
 		maxAccuracy,
 		fields, 
 		stats, 
-		statField	
+		statField,
+		outputFields,
+		existFields	
 	)
 	
 
@@ -490,38 +499,44 @@ function elastic_graph_sankey(id, data){
 		
 		
 	var link = square.append("g").selectAll(".link")
-      .data(data.links)
-    .enter().append("path")
-      .attr("class", "link")
-      .attr("d", path)
-	  .style("stroke-width", function(d) { return Math.max(1, d.dy); })
-	  .on("click", function(d){ 
-			// attributes are : "target", 	"sourceField", 		"targetField", 		"value", 		"dy",		"ty", 		 "sy",  "source"
+			.data(data.links)
+		.enter().append("path")
+			.attr("class", "link")
+			.attr("d", path)
+			.style("stroke-width", function(d) { return Math.max(1, d.dy); })
+			.on("click", function(d){ 
+				// attributes are : "target", 	"sourceField", 		"targetField", 		"value", 		"dy",		"ty", 		 "sy",  "source"
 
-			var clickObject = {"compare":[], "notexist":[], "timerange":[]}
+				var clickObject = {"compare":[], "notexist":[], "timerange":[]}
 
-			if(d.source.name == d.sF+"_null"){
-				clickObject.notexist.push(d.sF)
-			}else{
-				miniObj = {}
-				miniObj[d.sF] = d.source.name
-				clickObject.compare.push(miniObj)
-			}
-			
-			if(d.target.name == d.tF+"_null"){
-				clickObject.notexist.push(d.tF)
-			}else{
-				miniObj = {}
-				miniObj[d.tF] = d.target.name
-				clickObject.compare.push(miniObj)
-			}
+				if(d.source.name == d.sF+"_null"){
+					clickObject.notexist.push(d.sF)
+				}else{
+					miniObj = {}
+					miniObj[d.sF] = d.source.name
+					clickObject.compare.push(miniObj)
+				}
+				
+				if(d.target.name == d.tF+"_null"){
+					clickObject.notexist.push(d.tF)
+				}else{
+					miniObj = {}
+					miniObj[d.tF] = d.target.name
+					clickObject.compare.push(miniObj)
+				}
 
 
-			clickObject = btoa(JSON.stringify(clickObject));
-			childFromClick(id, {"y": 1000, "Ds": clickObject} );
+				clickObject = btoa(JSON.stringify(clickObject));
+				childFromClick(id, {"y": 1000, "Ds": clickObject} );
 
-	})
-	  ;
+			})
+			.on("mouseover", function(d) {
+				d3.select(this).style("stroke", "red");
+			})                  
+			.on("mouseout", function(d) {
+				d3.select(this).style("stroke", "");
+			});
+	  
 
 
 

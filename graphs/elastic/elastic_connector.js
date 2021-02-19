@@ -6,7 +6,7 @@
 
 
 
-async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, incTime, filter, aggsTerm, aggsTermTime, aggsRanges, maxAccuracy, fields, stats, statField){
+async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, incTime, filter, aggsTerm, aggsTermTime, aggsRanges, maxAccuracy, aggFields, stats, statField, outputFields, existFields){
 	ee(" -> "+arguments.callee.name+"("+id+")");
 	qqq = false
 	
@@ -71,11 +71,9 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 				"must":[],
 				"must_not":[]
 				
-			}
+			},			
 		},
-		"aggs":{
-			"time_ranges":{}
-		},
+		"aggs":{},
 		"size": limit
 	}
 
@@ -107,27 +105,33 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	////////////////////////////////
 	qqq && qq("elasticQueryBuildderToRuleThemAllandOr id:"+id+" MUST common to every path "+JSON.stringify(commonSquares))
 	_.each(commonSquares, function(id){
-		// the Must for all squares
+
 		var thisDs = retrieveSquareParam(id, "Ds", false)
+
+		// the Must for all squares
 		if(thisDs){
+			
 			thisDs = JSON.parse(atob(thisDs))
+			
 			if(thisDs.hasOwnProperty("compare")){
 				_.each(thisDs['compare'], function(comp){
 					qq("adding Must id:"+id+", comp:"+JSON.stringify(comp))
 					query.query.bool.must.push(elasticPrepKeyword(_.keys(comp)[0], _.values(comp)[0], thisMappings))
 				})
 			}
-		}
 
-		// the Must_not for all squares
-		var thisDs = retrieveSquareParam(id, "Ds", false)
-		if(thisDs){
-			thisDs = JSON.parse(atob(thisDs))
 			if(thisDs.hasOwnProperty("notexist")){
 				_.each(thisDs['notexist'], function(comp){
 					query.query.bool.must_not.push({"exists": {"field": comp}})
 				})
 			}
+
+			// thisDs.hasOwnProperty("exist")
+			// not really to be built into chaings of squares? 
+			// should this be more a square definition instead?
+
+
+
 		}
 
 		// filters
@@ -140,11 +144,25 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	
 
 	////////////////////////////////
+	// some square types demand specific fields exist, add this condition as a new "must" chain seperate from being calculated from parent squares
+	////////////////////////////////
+	if(existFields){
+		_.each(existFields, function(field){
+			query['query']['bool']['must'].push({"exists": {"field": field }})
+		})		
+	}
+
+
+
+
+	////////////////////////////////
 	// aggs, by time range (inbetween dates) or by time term (e.g. group by day of week)
 	////////////////////////////////
 	qqq && qq("elasticQueryBuildderToRuleThemAllandOr id:"+id+" agg by time frames")
+		
 	if(aggsTerm){
-		query.aggs.time_ranges = {
+	
+		query['aggs']['time_ranges'] = {
 			"terms": {
 				"size": GLB.dftAggregationSize,
 				"script": {
@@ -155,7 +173,7 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 
 	}else if(aggsRanges){
 
-		query.aggs.time_ranges = {
+		query['aggs']['time_ranges'] = {
 			"range": {
 				"field": "@timestamp",
 				"ranges": []
@@ -176,18 +194,21 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	// AGGS
 	////////////////////////////////
 	qqq && qq("elasticQueryBuildderToRuleThemAllandOr id:"+id+" agg by query")
-	if(fields.length>0){
+	if(aggFields.length>0){
+		
+
+		
 		var agg = {}
 		var node = agg
-		for(var i = 0 ; i < fields.length ; i++){
+		for(var i = 0 ; i < aggFields.length ; i++){
 
 			node['field'] = {}
 			node['field']['terms'] = {}
 
-			if(await hasFieldKeyword(id, fields[i])){
-				node['field']['terms']['field'] = (fields[i]+".keyword")
+			if(await hasFieldKeyword(id, aggFields[i])){
+				node['field']['terms']['field'] = (aggFields[i]+".keyword")
 			}else{
-				node['field']['terms']['field'] = fields[i]
+				node['field']['terms']['field'] = aggFields[i]
 			}
 
 
@@ -196,15 +217,15 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 				node['field']['terms']['size'] = 2147483647	
 			}
 
-			if(fields.length > i+1){
-				// more fields, go deeper
-				// qq(fields.length +">"+ (i + 1))
+			if(aggFields.length > i+1){
+				// more aggFields, go deeper
+				// qq(aggFields.length +">"+ (i + 1))
 				node['field']['aggs'] = {}
 				node = node['field']['aggs']
 
 			}else if(stats == true){
 				// final field, append agg stats
-				// qq("'else' "+fields.length+ ", i:"+(i+1))
+				// qq("'else' "+aggFields.length+ ", i:"+(i+1))
 
 				node['field']['aggs'] = {}
 				node['field']['aggs']['stats'] = {}
@@ -276,7 +297,18 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 		}
 
 	})
+
+
+	////////////////////////////////
+	// add outputFields for the raw output (e.g. not Aggs)
+	////////////////////////////////
+	if(outputFields){
+		query._source = outputFields
+	}
 	
+	
+
+
 	qqq && qq("elasticQueryBuildderToRuleThemAllandOr id:"+id+" timeframes")
 	if(theBigOr.hasOwnProperty("bool")){
 		query.query.bool.must.push(theBigOr)
@@ -342,6 +374,7 @@ function elasticPrepKeyword(key, val, mappings){
 
 
 
+
 //////////////////////////////////////////
 //////////////////////////////////////////
 ///  Elastic API AJAX Post
@@ -354,10 +387,24 @@ function elasticPrepKeyword(key, val, mappings){
 async function elastic_connector(dst, indexPattern, id, query, name){
 	// ee(" -> "+arguments.callee.name+"("+JSON.stringify(id)+", "+indexPattern+", "+id+", "+query+", "+name+")");
 
+
 	var queryBodyJSON = JSON.stringify(query);
 	var response;
-	var responseData = {"id":id, "name":name}
+	var responseData = {"id":id, "name":name, "error": null}
 
+
+	if(GLB.demoMode){
+		// find precanned data and return that, 
+		responseData['data'] = responseElasticData(retrieveSquareParam(id, "Gt", true), name)
+		qq(responseData)
+		return responseData		
+
+	}
+
+
+
+
+	
 	try {
 		response = await $.ajax({
 			type: "POST",

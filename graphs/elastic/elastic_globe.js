@@ -107,15 +107,24 @@ async function elastic_populate_globe(id){
 
 	
 	var fields = []
+	var outputFields = []
+	var existFields = []
 	if(retrieveSquareParam(id,"Cs",false) !== undefined){
 		if(retrieveSquareParam(id,"Cs",false)['x_track'] !== undefined){
 			fields.push(retrieveSquareParam(id,"Cs",false)['x_track'])
+			outputFields.push(retrieveSquareParam(id,"Cs",false)['x_track'])
+			existFields.push(retrieveSquareParam(id,"Cs",false)['x_track'])
+			
 		}
 		if(retrieveSquareParam(id,"Cs",false)['x_lat'] !== undefined){
 			fields.push(retrieveSquareParam(id,"Cs",false)['x_lat'])
+			outputFields.push(retrieveSquareParam(id,"Cs",false)['x_lat'])
+			existFields.push(retrieveSquareParam(id,"Cs",false)['x_lat'])
 		}
 		if(retrieveSquareParam(id,"Cs",false)['x_lon'] !== undefined){
 			fields.push(retrieveSquareParam(id,"Cs",false)['x_lon'])
+			outputFields.push(retrieveSquareParam(id,"Cs",false)['x_lon'])
+			existFields.push(retrieveSquareParam(id,"Cs",false)['x_lon'])
 		}
 	}
 	var limit = 10000;
@@ -127,6 +136,9 @@ async function elastic_populate_globe(id){
 	var maxAccuracy = true
 	var stats  = false
 	var statField = ""
+
+	
+	
 
 	// var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
 	var query = await elasticQueryBuildderToRuleThemAllandOr(
@@ -141,7 +153,9 @@ async function elastic_populate_globe(id){
 		maxAccuracy,
 		fields, 
 		stats, 
-		statField	
+		statField,
+		outputFields,
+		existFields	
 	)
 
 	var handle = retrieveSquareParam(id, 'CH')

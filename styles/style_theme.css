@@ -16,3 +16,7 @@
 .svg__colour__warning{
    filter: invert(48%) sepia(49%) saturate(2000%) hue-rotate(20deg) brightness(150%) contrast(119%)
 }
+
+.highlight__colour{
+   stroke:red;
+}

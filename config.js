@@ -8,6 +8,7 @@
 
 // odd balls
 var GLB = Object ();
+GLB.demoMode = false;
 GLB.screenLogMax = 10;
 GLB.drawLineBezier = false;
 GLB.zoomLevels=[0.75, 1, 1.2, 1.5, 2];
@@ -180,7 +181,9 @@ GLB.favourites = [
   },
   {"printable":"Agent IP and Type","Gt":"PieChart","Cs":{"array":["agent.ip","data.type"],"x_scale":"log"},"uid":"b9f3749ace1c2161112c689451f5638e"},
   {"printable":"Destination Globe by Dst Port","Gt":"Globe","Cs":{"x_lat":"destination.geo.location.lat","x_lon":"destination.geo.location.lon","x_track":"destination.port","x_scale":"linear"},"uid":"499c12478e8f7898a71241437007435e"},
-  {"printable":"IDS Rules","Gt":"AsterPlot","Cs":{"x_field":"rule.tsc","x_width":"rule.category","x_depth":"rule.firedtimes"},"uid":"6f0c3e0db3a4b5fe5bea5d5548b264d5"}
+  {"printable":"IDS Rules","Gt":"AsterPlot","Cs":{"x_field":"rule.tsc","x_width":"rule.category","x_depth":"rule.firedtimes"},"uid":"6f0c3e0db3a4b5fe5bea5d5548b264d5"},
+  {"printable":"DHCP","Gt":"Sankey","Cs":{"array":["host.hostname","host.mac","dhcp.message_types"],"x_scale":"log"},"uid":"ffbb18174b21cfe1ad27bdb6ae50ce32"}
+
 
 
 ]

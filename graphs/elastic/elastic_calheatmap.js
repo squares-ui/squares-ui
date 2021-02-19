@@ -554,11 +554,15 @@ function elastic_graph_calHeatMap(id, data){
 				if(d.data.doc_count>0){
 					setHoverInfo(id, "Hour:"+ d.data.key+", #"+d.data.doc_count)
 				}
+				d3.select(this).style("stroke", "red");
 			})
 			.on("click", function(d){ 
 				var clickObject = {"y": 1000, "Fi": "doc['@timestamp'].value.getHour()=="+d.data.key.toString() }
 				childFromClick(id,  clickObject);		
 			})
+			.on("mouseout", function(d) {
+				d3.select(this).style("stroke", "");
+			});
 
 		g.append("text")
 			.attr("transform", function(d) { return "translate(" + labelArc.centroid(d) + ")"; })
@@ -591,11 +595,15 @@ function elastic_graph_calHeatMap(id, data){
 				if(d.data.doc_count>0){
 					setHoverInfo(id, "Minute:"+ d.data.key+", #"+d.data.doc_count)
 				}
+				d3.select(this).style("stroke", "red");
 			})
 			.on("click", function(d){ 
 				var clickObject = {"y": 1000, "Fi": "doc['@timestamp'].value.getMinute()=="+d.data.key.toString() }
 				childFromClick(id,  clickObject);		
 			})
+			.on("mouseout", function(d) {
+				d3.select(this).style("stroke", "");
+			});
 
 		g.append("text")
 			.attr("transform", function(d) { return "translate(" + labelArc.centroid(d) + ")"; })
@@ -631,11 +639,15 @@ function elastic_graph_calHeatMap(id, data){
 			if(d.data.doc_count>0){
 				setHoverInfo(id, "Second:"+ d.data.key+", #"+d.data.doc_count)
 			}
+			d3.select(this).style("stroke", "red");
 		})
 		.on("click", function(d){ 
 			var clickObject = {"y": 1000, "Fi": "doc['@timestamp'].value.getSecond()=="+d.data.key.toString() }
 			childFromClick(id,  clickObject);		
-		})
+		})              
+		.on("mouseout", function(d) {
+			d3.select(this).style("stroke", "");
+		});
 	
 	g.append("text")
 		.attr("transform", function(d) { return "translate(" + labelArc.centroid(d) + ")"; })
