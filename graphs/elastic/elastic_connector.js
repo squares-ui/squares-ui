@@ -41,7 +41,7 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 
 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
 	var indexPattern = "*"	  
-	var thisMappings = await getSavedMappings(thisDst, indexPattern, true)
+	var thisMappings = await getMappingsData(thisDst, indexPattern, true)
 
 
 
