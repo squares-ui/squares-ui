@@ -9,7 +9,7 @@
 // odd balls
 var GLB = Object ();
 GLB.devMode = false;  // static, change this at will for a few extra buttons
-GLB.demoMode = true;  // is changed on page load
+GLB.demoMode = false;  // is changed on page load
 // GLB.screenLogMax = 10;
 GLB.drawLineBezier = false;
 GLB.zoomLevels=[0.75, 1, 1.2, 1.5, 2];

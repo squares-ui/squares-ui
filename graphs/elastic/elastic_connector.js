@@ -396,10 +396,11 @@ async function elastic_connector(dst, indexPattern, id, query, name){
 	var response;
 	var responseData = {"id":id, "name":name, "error": null}
 
+	var thisName = retrieveSquareParam(id, 'Co', true)
 
 
 	// In demo mode, just reply with "yes it works"
-	if(GLB.demoMode){		
+	if(GLB.demoMode && thisName == "Dummy"){		
 		responseData.data = {"took":1,"timed_out":false,"_shards":{"total":1,"successful":1,"skipped":0,"failed":1,"failures":[]},"hits":{"total":{"value":1,"relation":"eq"},"max_score":null,"hits":[]}}		
 		return(responseData)
 	}
