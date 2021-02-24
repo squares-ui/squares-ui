@@ -116,7 +116,7 @@ body{
 	
 }
 
-.squarePageMenuIconDevMode{			
+.iconDevMode{			
 	background-color:#F08080;
 }
 
@@ -189,7 +189,7 @@ body{
 	overflow-wrap: break-word;
 }
 .square_cluster_image{
-	padding-left:40px;
+	margin-left:40px;
 	height: 40px;
 }
 

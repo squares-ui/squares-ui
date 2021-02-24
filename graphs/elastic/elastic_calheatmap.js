@@ -61,36 +61,28 @@ async function elastic_populate_calHeatMap(id){
 	
 	// ee(" -> "+arguments.callee.name+"("+id+")");
 
+	var thisCs = retrieveSquareParam(id,"Cs",true)
 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
 	var thisIndex = "*"
 
-	
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var timesArray = [[from, to]]
-	
-
-	var fields = []
-	_.each(retrieveSquareParam(id,"Cs",true)['array'], function(key,num){
-		fields.push(key)
-	})
 
 	var limit = 1;
 	var stats = false
-	var statField = ""
+	var statField = null
 	var incTime = true
-	var urlencode = false	
-	var handle = retrieveSquareParam(id, 'CH')
-	
 	var filter = combineScriptFilter(id)
-	var maxAccuracy = true;
+	var maxAccuracy = true
 
-	//######
+	var aggFields = []
+	var outputFields = []
+	var existOrFields = []
+
+	//
 
 	var promises = [id]
-	
-	var handle = retrieveSquareParam(id, 'CH')
-
 
 	var aggBy = "getMonthValue"
 	// var query = await elasticQueryBuildderAggScriptDayHour(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, aggBy+"()", false, filter)
@@ -104,9 +96,11 @@ async function elastic_populate_calHeatMap(id){
 		aggBy+"()",
 		false,
 		maxAccuracy,
-		fields, 
+		aggFields, 
 		stats, 
-		statField	
+		statField,
+		outputFields,
+		existOrFields
 	)
 	promises.push(elastic_connector(thisDst, thisIndex, id, query, aggBy))
 	
@@ -123,9 +117,11 @@ async function elastic_populate_calHeatMap(id){
 		aggBy,
 		false,
 		maxAccuracy,
-		fields, 
+		aggFields, 
 		stats, 
-		statField	
+		statField,
+		outputFields,
+		existOrFields	
 	)
 	promises.push(elastic_connector(thisDst, thisIndex, id, query, aggBy))
 	
@@ -142,9 +138,11 @@ async function elastic_populate_calHeatMap(id){
 		aggBy+"()",
 		false,
 		maxAccuracy,
-		fields, 
+		aggFields, 
 		stats, 
-		statField	
+		statField,
+		outputFields,
+		existOrFields	
 	)
 	promises.push(elastic_connector(thisDst, thisIndex, id, query, aggBy))
 	
@@ -161,9 +159,11 @@ async function elastic_populate_calHeatMap(id){
 		aggBy+"()",
 		false,
 		maxAccuracy,
-		fields, 
+		aggFields, 
 		stats, 
-		statField	
+		statField,
+		outputFields,
+		existOrFields	
 	)
 	promises.push(elastic_connector(thisDst, thisIndex, id, query, aggBy))
 	
@@ -180,9 +180,11 @@ async function elastic_populate_calHeatMap(id){
 		aggBy+"()",
 		false,
 		maxAccuracy,
-		fields, 
+		aggFields, 
 		stats, 
-		statField	
+		statField,
+		outputFields,
+		existOrFields	
 	)
 	promises.push(elastic_connector(thisDst, thisIndex, id, query, aggBy))
 	

@@ -9,7 +9,7 @@
 // odd balls
 var GLB = Object ();
 GLB.devMode = false;  // static, change this at will for a few extra buttons
-GLB.demoMode = true;  // is changed on page load
+GLB.demoMode = false;  // is changed on page load
 // GLB.screenLogMax = 10;
 GLB.drawLineBezier = false;
 GLB.zoomLevels=[0.75, 1, 1.2, 1.5, 2];
@@ -49,6 +49,7 @@ GLB.threejs.realTimeRender = true; // true = performance, false renders on setTi
 GLB.threejs.notRealTimeRenderFrequency = 500; // measured in ms
 GLB.threejs.showperformance = false;
 GLB.threejs.fps_TimeOut = 1000/60;  // bigger number is long delay = lower fps for low power machines.  1000=1fps,  16=60fps
+GLB.threejs.autoRotateSpeed = 2
 
 // When a query aggregates, how many fields should we return?
 GLB.dftAggregationSize = 100 // not fully implemented everywhere
@@ -133,58 +134,107 @@ GLB.Days = [
 ]
 
 
-GLB.favourites = [
-  {	
-    "uid": "elastic_a3dcb4d229de6fde0db5686dee47145c",
-    "printable": "Source",
-    "Gt": "PieChart",
-    "Cs":{"array":["observer.name","event.category","event.module"],"x_scale":"linear","x_null":true}
-  },{
-    "uid":"b3f804d73f990a227894ef92d61dd58f",
-    "printable":"File mime source and Name",
-    "Gt":"Sankey",
-    "Cs":{"array":["file.mime_type","file.source"],"x_scale":"linear", "x_null":1}
-  },{	
-    "uid": "elastic_a3dcb4d229de6fde0db5686dee47145m",
-    "printable": "Trend of Event Types",
-    "Gt": "Trend",
-    "Cs":{"x_field":"event.dataset","x_windowSlide":"TheWindowSize","x_windows":"6"}
-  },{				
-    "uid": "elastic_a3dcb4d229de6fde0db5686dee47145l",
-    "printable": "Bytes xFer/Port/Protocol",
-    "Gt": "TreemapCandles",
-    "Cs":{"array":["network.protocol","destination.port"],"x_candle":"network.bytes","x_scale":"linear","x_null":true}
-  },{	
-    "uid": "elastic_a3dcb4d229de6fde0db5686dee47145e",
-    "printable": "Connection States",
-    "Gt": "PieChart",
-    "Cs":{"array":["connection.state_description","destination.port"],"x_scale":"log"}
-  },{	
-    "uid": "elastic_a3dcb4d229de6fde0db5686dee47145o",
-    "printable": "Trend DNS",
-    "Gt": "Trend",
-    "Cs":{"x_field":"dns.subdomain","x_windowSlide":"TheWindowSize","x_windows":"6"}
-  },{	
-    "uid": "elastic_a3dcb4d229de6fde0db5686dee47145g",
-    "printable": "PKI Certs",
-    "Gt": "Sankey",
-    "Cs":{"array":["ssl.version","ssl.validation_status","ssl.next_protocol"],"x_scale":"linear","x_null":true}
-  },{	
-    "uid": "elastic_a3dcb4d229de6fde0db5686dee47145i",
-    "printable": "HTTP Response Codes",
-    "Gt": "Sankey",
-    "Cs":{"array":["http.method","http.status_code"],"x_scale":"linear","x_null":true}
-  },{	
-    "uid": "elastic_a3dcb4d229de6fde0db5686dee47145s",
-    "printable": "Calendar Heatmap",
-    "Gt": "Calendar HeatMap",
-    "Cs":{"x_field":"@timestamp"}
-  },
-  {"printable":"Agent IP and Type","Gt":"PieChart","Cs":{"array":["agent.ip","data.type"],"x_scale":"log"},"uid":"b9f3749ace1c2161112c689451f5638e"},
-  {"printable":"Destination Globe by Dst Port","Gt":"Globe","Cs":{"x_lat":"destination.geo.location.lat","x_lon":"destination.geo.location.lon","x_track":"destination.port","x_scale":"linear"},"uid":"499c12478e8f7898a71241437007435e"},
-  {"printable":"IDS Rules","Gt":"AsterPlot","Cs":{"x_field":"rule.tsc","x_width":"rule.category","x_depth":"rule.firedtimes"},"uid":"6f0c3e0db3a4b5fe5bea5d5548b264d5"},
-  {"printable":"DHCP","Gt":"Sankey","Cs":{"array":["host.hostname","host.mac","dhcp.message_types"],"x_scale":"log"},"uid":"ffbb18174b21cfe1ad27bdb6ae50ce32"}
+// GLB.favourites = [
+//   {	
+//     "uid": "elastic_a3dcb4d229de6fde0db5686dee47145c",
+//     "printable": "Source",
+//     "Gt": "PieChart",
+//     "Cs":{"array":["observer.name","event.category","event.module"],"x_scale":"linear","x_null":true}
+//   },{
+//     "uid":"b3f804d73f990a227894ef92d61dd58f",
+//     "printable":"File mime source and Name",
+//     "Gt":"Sankey",
+//     "Cs":{"array":["file.mime_type","file.source"],"x_scale":"linear", "x_null":1}
+//   },{	
+//     "uid": "elastic_a3dcb4d229de6fde0db5686dee47145m",
+//     "printable": "Trend of Event Types",
+//     "Gt": "Trend",
+//     "Cs":{"x_field":"event.dataset","x_windowSlide":"TheWindowSize","x_windows":"6"}
+//   },{				
+//     "uid": "elastic_a3dcb4d229de6fde0db5686dee47145l",
+//     "printable": "Bytes xFer/Port/Protocol",
+//     "Gt": "TreemapCandles",
+//     "Cs":{"array":["network.protocol","destination.port"],"x_candle":"network.bytes","x_scale":"linear","x_null":true}
+//   },{	
+//     "uid": "elastic_a3dcb4d229de6fde0db5686dee47145e",
+//     "printable": "Connection States",
+//     "Gt": "PieChart",
+//     "Cs":{"array":["connection.state_description","destination.port"],"x_scale":"log"}
+//   },{	
+//     "uid": "elastic_a3dcb4d229de6fde0db5686dee47145o",
+//     "printable": "Trend DNS",
+//     "Gt": "Trend",
+//     "Cs":{"x_field":"dns.subdomain","x_windowSlide":"TheWindowSize","x_windows":"6"}
+//   },{	
+//     "uid": "elastic_a3dcb4d229de6fde0db5686dee47145g",
+//     "printable": "PKI Certs",
+//     "Gt": "Sankey",
+//     "Cs":{"array":["ssl.version","ssl.validation_status","ssl.next_protocol"],"x_scale":"linear","x_null":true}
+//   },{	
+//     "uid": "elastic_a3dcb4d229de6fde0db5686dee47145i",
+//     "printable": "HTTP Response Codes",
+//     "Gt": "Sankey",
+//     "Cs":{"array":["http.method","http.status_code"],"x_scale":"linear","x_null":true}
+//   },{	
+//     "uid": "elastic_a3dcb4d229de6fde0db5686dee47145s",
+//     "printable": "Calendar Heatmap",
+//     "Gt": "Calendar HeatMap",
+//     "Cs":{"x_field":"@timestamp"}
+//   },
+//   {"printable":"Agent IP and Type","Gt":"PieChart","Cs":{"array":["agent.ip","data.type"],"x_scale":"log"},"uid":"b9f3749ace1c2161112c689451f5638e"},
+//   {"printable":"Destination Globe by Dst Port","Gt":"Globe","Cs":{"x_lat":"destination.geo.location.lat","x_lon":"destination.geo.location.lon","x_track":"destination.port","x_scale":"linear"},"uid":"499c12478e8f7898a71241437007435e"},
+//   {"printable":"IDS Rules","Gt":"AsterPlot","Cs":{"x_field":"rule.tsc","x_width":"rule.category","x_depth":"rule.firedtimes"},"uid":"6f0c3e0db3a4b5fe5bea5d5548b264d5"},
+//   {"printable":"DHCP","Gt":"Sankey","Cs":{"array":["host.hostname","host.mac","dhcp.message_types"],"x_scale":"log"},"uid":"ffbb18174b21cfe1ad27bdb6ae50ce32"}
+// ]
+
+// GLB.favourites = [
+//   {"printable":"Data Sources","Gt":"PieChart","Cs":{"array":["host.name","event.category","event.module","event.dataset"],"x_scale":"log","x_null":true},"uid":"5c119820260b5841bc3139babe18bddf"},
+//   {"printable":"Dataset","Gt":"Trend","Cs":{"x_field":"event.dataset","x_windowSlide":"Fracture","x_windows":"7"},"uid":"a3efbfa564020b8d16a1d6c76e92b341"},
+//   {"printable":"Calendar HeatMap","Gt":"Calendar HeatMap","Cs":{"x_field":"@timestamp"},"uid":"3913b0ac025f7877d6ae9756eaa25efe"},
+//   {"printable":"HTTP Requests","Gt":"Sankey","Cs":{"array":["http.status_code","http.method"],"x_scale":"log","x_null":true},"uid":"d22a3e1a44bb26bb9d3b27afabc38cbc"},
+//   {"printable":"DNS ","Gt":"Sankey","Cs":{"array":["dns.top_level_domain","dns.parent_domain"],"x_scale":"log","x_null":true},"uid":"bb7bea38e346718dc3c0e57c30a77fdb"},
+//   {"printable":"DHCP Requests","Gt":"PieChart","Cs":{"array":["dhcp.message_types"],"x_scale":"linear"},"uid":"816765105814e50214539e794ae61cb6"},
+//   {"printable":"SSL Version PKI Status","Gt":"Sankey","Cs":{"array":["ssl.version","ssl.validation_status","ssl.next_protocol"],"x_scale":"log"},"uid":"8d78da2b061e8a0705c011b63ac3ddbc"},
+//   {"printable":"PKI Issues","Gt":"Sankey","Cs":{"array":["x509.certificate.signing_algorithm","x509.certificate.issuer"],"x_scale":"log"},"uid":"c42e6cdb963ea02f21adfdfd1f6c3c4b"},
+//   {"printable":"SSL Version","Gt":"Trend","Cs":{"x_field":"ssl.version","x_windowSlide":"Fracture","x_windows":"7"},"uid":"941ea05e7441cf714a4730adc3ebda59"},
+//   {"printable":"Protocol connection States","Gt":"Sankey","Cs":{"array":["network.protocol","connection.state_description"],"x_scale":"linear"},"uid":"2baf6a3580b97396a08df800f03c50fc"},
+//   {"printable":"Protocol ports","Gt":"TreemapCandles","Cs":{"array":["network.protocol","destination.port"],"x_candle":"network.bytes","x_scale":"linear","x_null":true},"uid":"60f5b9a0ef9456a1cd1883faeca1900f"},
+//   {"printable":"Bytes per src/dst IP","Gt":"scatterPlot","Cs":{"x_x":"source.port","x_y":"network.bytes","x_z":"destination.port"},"uid":"9c5d3a6045730bce50f072dd9dfd38ba"},
+//   {"printable":"Transport protocols","Gt":"PieChart","Cs":{"array":["network.transport","network.protocol"],"x_scale":"log","x_null":true},"uid":"fac92e8086258683c13bc34f38eb4a0f"},
+//   {"printable":"Connection locations","Gt":"Sankey","Cs":{"array":["connection.local.originator","destination.geo.country_name","connection.local.responder"],"x_scale":"log","x_null":true},"uid":"29638a18047dc07cf1dfae775f2e6d4f"},
+//   {"printable":"Protocols","Gt":"Trend","Cs":{"x_field":"network.protocol","x_windowSlide":"Fracture","x_windows":"7"},"uid":"7c520c76ba2c29e82f0c3f973bb97795"},
+//   {"printable":"Destination","Gt":"Globe","Cs":{"x_lat":"destination.geo.location.lat","x_lon":"destination.geo.location.lon","x_track":"destination.port","x_scale":"linear"},"uid":"499c12478e8f7898a71241437007435e"},
+//   {"printable":"DHCP","Gt":"Sankey","Cs":{"array":["host.hostname","host.mac","dhcp.message_types"],"x_scale":"log"},"uid":"ffbb18174b21cfe1ad27bdb6ae50ce32"},
+//   {"printable":"IDS Alerts","Gt":"PieChart","Cs":{"array":["rule.ruleset","rule.action","rule.name"],"x_scale":"log"},"uid":"fe7a55bf67754a292707589a9abeff43"}
+// ]
 
 
 
-]
+GLB.favourites = {
+  "Platform":[
+    {"printable":"Data Sources","Gt":"PieChart","Cs":{"array":["host.name","event.category","event.module","event.dataset"],"x_scale":"log","x_null":true},"uid":"5c119820260b5841bc3139babe18bddf"},
+    {"printable":"Dataset","Gt":"Trend","Cs":{"x_field":"event.dataset","x_windowSlide":"Fracture","x_windows":"7"},"uid":"a3efbfa564020b8d16a1d6c76e92b341"},
+    {"printable":"Calendar HeatMap","Gt":"Calendar HeatMap","Cs":{"x_field":"@timestamp"},"uid":"3913b0ac025f7877d6ae9756eaa25efe"}
+  ],
+  "Application":[  
+    {"printable":"HTTP Requests","Gt":"Sankey","Cs":{"array":["http.status_code","http.method"],"x_scale":"log","x_null":true},"uid":"d22a3e1a44bb26bb9d3b27afabc38cbc"},
+    {"printable":"DNS ","Gt":"Sankey","Cs":{"array":["dns.top_level_domain","dns.parent_domain"],"x_scale":"log","x_null":true},"uid":"bb7bea38e346718dc3c0e57c30a77fdb"},
+    {"printable":"DHCP Requests","Gt":"PieChart","Cs":{"array":["dhcp.message_types"],"x_scale":"linear"},"uid":"816765105814e50214539e794ae61cb6"},
+    {"printable":"DHCP","Gt":"Sankey","Cs":{"array":["host.hostname","host.mac","dhcp.message_types"],"x_scale":"log"},"uid":"ffbb18174b21cfe1ad27bdb6ae50ce32"},
+    {"printable":"SSL Version PKI Status","Gt":"Sankey","Cs":{"array":["ssl.version","ssl.validation_status","ssl.next_protocol"],"x_scale":"log"},"uid":"8d78da2b061e8a0705c011b63ac3ddbc"},
+    {"printable":"PKI Issues","Gt":"Sankey","Cs":{"array":["x509.certificate.signing_algorithm","x509.certificate.issuer"],"x_scale":"log"},"uid":"c42e6cdb963ea02f21adfdfd1f6c3c4b"},
+    {"printable":"SSL Version","Gt":"Trend","Cs":{"x_field":"ssl.version","x_windowSlide":"Fracture","x_windows":"7"},"uid":"941ea05e7441cf714a4730adc3ebda59"},
+  ],
+  "Network":[
+    {"printable":"Protocol connection States","Gt":"Sankey","Cs":{"array":["network.protocol","connection.state_description"],"x_scale":"linear"},"uid":"2baf6a3580b97396a08df800f03c50fc"},
+    {"printable":"Protocol ports","Gt":"TreemapCandles","Cs":{"array":["network.protocol","destination.port"],"x_candle":"network.bytes","x_scale":"linear","x_null":true},"uid":"60f5b9a0ef9456a1cd1883faeca1900f"},
+    {"printable":"Bytes per src/dst IP","Gt":"scatterPlot","Cs":{"x_x":"source.port","x_y":"network.bytes","x_z":"destination.port"},"uid":"9c5d3a6045730bce50f072dd9dfd38ba"},
+    {"printable":"Transport protocols","Gt":"PieChart","Cs":{"array":["network.transport","network.protocol"],"x_scale":"log","x_null":true},"uid":"fac92e8086258683c13bc34f38eb4a0f"},
+    {"printable":"Connection locations","Gt":"Sankey","Cs":{"array":["connection.local.originator","destination.geo.country_name","connection.local.responder"],"x_scale":"log","x_null":true},"uid":"29638a18047dc07cf1dfae775f2e6d4f"},
+    {"printable":"Protocols","Gt":"Trend","Cs":{"x_field":"network.protocol","x_windowSlide":"Fracture","x_windows":"7"},"uid":"7c520c76ba2c29e82f0c3f973bb97795"},
+    {"printable":"Destination","Gt":"Globe","Cs":{"x_lat":"destination.geo.location.lat","x_lon":"destination.geo.location.lon","x_track":"destination.port","x_scale":"linear"},"uid":"499c12478e8f7898a71241437007435e"},
+  ],
+  "IDS":[  
+    {"printable":"IDS Alerts","Gt":"PieChart","Cs":{"array":["rule.ruleset","rule.action","rule.name"],"x_scale":"log"},"uid":"fe7a55bf67754a292707589a9abeff43"}
+  ]
+}

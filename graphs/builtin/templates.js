@@ -83,67 +83,54 @@ function graph_templates(id, data){
 		.classed("fleft", true)
 		.attr("src", "./images/239_b.png")
 
+	clusterDiv = clusterSection.append("div")
+		.classed("square_cluster_text", true)
+		.classed("fleft", true);
+
+	clusterDiv.append("div")
+		.classed("square_cluster_text", true)
+		.append("div")
+			.classed("fontsize", true)
+			.text("Apply a 'Template' to me:")
+		.append("div")
+		.append("select")
+			.classed("fontsize", true)
+			.attr("id", function(d){ return "template_apply_favourite" })
+			.attr("name", function(d){ return "template_apply_favourite" })
+
+	clusterDiv = clusterSection.append("div")
+		.classed("square_cluster_text", true)
+		.classed("fleft", true)
+
+	clusterDiv.append("div")
+		.attr("id", function(d){ return "square_template_apply_favourite" })
 	
-	var favourites = GLB.favourites
+	if(!_.isEmpty(GLB.favourites)){
 
-	if(favourites.length>0){
-
-		clusterDiv = clusterSection.append("div")
-			.classed("square_cluster_text", true)
-			.classed("fleft", true);
-
-			clusterDiv.append("div")
-				.classed("square_cluster_text", true)
-				.append("div")
-					.classed("fontsize", true)
-					.text("Apply a 'Template' to me:")
-				.append("div")
-				.append("select")
-					.classed("fontsize", true)
-					.attr("id", function(d){ return "template_apply_favourite" })
-					.attr("name", function(d){ return "template_apply_favourite" })
-
-		clusterDiv = clusterSection.append("div")
-			.classed("square_cluster_text", true)
-			.classed("fleft", true)
+		var mySelectt = $('#template_apply_favourite');
 			
-			clusterDiv.append("div")
-				.attr("id", function(d){ return "square_template_apply_favourite" })
-			var mySelectt = $('#template_apply_favourite');
-			
+		// var favourites = GLB.favourites
 
-			_.each(favourites, function(favourite){
+
+		_.each(GLB.favourites, function(val, key){
+			
+			mySelectt.append(
+				$('<option disabled></option>').html("----- "+key+ " -----")
+			);				
+			
+			_.each(val, function(favourite){
+				// qq(favourite)
 				mySelectt.append(
 					$('<option></option>').val(favourite.uid).html(favourite.printable+" ("+favourite.Gt+")")
 				);	
 			})
 
-			$("#square_template_apply_favourite").append("<input type='button' id='template_id_apply_favourite' value='Import Favourite' />");
-			$("#template_id_apply_favourite").bind("click",  function(){  importSquareFavourite(id, $('#template_apply_favourite').val())}  );
+		})
 
-		}else{
+		$("#square_template_apply_favourite").append("<input type='button' id='template_id_apply_favourite' value='Import Favourite' />");
+		$("#template_id_apply_favourite").bind("click",  function(){  importSquareFavourite(id, $('#template_apply_favourite').val())}  );
 
-
-
-			clusterDiv = clusterSection.append("div")
-			.classed("square_cluster_text", true)
-			.classed("fleft", true);
-
-			clusterDiv.append("div")
-				.classed("square_cluster_text", true)
-				.append("div")
-					.classed("fontsize", true)
-					// CSS breaks on "-", replace with char friendly unicode
-					.html("No favourites saved for: "+retrieveSquareParam(id, 'CH', true).replaceAll("-", "&#8209;") )
-					
-				
-					clusterDiv = clusterSection.append("div")
-					.classed("square_cluster_text", true)
-					.classed("fleft", true)
-					
-					clusterDiv.append("div")
-
-		}
+	}
 
 
 
@@ -319,6 +306,7 @@ function graph_templates(id, data){
 	/////////////////Create a Favourite///////////////////
 	
 	if(GLB.devMode){
+		
 		favString = {}
 		
 		favString['printable'] = "x"
@@ -335,6 +323,7 @@ function graph_templates(id, data){
 		clusterDiv.append("img")
 			.classed("square_cluster_image", true)
 			.classed("fleft", true)
+			.classed("iconDevMode", true)
 			.attr("src", "./images/239_b.png")
 
 

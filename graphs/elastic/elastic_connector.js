@@ -6,7 +6,7 @@
 
 
 
-async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, incTime, filter, aggsTerm, aggsTermTime, aggsRanges, maxAccuracy, aggFields, stats, statField, outputFields, existFields){
+async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, incTime, filter, aggsTerm, aggsTermTime, aggsRanges, maxAccuracy, aggFields, stats, statField, outputFields, existOrFields, existAndFields){
 	ee(" -> "+arguments.callee.name+"("+id+")");
 	qqq = false
 
@@ -148,14 +148,26 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	
 
 	////////////////////////////////
-	// some square types demand specific fields exist, add this condition as a new "must" chain seperate from being calculated from parent squares
+	// existOrFields[] is for fields where partial null ok in a record.   existAndFields is if all fields must exist
 	////////////////////////////////
-	if(existFields){
-		_.each(existFields, function(field){
+	
+	// if 1 field, then don't enforce fields (it can be null).  If 2 fields, then 1 must be something (aka partial null)
+	if(existOrFields && existOrFields.length>1){
+		qq("adding or fields x:"+existOrFields.length)
+		var tmpBool =  {"bool": {"minimum_should_match": 1,"should": []}}
+		_.each(existOrFields, function(field){
+			tmpBool['bool']['should'].push({"exists": {"field": field }})
+		})		
+		query['query']['bool']['must'].push(tmpBool)
+	}
+	
+	// all of these must exist
+	if(existAndFields  && existAndFields.length>0){
+		qq("adding and fields x:"+existAndFields.length)
+		_.each(existAndFields, function(field){
 			query['query']['bool']['must'].push({"exists": {"field": field }})
 		})		
 	}
-
 
 
 
@@ -198,7 +210,7 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	// AGGS
 	////////////////////////////////
 	qqq && qq("elasticQueryBuildderToRuleThemAllandOr id:"+id+" agg by query")
-	if(aggFields.length>0){
+	if(aggFields && aggFields.length>0){
 		
 
 		
@@ -206,11 +218,20 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 		var node = agg
 		for(var i = 0 ; i < aggFields.length ; i++){
 
+			
 			node['field'] = {}
 			node['field']['terms'] = {}
+			
+			
 
 			if(await hasFieldKeyword(id, aggFields[i])){
 				node['field']['terms']['field'] = (aggFields[i]+".keyword")
+				
+				// add a default phrase for aggs with missing field
+				// having "null" at multiple layers of aggs/flares/tree might cause issues, so base null on keyname				
+				// var nullKey = _.last(_.without(aggFields[i].split("."), "keyword"))
+				node['field']['terms']['missing'] = "null"
+
 			}else{
 				node['field']['terms']['field'] = aggFields[i]
 			}
@@ -306,7 +327,7 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	////////////////////////////////
 	// add outputFields for the raw output (e.g. not Aggs)
 	////////////////////////////////
-	if(outputFields){
+	if(outputFields && outputFields.length>0){
 		query._source = outputFields
 	}
 	
@@ -361,7 +382,7 @@ function elasticNestCalculator(PrIds, path, theReturn){
 }
 
 function elasticPrepKeyword(key, val, mappings){
-	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+key+", "+val+")");
+	ee(" -> "+arguments.callee.name+"("+key+", "+val+")");
 	var miniObj = {}
 	if(_.contains(mappings.keywordFields, key)){
 		miniObj[key+".keyword"] = val			
@@ -698,12 +719,12 @@ function combineScriptFilter(id){
 
 
 
-function elasticToFlare(data, scale, incNull){
+function elasticToFlare(data, scale){
 	// in = elastic response
 	// out = d3 flare {"data": {"name": "", "children": [..]}
 	// for graphs that only use 1 time range, just enter it straight away
 	dataout = {"name": "", "children":[]}
-	dataout['children'] = elasticToFlareLoop(data, dataout['children'], scale, incNull)
+	dataout['children'] = elasticToFlareLoop(data, dataout['children'], scale)
 	return dataout
 	
 }
@@ -716,16 +737,16 @@ function elasticToFlareLoop(data, dataout, scale){
 		if(data[i].hasOwnProperty("field") && data[i]['field']['buckets'].length == 0){
 			// parent object, but no fields within (aka multi dimensional values are null)
 
-			if(incNull){
-				var mo = {}
-				mo['name'] = data[i]['key']
-				mo['children'] = []
-				dataout.push(mo)
+			// if(incNull){
+			// 	var mo = {}
+			// 	mo['name'] = data[i]['key']
+			// 	mo['children'] = []
+			// 	dataout.push(mo)
 
-				elasticToFlareLoop([{"key": "null", "doc_count": data[i]['doc_count']}], dataout[dataout.length-1]['children'], scale, incNull)
-			}else{
-				elasticToFlareLoop([], dataout[dataout.length-1]['children'], scale, incNull)
-			}
+			// 	elasticToFlareLoop([{"key": "null", "doc_count": data[i]['doc_count']}], dataout[dataout.length-1]['children'], scale, incNull)
+			// }else{
+				elasticToFlareLoop([], dataout[dataout.length-1]['children'], scale)
+			// }
 
 		}else if(data[i].hasOwnProperty("field")){
 			// parent object, loop through children
@@ -735,7 +756,7 @@ function elasticToFlareLoop(data, dataout, scale){
 			mo['children'] = []
 			dataout.push(mo)
 			
-			elasticToFlareLoop(data[i]['field']['buckets'], dataout[dataout.length-1]['children'], scale, incNull)
+			elasticToFlareLoop(data[i]['field']['buckets'], dataout[dataout.length-1]['children'], scale)
 
 		}else{
 			// ww(7, i+": NO has field")
@@ -792,9 +813,157 @@ async function hasFieldKeyword(id, keyword){
 
 
 
+function elasticAggToSankey(data){
+
+
+}
 
 
 
+function elasticAggToSankeyLoop(Cs, depth, dataIn, dataOut, breadCrumbs, fields){
+	//dataIn = arry of buckets
+	//dataOut = {"nodes":[], "links":[]}
+	
+	var qqq = false
+	qqq && qq("-------")
+	qqq && qq(breadCrumbs)
+
+	var fields2 = JSON.parse(JSON.stringify(fields))
+	fields2.push(Cs[depth]) 
+	qqq && qq("added Cs["+depth+"] ("+Cs[depth]+") to fields2")
+
+
+	_.each(dataIn, function(bucket, i){
+		qqq && qq("-----bucket key:"+bucket['key']+" i:"+i)
+
+		var breadCrumbs2 = JSON.parse(JSON.stringify(breadCrumbs))
+		breadCrumbs2.push(bucket['key']) 
+
+
+		if(bucket.hasOwnProperty("field")){
+			qqq && qq("- fields found :"+bucket['key'])
+			
+			if(!_.findWhere(dataOut.nodes, {"name":bucket['key']})){
+				qqq && qq("cant' find node:"+bucket['key']+", adding")
+				
+				// get every node ID, find max, increment
+				newNodeID = _.max(_.map(dataOut.nodes, function(node){
+					return _.get(node, "node")
+				}))
+				newNodeID++
+				
+				dataOut['nodes'].push({"node": newNodeID, "name":bucket['key']})
+				qqq && qq("nodes now:")
+				qqq && qq(dataOut['nodes'])
+			}
+
+			qqq && qq("added to breadcrumbs, now: "+ JSON.stringify(breadCrumbs2))
+			
+			elasticAggToSankeyLoop(Cs, (depth+1), bucket['field']['buckets'] , dataOut, breadCrumbs2, fields2)
+
+		}else{
+
+			qqq && qq("- no fields, at the deepest, breadCrumbs = "+JSON.stringify(breadCrumbs2) +", ")
+			
+			// at the deepest of aggs.  Add the doc_count to every pair of parent+grandparent, grandparent+greatgrandparent, etc
+			for ( var i = 0 ; i < breadCrumbs2.length-1; i++){
+				qqq && qq("looping for breadCrumb:"+breadCrumbs2[i])
+				
+				// Deep search if node is logged
+				if(!_.findWhere(dataOut.nodes, {"name":bucket['key']})){
+					qqq && qq("cant' find node:"+bucket['key']+", adding")
+					// get every node ID, find max, increment
+					newNodeID = _.max(_.map(dataOut.nodes, function(node){
+						return _.get(node, "node")
+					}))
+					newNodeID++
+					dataOut['nodes'].push({"node": newNodeID, "name":bucket['key']})
+					qqq && qq("nodes now:")
+					qqq && qq(dataOut['nodes'])
+				}
+
+				// get Node ID for link
+				var srcNode = _.findWhere(dataOut.nodes, {"name":breadCrumbs2[i]})['node']
+				var dstNode = _.findWhere(dataOut.nodes, {"name":breadCrumbs2[i+1]})['node']
+				
+				qqq && qq(breadCrumbs2[i]+"("+srcNode+") -> "+breadCrumbs2[i+1]+"("+dstNode+")")
+				
+
+				// create new link, or add to existing?
+				var tmpPointer = _.findWhere(dataOut['links'], {"source":srcNode, "target":dstNode})
+				if(tmpPointer){
+						tmpPointer['valueReal'] += bucket['doc_count']
+						qqq && qq("link existed, +"+bucket['doc_count']+", now"+tmpPointer)
+				}else{
+					// does a reverse link exist?  Bad news!
+					if(!_.findWhere(dataOut['links'], {"source":dstNode, "target":srcNode})){
+						dataOut['links'].push({"source": srcNode, "target": dstNode, "sF": fields2[i], "tF": fields2[i+1], "valueReal": bucket['doc_count']})
+						qqq && qq("link didn't exist, now "+bucket['doc_count'])
+					}else{
+						ww(0, "Loop of data for id:"+", {'source':"+dstNode+", 'target':"+srcNode+"} exists")
+					}
+
+				}
+
+			}
+
+			
+		}
+
+	})
+	
+	return dataOut
+
+
+	// {
+	// 	"nodes": [{
+	// 			"node": 0,
+	// 			"name": ""
+	// 		}, {
+	// 			"node": 1,
+	// 			"name": "0"
+	// 		}, {
+	// 			"node": 2,
+	// 			"name": "10000"
+	// 		}, {
+	// 			"node": 3,
+	// 			"name": "10001"
+	// 		}, {
+	// 			"node": 4,
+	// 			"name": "10005"
+	// 		}, {
+	// 			"node": 5,
+	// 			"name": "1001"
+	// 		}
+	// 	],
+	// 	"links": [{
+	// 			"source": 0,
+	// 			"target": 40,
+	// 			"sF": "event.code",
+	// 			"tF": "event.dataset",
+	// 			"value": 9.827614750837508
+	// 		}, {
+	// 			"source": 0,
+	// 			"target": 36,
+	// 			"sF": "event.code",
+	// 			"tF": "event.dataset",
+	// 			"value": 8.771910256435763
+	// 		}, {
+	// 			"source": 0,
+	// 			"target": 33,
+	// 			"sF": "event.code",
+	// 			"tF": "event.dataset",
+	// 			"value": 6.3471075307174685
+	// 		}, {
+	// 			"source": 0,
+	// 			"target": 37,
+	// 			"sF": "event.code",
+	// 			"tF": "event.dataset",
+	// 			"value": 5.1588830833596715
+	// 		}
+	// 	]
+	// }
+}
 
 
 

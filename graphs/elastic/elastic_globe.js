@@ -97,50 +97,50 @@ async function elastic_completeform_globe(id, targetDiv){
 async function elastic_populate_globe(id){
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 	
+
+	var thisCs = retrieveSquareParam(id,"Cs",true)
 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
 	var thisIndex = "*"
-
 
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var timesArray = [[from, to]]
 
-	
-	var fields = []
-	var outputFields = []
-	var existFields = []
-	if(retrieveSquareParam(id,"Cs",false) !== undefined){
-		if(retrieveSquareParam(id,"Cs",false)['x_track'] !== undefined){
-			fields.push(retrieveSquareParam(id,"Cs",false)['x_track'])
-			outputFields.push(retrieveSquareParam(id,"Cs",false)['x_track'])
-			existFields.push(retrieveSquareParam(id,"Cs",false)['x_track'])
-			
-		}
-		if(retrieveSquareParam(id,"Cs",false)['x_lat'] !== undefined){
-			fields.push(retrieveSquareParam(id,"Cs",false)['x_lat'])
-			outputFields.push(retrieveSquareParam(id,"Cs",false)['x_lat'])
-			existFields.push(retrieveSquareParam(id,"Cs",false)['x_lat'])
-		}
-		if(retrieveSquareParam(id,"Cs",false)['x_lon'] !== undefined){
-			fields.push(retrieveSquareParam(id,"Cs",false)['x_lon'])
-			outputFields.push(retrieveSquareParam(id,"Cs",false)['x_lon'])
-			existFields.push(retrieveSquareParam(id,"Cs",false)['x_lon'])
-		}
-	}
 	var limit = 10000;
-	var filter = combineScriptFilter(id)
-	// var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
-
-	
-	var incTime = true
-	var maxAccuracy = true
-	var stats  = false
+	var stats = false
 	var statField = ""
+	var incTime = true
+	var filter = combineScriptFilter(id)
+	var maxAccuracy = true
 
-	
-	
+	var aggFields = []
+	var outputFields = []
+	var existOrFields = []
+	var existAndFields = []
 
-	// var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
+	// 
+
+	if(thisCs !== undefined){
+
+		if(thisCs['x_lat'] !== undefined){
+			aggFields.push(thisCs['x_lat'])
+			outputFields.push(thisCs['x_lat'])
+		}
+		if(thisCs['x_lon'] !== undefined){
+			aggFields.push(thisCs['x_lon'])
+			outputFields.push(thisCs['x_lon'])
+		}
+		if(thisCs['x_track'] !== undefined){
+			aggFields.push(thisCs['x_track'])
+			outputFields.push(thisCs['x_track'])
+		}
+		
+		existAndFields.push(thisCs['x_lon'])
+		existAndFields.push(thisCs['x_lat'])
+		existAndFields.push(thisCs['x_track'])
+
+	}
+
 	var query = await elasticQueryBuildderToRuleThemAllandOr(
 		id, 
 		timesArray, 
@@ -151,20 +151,19 @@ async function elastic_populate_globe(id){
 		"",
 		true,
 		maxAccuracy,
-		fields, 
+		aggFields, 
 		stats, 
 		statField,
 		outputFields,
-		existFields	
+		existOrFields,
+		existAndFields
 	)
 
-	var handle = retrieveSquareParam(id, 'CH')
-	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
 
-	
 	var promises = [id]
-	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all"))
+	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all") )
 	return Promise.all(promises)
+
 	
 }
 
@@ -172,6 +171,57 @@ async function elastic_populate_globe(id){
 
 function elastic_rawtoprocessed_globe(id, data){
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+
+	data = data[0]['data']['aggregations']['time_ranges']['buckets'][0]['field']['buckets']
+
+	var dataMid = {}
+	var dataHighest = 0
+	var dataKeys = []
+
+	_.each(data, function(lat){
+
+		if(!dataMid.hasOwnProperty(lat['key'])){
+			dataMid[lat['key']] = {}
+		}
+
+		_.each(lat['field']['buckets'], function(lon){
+
+			if(!dataMid[lat['key']].hasOwnProperty(lon['key'])){
+				dataMid[lat['key']][lon['key']] = {}
+			}
+
+			_.each(lon['field']['buckets'], function(stat){
+
+
+				if(!dataMid[lat['key']][lon['key']].hasOwnProperty(stat['key'])){
+					dataMid[lat['key']][lon['key']][stat['key']] = {}
+					dataMid[lat['key']][lon['key']][stat['key']]['count'] = stat['doc_count']
+				}else{
+					dataMid[lat['key']][lon['key']][stat['key']]['count'] += stat['doc_count']
+				}
+
+				if(!_.contains(dataKeys, stat['key'])){
+					dataKeys.push(stat['key'])
+				}
+
+				if(stat['doc_count'] > dataHighest){
+					dataHighest = stat['doc_count']
+				}
+
+			})
+
+		})
+
+
+	})
+
+
+	var dataOut = {"data": dataMid, "highest": dataHighest, "keys": dataKeys}
+
+	return dataOut
+
+
+
 
 	var data = data[0]['data']['hits']['hits']
 	
@@ -187,8 +237,6 @@ function elastic_rawtoprocessed_globe(id, data){
 		}
 	}
 	
-	
-	var dataCount = {}
 	
 
 	var csTrack = retrieveSquareParam(id,"Cs",true)['x_track']
@@ -309,6 +357,8 @@ function elastic_graph_globe(id, data){
 
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
+	// data = {"data":{"53.3811":{"1.4701":{"80":150}}}, "highest":150, "keys":["80"]}
+
 	var squareContainer = workspaceDiv.selectAll('#square_container_'+id)
 	var square = squareContainer
 		.append("xhtml:div") 
@@ -320,13 +370,17 @@ function elastic_graph_globe(id, data){
 			// .classed("y_overflow", true)
 			.attr("width", "1000")
 		.on("mousedown", function() { d3.event.stopPropagation(); })
-	var height = document.getElementById("square_"+id).clientHeight;
-	var width  = document.getElementById("square_"+id).clientWidth;
+	// var height = document.getElementById("square_"+id).clientHeight;
+	// var width  = document.getElementById("square_"+id).clientWidth;
 	
-	// var data = retrieveSquareParam(id, 'processeddata')['data']
-	// var nodes = retrieveSquareParam(id, 'processeddata')['nodes']
+	var sphereRadiusScale = d3.scaleLog()
+		.domain([0.1, data['highest']])
+		.range([5, 30]);
 
-	var highest = data['highest']
+	var keyScale = d3.scaleOrdinal()
+		.domain(data['keys'])
+		.range([1, 200]);
+
 
 	var globeRadius = grid_size/3;
 	// var markerRadius = 0.5;
@@ -346,7 +400,7 @@ function elastic_graph_globe(id, data){
 	// controls.maxDistance = 100;
 	controls.maxPolarAngle = Math.PI / 2;
 	controls.autoRotate = true;
-	controls.autoRotateSpeed = 0.06;
+	controls.autoRotateSpeed = -1 * GLB.threejs.autoRotateSpeed;
 	controls.userRotate = true;
 	controls.userRotateSpeed = 0.01;
 	controls.target = new THREE.Vector3(grid_size/2,grid_size/3,grid_size/2);
@@ -401,6 +455,113 @@ function elastic_graph_globe(id, data){
 		opacity: 0.3
 	});
 
+
+	_.each(data['data'], function(latObj, latKey){
+
+
+		_.each(latObj, function(lonObj, lonKey){
+
+			heightOffset = grid_size/4
+			topOfLine = (globeRadius * 1.2)+ heightOffset 
+	
+			lat = parseInt(latKey)
+			lon = parseInt(lonKey)
+
+			phi   = (90-lat)*(Math.PI/180)
+			theta = (lon+180)*(Math.PI/180)
+	
+			var x = -topOfLine * Math.sin(phi)*Math.cos(theta) + grid_size/2
+			var z =  topOfLine * Math.sin(phi)*Math.sin(theta) + grid_size/2
+			var y =  topOfLine * Math.cos(phi) + grid_size/3
+
+
+
+			// draw the cocktail stick
+			var points = [];
+			points.push( new THREE.Vector3( grid_size/2, grid_size/3, grid_size/2 ) );
+			points.push( new THREE.Vector3( x,y,z ) );
+
+			var geometry = new THREE.BufferGeometry().setFromPoints( points );
+			var line = new THREE.Line( geometry, material );
+			scene.add( line );
+
+
+			_.each(lonObj, function(val, key){
+
+				// myTallness = (val['count'] / data['highest']) * ((markerFurther-1)*globeRadius)
+				myTallness = keyScale(key)
+			
+	
+				farOutness = globeRadius + heightOffset + (myTallness/2)
+				
+	
+	
+				x = -farOutness * Math.sin(phi)*Math.cos(theta) + grid_size/2
+				z =  farOutness * Math.sin(phi)*Math.sin(theta) + grid_size/2
+				y =  farOutness * Math.cos(phi) + grid_size/3
+	
+	
+				var material = new THREE.MeshBasicMaterial( {color: colorScale(key)  } );
+				var sphereGeometry = new THREE.SphereGeometry(sphereRadiusScale(val['count']), 9, 9);
+				var sphere = new THREE.Mesh(sphereGeometry, material);
+				
+				sphere.position.x=x;
+				sphere.position.y=y;
+				sphere.position.z=z;
+	
+				// qq("obj:"+obj2+" highest:" +highest+" ratio: "+(obj2 / highest)+ " myTallness:"+myTallness)
+
+				sphere.squaresName = key
+
+
+				let clickObject = {"compare":[]}
+				miniObj = {}
+	
+				var miniobjKey = retrieveSquareParam(id, 'Cs', true)['x_lat']
+				miniobj = {}
+				miniobj[miniobjKey] = latKey
+				clickObject.compare.push(miniobj)
+				
+				miniobjKey = retrieveSquareParam(id, 'Cs', true)['x_lon']
+				miniobj = {}
+				miniobj[miniobjKey] = lonKey
+				clickObject.compare.push(miniobj)
+	
+				miniobjKey = retrieveSquareParam(id, 'Cs', true)['x_track']
+				miniobj = {}
+				miniobj[miniobjKey] = key
+				clickObject.compare.push(miniobj)		
+	
+				sphere.squaresAction = function(){ childFromClick(id, {"y": 1000, "Ds": btoa(JSON.stringify(clickObject))} , {} ) };
+				scene.add(sphere);
+
+
+			})
+
+
+		})
+
+
+	})
+
+
+
+
+
+
+
+	threeScenes["square_"+id] = scene;
+	return
+
+
+
+
+
+
+
+
+
+
 	// for each lat|lon calculate the angles and positions
 	_.each(data.data, function(obj,latlon){
 		
@@ -450,7 +611,7 @@ function elastic_graph_globe(id, data){
 			// var geometry = new THREE.BoxGeometry( mySize, myTallness, mySize );
 			// var cube = new THREE.Mesh(geometry, material);
 
-			var sphereGeometry = new THREE.SphereGeometry(myTallness/3, 9, 9);
+			var sphereGeometry = new THREE.SphereGeometry(sphereRadiusScale(obj2), 9, 9);
 			var sphere = new THREE.Mesh(sphereGeometry, material);
 			
 			sphere.position.x=x;
@@ -486,15 +647,10 @@ function elastic_graph_globe(id, data){
 
 		})
 
-
 	})
 
 
-	// var lineMaterial = new THREE.LineBasicMaterial( { color: 0x000000, linewidth: 1 } );
-	// var myLines = new THREE.LineSegments( geometry, lineMaterial );
-	// myLines.updateMatrix();
-	
-	// scene.add(myLines);
+
 
 	threeScenes["square_"+id] = scene;
 

@@ -60,29 +60,36 @@ async function elastic_completeform_fieldvariance(id, targetDiv){
 
 
 async function elastic_populate_fieldvariance(id){
-
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	
+	var thisCs = retrieveSquareParam(id,"Cs",true)
 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
 	var thisIndex = "*"
 
-	
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var timesArray = [[from, to]]
 
-	var fields = []
-	var limit = 100;
-	if(retrieveSquareParam(id,"Cs",false) !== undefined){
-		limit = retrieveSquareParam(id,"Cs",false)['x_size']
+	var limit = 1;
+	var stats = false
+	var statField = ""
+	var incTime = true
+	var filter = combineScriptFilter(id)
+	var maxAccuracy = true
+
+	var aggFields = []
+	var outputFields = []
+	var existOrFields = []
+	var existAndFields = []
+
+	// 
+	
+	
+	if(thisCs !== undefined){
+		limit = thisCs['x_size']
 	}
 
-	var filter = combineScriptFilter(id)
-	var incTime = true
-	var maxAccuracy = true
-	var stats  = false
-	var statField = ""
 
-	// var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
 	var query = await elasticQueryBuildderToRuleThemAllandOr(
 		id, 
 		timesArray, 
@@ -93,14 +100,15 @@ async function elastic_populate_fieldvariance(id){
 		"",
 		true,
 		maxAccuracy,
-		fields, 
+		aggFields, 
 		stats, 
-		statField	
+		statField,
+		outputFields,
+		existOrFields,
+		existAndFields	
 	)
 
-	var handle = retrieveSquareParam(id, 'CH')
-	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
-
+	
 	var promises = [id]
 	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all"))
 	return Promise.all(promises)
@@ -278,7 +286,7 @@ function elastic_graph_fieldvariance(id, data){
 	$("#square_"+id+"_table").append("<tbody></tbody>");
 	_.each(data, function(obj,key){
 		// qq(".")
-		clickObject = {"y": 1000, "Gt":"PieChart", "Cs":{"array":[key]}}
+		
 
 		if(obj.samples.length == 5){
 			obj.samples.push("[...]")
@@ -290,6 +298,8 @@ function elastic_graph_fieldvariance(id, data){
 		}
 		var samplesHover = obj.samples.join(", ")
 
+		var clickObject = {"y": 1000, "Gt":"PieChart", "Cs":{"array":[key]}, "Ds": retrieveSquareParam(id, "Ds", false)}
+
 		$("#square_"+id+"_table").find('tbody').append("<tr><td onclick='childFromClick("+retrieveSquareParam(id,"Pr",false)+", "+JSON.stringify(clickObject)+") ' >"+key+"</td><td>"+obj['type']+"</td><td title='"+samplesHover+"'>"+samples+"</td><td>"+obj['occurance']+" ("+obj['occurancePercentage']+"%)</td><td>"+obj['variance']+" ("+obj['variancePercentage']+"%)</td><tr>");
 		
 
@@ -300,7 +310,6 @@ function elastic_graph_fieldvariance(id, data){
 		sortList: [[3,1], [4,2]]
 	});
 	
-	data = null
 
 }
 

@@ -122,35 +122,42 @@ async function elastic_completeform_treemapdimensions(id, targetDiv){
 
 
 async function elastic_populate_treemapdimensions(id){
-	
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+
+	var thisCs = retrieveSquareParam(id,"Cs",true)
 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
 	var thisIndex = "*"
 
-	
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var timesArray = [[from, to]]
-
-
-	var fields = []
-	_.each(retrieveSquareParam(id,"Cs",true)['array'], function(key,num){
-		fields.push(key)
-	})	
 
 	var limit = 1;
 	var stats = false
 	var statField = ""
 	var incTime = true
-	var urlencode = false
 	var filter = combineScriptFilter(id)
 	var maxAccuracy = true
-	
-	// var query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, filter)
-	
-	
 
-	// var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
+	var aggFields = []
+	var outputFields = []
+	var existOrFields = []
+	var existAndFields = []
+
+	// 
+
+	_.each(thisCs['array'], function(key,num){
+		aggFields.push(key)
+		outputFields.push(key)
+		if(thisCs['x_null']){
+			existOrFields.push(key)
+		}else{
+			existAndFields.push(key)
+		}
+	})	
+
+
+
 	var query = await elasticQueryBuildderToRuleThemAllandOr(
 		id, 
 		timesArray, 
@@ -161,15 +168,15 @@ async function elastic_populate_treemapdimensions(id){
 		"",
 		true,
 		maxAccuracy,
-		fields, 
+		aggFields, 
 		stats, 
-		statField	
+		statField,
+		outputFields,
+		existOrFields,
+		existAndFields
 	)	
 
 
-	var handle = retrieveSquareParam(id, 'CH')
-	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
-	
 	var promises = [id]
 	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all"))
 	return Promise.all(promises)

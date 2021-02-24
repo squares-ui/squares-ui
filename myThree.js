@@ -15,7 +15,7 @@ var gridLines = 0x45656;
 var masterAmbientLight = new THREE.AmbientLight( 0xffffff );
 
 var masterCamera = new THREE.PerspectiveCamera(45, 1, 1, 15000);
-var cameraDist = 1.4
+var cameraDist = 1.6
 masterCamera.position.x = grid_size*cameraDist;
 masterCamera.position.y = grid_size*cameraDist;
 masterCamera.position.z = grid_size*cameraDist;
@@ -93,7 +93,7 @@ function render_Three(){
 		if ( rect_square.bottom < 0 || rect_square.top  > threeRenderer.domElement.clientHeight ||
 			rect_square.right  < 0 || rect_square.left > (threeRenderer.domElement.clientWidth*1) ) {
 			//ww(7, "square_"+square_id+" not in render scope");
-			//continue;  // it's off screen
+			// continue;  // it's off screen
 		}
 
 

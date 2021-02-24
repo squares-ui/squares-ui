@@ -19,7 +19,6 @@ async function elastic_completeform_cloud(id, targetDiv){
 	// Async difficult to handle
 	// promise.all appears to be the best way.  Construct the list of promises that will each master the jsonform{}
 
-
 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
 	var thisIndex = "*"
 	var thisMappings = await getMappingsData(thisDst, thisIndex)
@@ -63,8 +62,9 @@ async function elastic_completeform_cloud(id, targetDiv){
 
 
 async function elastic_populate_cloud(id){
-	
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+
+	var thisCs = retrieveSquareParam(id,"Cs",true)
 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
 	var thisIndex = "*"
 
@@ -72,21 +72,24 @@ async function elastic_populate_cloud(id){
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var timesArray = [[from, to]]
 
-	
-	//var fields = [];  // use this to see all fields in raw output
-	//var fields = ["@timestamp", "type", "client_ip", "method", "port", "server_response"];
-	var fields=[retrieveSquareParam(id,"Cs",true)['x_field']]
-
 	var limit = 1;
 	var stats = false
 	var statField = null
 	var incTime = true
-	var urlencode = false
 	var filter = combineScriptFilter(id)
 	var maxAccuracy = true
 
-	// var query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, filter)
-	
+	var aggFields = []
+	var outputFields = []
+	var existOrFields = []
+	var existAndFields = []
+
+	//
+
+	aggFields=[thisCs['x_field']]
+
+
+
 	var query = await elasticQueryBuildderToRuleThemAllandOr(
 		id, 
 		timesArray, 
@@ -97,16 +100,13 @@ async function elastic_populate_cloud(id){
 		"",
 		true,
 		maxAccuracy,
-		fields, 
+		aggFields, 
 		stats, 
-		statField	
+		statField,
+		outputFields,
+		existOrFields,
+		existAndFields
 	)
-
-
-
-
-	var handle = retrieveSquareParam(id, 'CH')
-	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
 
 	
 	var promises = [id]

@@ -50,6 +50,10 @@ async function elastic_completeform_aster(id, targetDiv){
 				"title": "Segment Depth (sum)",
 				"type": "string",
 				"enum": dropdownFieldsInt
+			},
+			"x_null": {
+				"title": "Include partial null/undefined ?",
+				"type": "boolean",
 			}
 
 		},
@@ -71,12 +75,17 @@ async function elastic_completeform_aster(id, targetDiv){
 			jsonform.value["x_width"] = thisCs['x_width']
 			
 		}
+		
+		if(thisCs['x_null']){
+			jsonform.value['x_null'] = 1
+		}	
 
 		if(thisCs['x_depth'] !== null ){
 			jsonform.value["x_depth"] = thisCs['x_depth']
 			
 		}
 
+		
 	}
 
 
@@ -88,6 +97,8 @@ async function elastic_completeform_aster(id, targetDiv){
 async function elastic_populate_aster(id){
 	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
+
+	var thisCs = retrieveSquareParam(id,"Cs",true)
 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
 	var thisIndex = "*"
 
@@ -95,21 +106,33 @@ async function elastic_populate_aster(id){
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var timesArray = [[from, to]]
 
-	var fields = []
-	var thisCs = retrieveSquareParam(id,"Cs",true)
-	fields.push(thisCs['x_field'])
-	fields.push(thisCs['x_width'])
-	fields.push(thisCs['x_depth'])
-
 	var limit = 1;
 	var stats = false
 	var statField = null
 	var incTime = true
-	var urlencode = false
 	var filter = combineScriptFilter(id)
 	var maxAccuracy = true
 
-	var promises = [id]
+	var aggFields = []
+	var outputFields = []
+	var existOrFields = []
+	var existAndFields = []
+
+	//
+
+	if(thisCs['x_null']){
+		existOrFields.push(thisCs['x_field'])
+	}else{
+		existAndFields.push(thisCs['x_field'])
+	}
+
+
+	aggFields.push(thisCs['x_field'])
+	aggFields.push(thisCs['x_width'])
+	aggFields.push(thisCs['x_depth'])
+
+
+
 
 	var query = await elasticQueryBuildderToRuleThemAllandOr(
 		id, 
@@ -121,11 +144,15 @@ async function elastic_populate_aster(id){
 		"",
 		true,
 		maxAccuracy,
-		fields, 
+		aggFields, 
 		stats, 
-		statField	
+		statField,
+		outputFields,
+		existOrFields,
+		existAndFields
 	)
 
+	var promises = [id]
 	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all") )
 	return Promise.all(promises)
 

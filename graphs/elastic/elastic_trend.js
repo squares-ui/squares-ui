@@ -84,23 +84,21 @@ async function elastic_completeform_trend(id, targetDiv){
 
 
 async function elastic_populate_trend(id, data){
-
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+
+
+	var thisCs = retrieveSquareParam(id,"Cs",true)
 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
 	var thisIndex = "*"
-	
+
+
 	var thisWe = calcGraphTime(id, 'We', 0)
 	var to = thisWe
 	var from = thisWe + retrieveSquareParam(id, "Ws", true)
-	
-	var thisCs = retrieveSquareParam(id,"Cs",true)
-
 	var timesArray = []
-
 	var windowSlide = thisCs['x_windowSlide']	
 	var windowSize = 0;
 	var windowCount = thisCs['x_windows']
-
 	if(windowSlide == "TheWindowSize"){
 		windowSize = (to-from)
 	}else if(windowSlide == "Daily"){
@@ -113,29 +111,31 @@ async function elastic_populate_trend(id, data){
 		windowSize = ((to-from)/windowCount)
 	}
 
-	// for (var i = 0 ; i < windowCount ; i++){
-	// 	timesArray.push([from - (i*windowSize), to - (i*windowSize)])
-	// }
-
-	// var newTo = to
-	for (var i = 0 ; i < windowCount ; i++){
-		
-		newTo = to - (i*windowSize)
-		timesArray.push([newTo - windowSize, newTo])
-		// newTo = newTo - windowSize
-	}
-
-
-	var fields = [thisCs['x_field']]
 	var limit = 1;
 	var stats = false
 	var statField = ""
 	var incTime = true
-	var urlencode = false
 	var filter = combineScriptFilter(id)
 	var maxAccuracy = true
 
-	// var query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, filter)
+	var aggFields = []
+	var outputFields = []
+	var existOrFields = []
+	var existAndFields = []
+
+	// 
+
+
+	for (var i = 0 ; i < windowCount ; i++){
+		newTo = to - (i*windowSize)
+		timesArray.push([newTo - windowSize, newTo])
+	}
+	
+	// null ever useful?   Make the field compulsory
+	existAndFields.push(thisCs['x_field'])
+
+	aggFields = [thisCs['x_field']]
+
 	var query = await elasticQueryBuildderToRuleThemAllandOr(
 		id, 
 		timesArray, 
@@ -146,14 +146,14 @@ async function elastic_populate_trend(id, data){
 		"",
 		true,
 		maxAccuracy,
-		fields, 
+		aggFields, 
 		stats, 
-		statField	
+		statField,
+		outputFields,
+		existOrFields,
+		existAndFields
 	)
 
-
-	var handle = retrieveSquareParam(id, 'CH')
-	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
 
 	var promises = [id]
 	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all"))

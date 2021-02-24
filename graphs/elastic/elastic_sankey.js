@@ -68,7 +68,7 @@ async function elastic_completeform_sankey(id, targetDiv){
 			},
 			{
 				"key":"x_null",
-				"inlinetitle": "Include null/undefined ?",
+				"inlinetitle": "Include partial null/undefined ?",
 				"notitle": true,
 			},
 			{
@@ -117,37 +117,41 @@ async function elastic_completeform_sankey(id, targetDiv){
 async function elastic_populate_sankey(id){
 
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+	
+	var thisCs = retrieveSquareParam(id,"Cs",true)
 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
 	var thisIndex = "*"
 
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
-	
 	var timesArray = [[from, to]]
 
-	// qq(Ds)
-	
-	var fields = []
-	var outputFields = []
-	var existFields = null
-	_.each(retrieveSquareParam(id,"Cs",true)['array'], function(key,num){
-		fields.push(key)
-		outputFields.push(key)
-
-	})
-
-
-	var limit = 10000;
-	
-	var filter = combineScriptFilter(id)
-	var maxAccuracy = true
-	var incTime = true
+	var limit = 1;
 	var stats = false
 	var statField = ""
+	var incTime = true
+	var filter = combineScriptFilter(id)
+	var maxAccuracy = true
 
-	// var query = elastic_query_builder(id, from, to, Ds, fields, limit, true, true, false, filter);
+	var aggFields = []
+	var outputFields = []
+	var existOrFields = []
+	var existAndFields = []
 
+	// 
 
+	_.each(thisCs['array'], function(key,num){
+		aggFields.push(key)
+	})
+
+	_.each(thisCs['array'], function(key,num){
+		if(thisCs['x_null']){
+			existOrFields.push(key)
+		}else{
+			existAndFields.push(key)
+		}
+		outputFields.push(key)
+	})
 
 	var query = await elasticQueryBuildderToRuleThemAllandOr(
 		id, 
@@ -159,259 +163,70 @@ async function elastic_populate_sankey(id){
 		"",
 		true,
 		maxAccuracy,
-		fields, 
+		aggFields, 
 		stats, 
 		statField,
 		outputFields,
-		existFields	
+		existOrFields,
+		existAndFields
 	)
-	
 
 
-	var handle = retrieveSquareParam(id, 'CH')
-	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
-
-	
 	var promises = [id]
-	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all"))
+	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all") )
 	return Promise.all(promises)
+
+
 
 }
 
 
 function elastic_rawtoprocessed_sankey(id, data){
 
-	var data = data[0]['data']['hits']['hits']
+	var data = data[0]['data']
 	var dataout = {}
 
-	// to have ability to prevent UI overload with nodes, we need to limit
-	// however limiting nodes first results in a few nodes, but no links
-	// need to calculate links (using original key name)
-	// then calulate nodes
-	// then retro fit links with node locations
-
-	var Cs = retrieveSquareParam(id,"Cs",true)['array']
-
-	var incNull = false
 	var scale = "log"
-	if(retrieveSquareParam(id,"Cs",true) !== undefined){
-		if(retrieveSquareParam(id,"Cs",true).hasOwnProperty('x_null')){
-			incNull = retrieveSquareParam(id,"Cs",true).x_null
-		}
-		if(retrieveSquareParam(id,"Cs",true).hasOwnProperty('x_scale')){
-			scale = retrieveSquareParam(id,"Cs",true).x_scale
+	var thisCs = retrieveSquareParam(id,"Cs",true)
+
+	if(thisCs !== undefined){
+		// if(thisCs.hasOwnProperty('x_null')){
+		// 	incNull = thisCs.x_null
+		// }
+		if(thisCs.hasOwnProperty('x_scale')){
+			scale = thisCs.x_scale
 		}
 	}
 
 
-
-	//############################
-	// generate data2, which is later used to generate links
-	//############################
-	var rawLinks = {}
-	_.each(data, function(obj, i){
-
-		for(var j = 0; j < Cs.length-1; j++ ){
-			var deepSource = Cs[j].split('.').reduce(stringDotNotation, obj._source)
-			var sources = []
-			if( deepSource != "null" ){
-				var key = deepSource
-				if(key.constructor.name !== "Array") {
-					key = [key]
-				}
-				_.each(key, function(el){
-					sources.push(el)
-				})
-			}else if (incNull){
-				sources.push(Cs[j]+"_null")
-			}
-
-
-
-			var deepDest = Cs[j+1].split('.').reduce(stringDotNotation, obj._source)
-			var destinations = []
-			
-			if(deepDest != "null" ){
-				var key = deepDest
-				if(key.constructor.name !== "Array") {
-					key = [key]
-				}
-				_.each(key, function(el){
-					destinations.push(el)
-				})
-			}else if (incNull){
-				destinations.push(Cs[j+1]+"_null")
-			}
-
-			_.each(sources, function(src){
-				_.each(destinations, function(dst){
-
-					if (!rawLinks.hasOwnProperty(src)) {
-						rawLinks[src] = {}
-						
-						// to click a Sankey Link we need to know which fields the attributes came from, so lets smuggle them inside the Links to find them later
-						rawLinks[src]['sF'] = Cs[j]  // sourceField
-						rawLinks[src]['tF'] = Cs[j+1]  //targetField
-					}
-					if (!rawLinks[src].hasOwnProperty(dst)) {
-						rawLinks[src][dst] = 0
-					}
-					rawLinks[src][dst] += 1
-		
-				})
-			})
-			
-
-		}
-	})
-	// qq("###### RawLinks")
-	// qq(rawLinks)
-	// "<node>": {
-	// 	"<node>": value,
-	// 	"sF": "<field>",
-	// 	"tF": "<field>"
-	// },
-
-
+	var dataOut = elasticAggToSankeyLoop(thisCs['array'], 0, data['aggregations']['time_ranges']['buckets'][0]['field']['buckets'], {"nodes":[{"node":0, "name":""}], "links":[]} , [], [] )
 	
-	// convert from   "28726":{"bro_http":1}   ->> [{"source":192,"target":104,"value":2},{...}]
-	var tmpLinks = []
-	_.each(rawLinks, function(obj, key){
-		_.each(obj, function(obj2, key2){
-			if(key2 != "sF" && key2 != "tF"){
-				tmpLinks.push({"source": (key), "target": (key2), "sF": obj['sF'], "tF": obj['tF'], "value": parseInt(obj2)})
-			}
-		})
-	})
-	// qq("###### tmpLinks")
-	// qq(tmpLinks)
-	// {
-    //     "source": "<node>",
-    //     "target": "<node>",
-    //     "sF": "<field>",
-    //     "tF": "<field>",
-    //     "value": value
-    // }
-
 	
-	// limit nodes to prevent UI overload
-	// though 'log' can handle more, so a little "helper"
-	if(scale == "log"){
-		sankeyLinksLimit * 2
-	}
-	if(tmpLinks.length > sankeyLinksLimit){
-		ww(3,"Sankey has too many nodes ("+tmpLinks.length+") culling to "+sankeyLinksLimit)
-		var tmpLinks = _.first(tmpLinks, sankeyLinksLimit)
-	}
-
-
-	//############################
-	// extract the needed nodes
-	//############################
-	var nodes = []
-	_.each(tmpLinks, function(link){
-		nodes.push(link.source)
-		nodes.push(link.target)
-	})
-	nodes2 = _.uniq(  _.sortBy(nodes)    , true)
-	dataout.nodes = []
-	for(var i = 0; i < nodes2.length; i++ ){
-		dataout.nodes.push({"node":i, "name": nodes2[i]})
-	}
-	dataout.nodes = _.sortBy(dataout.nodes, function(nodeObj){ return nodeObj.name }  )
-	// qq("###### dataout.nodes")
-	// qq(dataout.nodes)
-	// {
-	// 	"node": <node>,
-	// 	"name": "<node>"
-	// }
-
-
-	//############################
-	// now cycle tmpLinks, applying node names, into dataout.links
-	//############################
-	dataout.links = []
-	_.each(tmpLinks, function(tmpLink, i){
+	_.each(dataOut['links'], function(link){
 		
-		var reverseClash = ""
-		var reverseFound = false
 		
-		// check reverse link doesn't exist, this breaks graph
-		_.each(tmpLinks, function(tmpLink2, i2){
-			if(tmpLink.source == tmpLink2.target && tmpLink.target == tmpLink2.source){
-				// qq("checking found match")
-				reverseFound = true
-				reverseClash = tmpLink.source + ">" + tmpLink.target 
-			}
-		})
-
-		if(reverseFound == false){
-			var linkOut = {}
-			linkOut.source = _.where(dataout.nodes, {"name":tmpLink.source})[0].node
-			linkOut.target = _.where(dataout.nodes, {"name":tmpLink.target})[0].node
-			linkOut.sF = tmpLink['sF']
-			linkOut.tF = tmpLink['tF']
-			
-			if(scale == "linear"){
-				linkOut.value = tmpLink.value
-			}else if(scale == "log"){
-				// cheating but log(0) causes UI problems
-				// At this rate it's not longer a "count" more of a representation, so until an alternative I'm happy with it
-				linkOut.value = Math.log(tmpLink.value) + 1
-			}else if(scale == "inverse"){
-				linkOut.value = 1/tmpLink.value
-			}
-			
-			dataout.links.push(linkOut)
-		}else{
-			// reverse found, this causes Saneky charts to infinite loop recursion
-			// drop this entry and raise an error, then continue for valid data
-			ww(3,"Issue in Sankey graph id:"+id+", loop of source and dest  id:"+id+", Dropping data and continue")
-			
-			addSquareStatus(id, "warning", "Recursive Loop found, dropping: "+reverseClash)
-
+		// go through "valueReal" and calculate height for rendering
+		if(scale == "linear"){
+			link.value = link.valueReal
+		}else if(scale == "log"){
+			// cheating but log(0) causes UI problems
+			// At this rate it's not longer a "count" more of a representation, so until an alternative I'm happy with it
+			link.value = Math.log(link.valueReal) + 1
+		}else if(scale == "inverse"){
+			link.value = 1/link.valueReal
 		}
-
-	})
-
-
-	// qq("###### dataout.links")
-	// qq(dataout.links)
-	// {
-    //     "source": <node_id>,
-    //     "target": <node_id>,
-    //     "sF": "<node>",
-    //     "tF": "<node>",
-    //     "value": value
-    // }
 	
 
 
-	// qq("###### overall")
-	// qq(dataout)
-	// {
-	// 	"nodes": [{
-	// 			"node": 0,
-	// 			"name": "0"
-	// 		},{}],
-	// 	"links": [{
-	// 		"source": <node_id>,
-	// 		"target": <node_id>,
-	// 		"sF": "<field>",
-	// 		"tF": "<field>",
-	// 		"value": value
-	// 	},{}]
-
-
-
-	// sorting allows UI debugging easier
-	dataout.links = _.sortBy(dataout.links, function(obj){ 
-		return obj.source
+	
 	})
 
-	// saveProcessedData(id, '', dataout);
-	return dataout;
 
+	
+
+
+
+	return dataOut
 }
 
 
@@ -532,9 +347,12 @@ function elastic_graph_sankey(id, data){
 			})
 			.on("mouseover", function(d) {
 				d3.select(this).style("stroke", "red");
+				hoverinfo = d.source.name+", "+d.target.name+": " + d.valueReal;
+				setHoverInfo(id, hoverinfo)
 			})                  
 			.on("mouseout", function(d) {
 				d3.select(this).style("stroke", "");
+				clearHoverInfo(id)
 			});
 	  
 
@@ -547,15 +365,16 @@ function elastic_graph_sankey(id, data){
 			.attr("transform", function(d) { 
 				return "translate(" + d.x + "," + d.y + ")";
 			})
-			.call(d3.drag()
-			.subject(function(d) {
-			  return d;
-			})
-			.on("start", function() {
-			  this.parentNode.appendChild(this);
-			})
-			.on("drag", dragmove));
+			// .call(d3.drag()
+			// .subject(function(d) {
+			//   return d;
+			// })
+			// .on("start", function() {
+			//   this.parentNode.appendChild(this);
+			// })
+			// .on("drag", dragmove));
 				
+			
 		// add the rectangles for the nodes
 		node.append("rect")
 			.attr("height", function(d) { return d.dy; })
@@ -567,26 +386,19 @@ function elastic_graph_sankey(id, data){
 			.style("stroke", function(d) { 
 				return d3.rgb(d.color).darker(2); 
 			})
-			.on("mouseover", function(d) {
-				hoverinfo = d.name + ", count=" + d.value;
-				setHoverInfo(id, hoverinfo)
-			})
-			.on("mouseout", function(d) {
-				clearHoverInfo(id)
-			})
-			.call(d3.drag()
-			.subject(function(d) {
-			  return d;
-			})
-			.on("start", function() {
-			  this.parentNode.appendChild(this);
-			})
-			.on("drag", dragmove))
-			.on("click", function(d){ 
-				// difficult to do on the node, are we treating it as the source or destination?
-				// e.g. if a gateway is a source of some traffic, and the destination of other, it's rendered on the graph behaving as both
-				// clicking on the link determines the relation for us
-			})
+			// .call(d3.drag()
+			// .subject(function(d) {
+			//   return d;
+			// })
+			// .on("start", function() {
+			//   this.parentNode.appendChild(this);
+			// })
+			// .on("drag", dragmove))
+			// .on("click", function(d){ 
+			// 	// difficult to do on the node, are we treating it as the source or destination?
+			// 	// e.g. if a gateway is a source of some traffic, and the destination of other, it's rendered on the graph behaving as both
+			// 	// clicking on the link determines the relation for us
+			// })
 
 		// add in the title for the nodes
 		node.append("text")
@@ -596,10 +408,9 @@ function elastic_graph_sankey(id, data){
 			.attr("text-anchor", "end")
 			.attr("transform", null)
 			.text(function(d) { return d.name; })
-
 			.filter(function(d) { return d.x < width / 2; })
 			.attr("x", 6 + sankey.nodeWidth())
-			.attr("text-anchor", "start");
+			.attr("text-anchor", "start")
 
 
 

@@ -86,12 +86,15 @@ async function elastic_completeform_piechart(id, targetDiv){
 		}else{
 			jsonform.value['x_arr'].push({})
 		}
-		
-
+	
+		if(thisCs['x_null']){
+			jsonform.form[1]['value'] = 1
+		}	
 
 		if(thisCs['x_scale']){
 			jsonform.form[2]['value'] = thisCs['x_scale']
 		}
+
 
 	}else{
 		//create default layout
@@ -112,6 +115,8 @@ async function elastic_completeform_piechart(id, targetDiv){
 async function elastic_populate_piechart(id){
 	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
 
+
+	var thisCs = retrieveSquareParam(id,"Cs",true)
 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
 	var thisIndex = "*"
 
@@ -119,27 +124,32 @@ async function elastic_populate_piechart(id){
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var timesArray = [[from, to]]
 
-	var fields = []
-	_.each(retrieveSquareParam(id,"Cs",true)['array'], function(key,num){
-		fields.push(key)
-	})
-
 	var limit = 1;
 	var stats = false
-	var statField = null
+	var statField = ""
 	var incTime = true
-	var urlencode = false
 	var filter = combineScriptFilter(id)
 	var maxAccuracy = true
 
-	// var handle = retrieveSquareParam(id, 'CH')
-	// elastic_connector(connectors.handletox(handle, "dst"), connectors.handletox(handle, 'indexPattern'), id, query, "");
-	
-	var promises = [id]
-	var handle = retrieveSquareParam(id, 'CH')
+	var aggFields = []
+	var outputFields = []
+	var existOrFields = []
+	var existAndFields = []
 
-	// query = elasticQueryBuildderToRuleThemAll(id, timesArray, Ds, fields, limit, stats, statField, incTime, urlencode, filter)
+	// 
 
+	_.each(thisCs['array'], function(key,num){
+		aggFields.push(key)
+	})
+
+	_.each(thisCs['array'], function(key,num){
+		if(thisCs['x_null']){
+			existOrFields.push(key)
+		}else{
+			existAndFields.push(key)
+		}
+		outputFields.push(key)
+	})
 
 	var query = await elasticQueryBuildderToRuleThemAllandOr(
 		id, 
@@ -151,15 +161,17 @@ async function elastic_populate_piechart(id){
 		"",
 		true,
 		maxAccuracy,
-		fields, 
+		aggFields, 
 		stats, 
-		statField	
+		statField,
+		outputFields,
+		existOrFields	,
+		existAndFields
 	)
 
 
-
+	var promises = [id]
 	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all") )
-	
 	return Promise.all(promises)
 
 
@@ -176,24 +188,15 @@ function elastic_rawtoprocessed_piechart(id, data){
 	data = data[0]['data']['aggregations']['time_ranges']['buckets'][0]['field']['buckets']
 	fields = []
 
+	scale = "log"
 	if(retrieveSquareParam(id,"Cs",true) !== undefined){
-		Cs = retrieveSquareParam(id,"Cs",true)
-		if(Cs['array'] !== null ){
-			fields = Cs['array']
-		}
-		incNull = false
-		if(Cs.hasOwnProperty('x_null')){
-			incNull = Cs.x_null
-		}
-		scale = "log"
+		Cs = retrieveSquareParam(id,"Cs",true)		
 		if(Cs.hasOwnProperty('x_scale')){
 			scale = Cs.x_scale
 		}
 	}
 	
-	dataout = elasticToFlare(data, scale, incNull)
-	
-	return dataout
+	return elasticToFlare(data, scale)
 
 }
 
@@ -288,15 +291,11 @@ function elastic_graph_piechart(id, data){
 							clickObject['notexist'].push(keys[i])
 						}else{
 							
-
 							if(!clickObject.hasOwnProperty('compare')){
 								clickObject.compare = []
 							}
 
-
 							miniObj = {}
-
-							
 							
 							//miniObj[keys[i]] = JSON.parse(vals[i])
 							miniObj[keys[i]] = vals[i]

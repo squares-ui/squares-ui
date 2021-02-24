@@ -91,38 +91,38 @@ async function elastic_completeform_scatterPlot(id, targetDiv){
 
 
 async function elastic_populate_scatterPlot(id, data){
-	
 	//ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+")");
+
+	var thisCs = retrieveSquareParam(id,"Cs",true)
 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
 	var thisIndex = "*"
 
-	
 	var to = calcGraphTime(id, 'We', 0)
 	var from = calcGraphTime(id, 'We', 0) + retrieveSquareParam(id, "Ws", true)
 	var timesArray = [[from, to]]
 
+	var limit = 10000;
+	var stats = false
+	var statField = ""
+	var incTime = true
+	var filter = combineScriptFilter(id)
+	var maxAccuracy = true
 
-	var fields = []
-
+	var aggFields = []
 	var outputFields = []
-	var thisCs = retrieveSquareParam(id,"Cs",true)
+	var existOrFields = []
+
+	// 
+
 	outputFields.push(thisCs['x_x'])
 	outputFields.push(thisCs['x_y'])
 	outputFields.push(thisCs['x_z'])
 
-	var existFields = []
 	if(!thisCs['x_null']){
-		existFields.push(thisCs['x_x'])
-		existFields.push(thisCs['x_y'])
-		existFields.push(thisCs['x_z'])		
+		existOrFields.push(thisCs['x_x'])
+		existOrFields.push(thisCs['x_y'])
+		existOrFields.push(thisCs['x_z'])		
 	}
-
-	var limit = 10000;
-	var stats = false
-	var statField = null
-	var incTime = true
-	var filter = combineScriptFilter(id)
-	var maxAccuracy = true
 
 
 
@@ -136,11 +136,11 @@ async function elastic_populate_scatterPlot(id, data){
 		"",
 		false,
 		maxAccuracy,
-		fields, 
+		aggFields, 
 		stats, 
 		statField,
 		outputFields,
-		existFields
+		existOrFields
 	)
 
 	// var handle = retrieveSquareParam(id, 'CH')
@@ -225,20 +225,22 @@ async function elastic_rawtoprocessed_scatterPlot(id, data){
 
 	})
 
+
+	// scale Log cannot be [0,x] so add 0.1 to minimum ?
 	if(dataOut.scalar['x']){
-		dataOut.domain.x = [_.min(dataOut.domain.x), _.max(dataOut.domain.x)]
+		dataOut.domain.x = [_.min(dataOut.domain.x)+0.1, _.max(dataOut.domain.x)]
 	}else{
 		dataOut.domain.x = _.uniq(dataOut.domain.x)
 	}
 
 	if(dataOut.scalar['y']){
-		dataOut.domain.y = [_.min(dataOut.domain.y), _.max(dataOut.domain.y)]
+		dataOut.domain.y = [_.min(dataOut.domain.y)+0.1, _.max(dataOut.domain.y)]
 	}else{
 		dataOut.domain.y = _.uniq(dataOut.domain.y)
 	}
 
 	if(dataOut.scalar['z']){
-		dataOut.domain.z = [_.min(dataOut.domain.z), _.max(dataOut.domain.z)]
+		dataOut.domain.z = [_.min(dataOut.domain.z)+0.1, _.max(dataOut.domain.z)]
 	}else{
 		dataOut.domain.z = _.uniq(dataOut.domain.z)
 	}
@@ -288,9 +290,11 @@ async function elastic_graph_scatterPlot(id, data){
 	var scene = new THREE.Scene();
 	scene.userData.id = id;
 	
-	var grid = masterGridXZ.clone()
-	scene.add(grid);
+	var gridXZ = new THREE.GridHelper(grid_size, grid_cuts, gridCenterLine, gridLines);
+	gridXZ.position.set((grid_size*0.5), 0, (grid_size*0.5));
+	scene.add(gridXZ);
   
+
 	
 	var camera = masterCamera.clone();
 	scene.userData.camera = camera;
@@ -322,9 +326,9 @@ async function elastic_graph_scatterPlot(id, data){
 
 
 
-	var xScaleOffset = null;
+	var xScaleOffset = 0;
 	if(data.scalar['x']){
-		var xScale = d3.scaleLinear()
+		var xScale = d3.scaleLog()
 	}else{
 		var xScale = d3.scaleBand()
 	}
@@ -333,9 +337,10 @@ async function elastic_graph_scatterPlot(id, data){
 	if(!data.scalar['x']){
 		xScaleOffset = xScale.bandwidth() / 2
 	}
+	
 
 
-	var yScaleOffset = null;
+	var yScaleOffset = 0;
 	if(data.scalar['y']){
 		var yScale = d3.scaleLinear()
 	}else{
@@ -347,7 +352,7 @@ async function elastic_graph_scatterPlot(id, data){
 		yScaleOffset = yScale.bandwidth() / 2
 	}
 	
-	var zScaleOffset = null;
+	var zScaleOffset = 0;
 	if(data.scalar['z']){		
 		var zScale = d3.scaleLinear()
 	}else{
@@ -383,6 +388,7 @@ async function elastic_graph_scatterPlot(id, data){
 				if(!data.scalar['x']){
 					xWithOffset += xScaleOffset
 				}
+
 
 				var yWithOffset = yScale(yk)
 				if(!data.scalar['y']){
