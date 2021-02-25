@@ -349,11 +349,15 @@ function elastic_graph_treemapCandle(id, data){
 			stdDev.squaresName = _.pluck(coords['chain'], "val").join(", ") + ", avg:"+Math.floor(coords['avg'])+", max:"+coords['max']
 			
 
-			let clickObject = {"compare":[]}
+			let clickObject = {"compare":[], "notexist":[]}
 			_.each(coords['chain'], function(chai){
-				miniObj = {}
-				miniObj[chai['key']] = chai['val']
-				clickObject['compare'].push(miniObj)
+				if(chai['val'] == "null"){
+					clickObject.notexist.push(chai['val'])
+				}else{
+					var miniObj ={}
+					miniObj[chai['key']] = chai['val']
+					clickObject['compare'].push(miniObj)
+				}
 
 			})
 			stdDev.squaresAction = function(){ childFromClick(id, {"y": 1000, "Ds": btoa(JSON.stringify(clickObject))} , {} ) };
@@ -400,11 +404,19 @@ function elastic_graph_treemapCandle(id, data){
 			// stdDev.squaresName = _.pluck(coords['chain'], "val").join(", ") + ", avg:"+Math.floor(coords['avg'])+", max:"+coords['max']
 			stdDev.squaresName = _.pluck(coords['chain'], "val").join(", ") + ", avg:"+coords['avg'].toFixed(3)+", max:"+coords['max']
 
-			let clickObject = {"compare":[]}
+			let clickObject = {"compare":[], "notexist":[]}
 			_.each(coords['chain'], function(chai){
-				miniObj = {}
-				miniObj[chai['key']] = chai['val']
-				clickObject['compare'].push(miniObj)
+				// miniObj = {}
+				// miniObj[chai['key']] = chai['val']
+				// clickObject['compare'].push(miniObj)
+
+				if(chai['val'] == "null"){
+					clickObject.notexist.push(chai['val'])
+				}else{
+					var miniObj ={}
+					miniObj[chai['key']] = chai['val']
+					clickObject['compare'].push(miniObj)
+				}
 
 			})
 			stdDev.squaresAction = function(){ childFromClick(id, {"y": 1000, "Ds": btoa(JSON.stringify(clickObject))} , {} ) };

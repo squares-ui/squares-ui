@@ -111,6 +111,7 @@ async function elastic_populate_scatterPlot(id, data){
 	var aggFields = []
 	var outputFields = []
 	var existOrFields = []
+	var existAndFields = []
 
 	// 
 
@@ -122,6 +123,10 @@ async function elastic_populate_scatterPlot(id, data){
 		existOrFields.push(thisCs['x_x'])
 		existOrFields.push(thisCs['x_y'])
 		existOrFields.push(thisCs['x_z'])		
+	}else{
+		existAndFields.push(thisCs['x_x'])
+		existAndFields.push(thisCs['x_y'])
+		existAndFields.push(thisCs['x_z'])
 	}
 
 

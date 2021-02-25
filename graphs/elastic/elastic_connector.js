@@ -120,7 +120,18 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 			if(thisDs.hasOwnProperty("compare")){
 				_.each(thisDs['compare'], function(comp){
 					qq("adding Must id:"+id+", comp:"+JSON.stringify(comp))
-					query.query.bool.must.push(elasticPrepKeyword(_.keys(comp)[0], _.values(comp)[0], thisMappings))
+					// query.query.bool.must.push(elasticPrepKeyword(_.keys(comp)[0], _.values(comp)[0], thisMappings))
+					var miniObj = {"term": {}}
+					if(isFieldBoolean(_.keys(comp)[0], thisMappings)){
+						if(_.values(comp)[0] == 1){
+							miniObj['term'][_.keys(comp)[0]] = true
+						}else{
+							miniObj['term'][_.keys(comp)[0]] = false
+						}
+					}else{
+						miniObj['term'][elasticPrepKeyword(_.keys(comp)[0], thisMappings)] = _.values(comp)[0]
+					}
+					query.query.bool.must.push(miniObj)
 				})
 			}
 
@@ -224,16 +235,11 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 			
 			
 
-			if(await hasFieldKeyword(id, aggFields[i])){
-				node['field']['terms']['field'] = (aggFields[i]+".keyword")
-				
-				// add a default phrase for aggs with missing field
-				// having "null" at multiple layers of aggs/flares/tree might cause issues, so base null on keyname				
-				// var nullKey = _.last(_.without(aggFields[i].split("."), "keyword"))
+			node['field']['terms']['field'] = elasticPrepKeyword(aggFields[i], thisMappings)
+			if(await hasFieldKeyword(aggFields[i], thisMappings)){
+				// add a default phrase for aggs with missing field, useful for partial null results
+				// agg on null only exists for keys with a ".keyword" attribute
 				node['field']['terms']['missing'] = "null"
-
-			}else{
-				node['field']['terms']['field'] = aggFields[i]
 			}
 
 
@@ -291,9 +297,27 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 				if(thisDs.hasOwnProperty("compare")){
 					thisOr.bool.must = []
 					_.each(thisDs['compare'], function(comp){
-						thisOr.bool.must.push(elasticPrepKeyword(_.keys(comp)[0], _.values(comp)[0], thisMappings))
+						//thisOr.bool.must.push(elasticPrepKeyword(_.keys(comp)[0], _.values(comp)[0], thisMappings))
+						
+						var miniObj = {"term": {}}
+
+						if(isFieldBoolean(_.keys(comp)[0], thisMappings)){
+							if(_.values(comp)[0] == 1){
+								miniObj['term'][_.keys(comp)[0]] = true
+							}else{
+								miniObj['term'][_.keys(comp)[0]] = false
+							}
+						}else{
+							miniObj['term'][elasticPrepKeyword(_.keys(comp)[0], thisMappings)] = _.values(comp)[0]
+						}
+						thisOr.bool.must.push(miniObj)
+
 					})
 				}
+
+
+
+
 
 				if(thisDs.hasOwnProperty("notexist")){
 					thisOr.bool.must_not = []
@@ -377,28 +401,43 @@ function elasticNestCalculator(PrIds, path, theReturn){
 	// an array of paths back to root square
 	// [[11,8,3,2,1],[10,9,3,2,1],[5,2,1],[6,4,2,1],[7,4,2,1]]
 	return theReturn
-	
 
 }
 
-function elasticPrepKeyword(key, val, mappings){
-	ee(" -> "+arguments.callee.name+"("+key+", "+val+")");
-	var miniObj = {}
+
+
+
+function elasticPrepKeyword(key, mappings){
+	// ee(" -> "+arguments.callee.name+"("+key+")");
+	
 	if(_.contains(mappings.keywordFields, key)){
-		miniObj[key+".keyword"] = val			
+		return key+".keyword"
 	}else{
-		miniObj[key] = val
+		return key
 	}	
-	miniObj = {"term": miniObj}
-	
-	// miniObj = {"term": {"key.keyword":"value"}}
-	return miniObj;
+
 }
 
 
+function hasFieldKeyword(keyword, mappings){
+	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+keyword+")");
 
+	if(_.contains(mappings.keywordFields, keyword)){
+		return true
+	}else{
+		return false
+	}
+}
 
+function isFieldBoolean(keyword, mappings){
+	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+keyword+")");
 
+	if(_.contains(mappings.boolean, keyword)){
+		return true
+	}else{
+		return false
+	}
+}
 
 //////////////////////////////////////////
 //////////////////////////////////////////
@@ -794,29 +833,9 @@ function elasticToFlareLoop(data, dataout, scale){
 }
 
 
-async function hasFieldKeyword(id, keyword){
-	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+id+", "+keyword+")");
-
-	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
-	var thisIndex = "*"
-	
-
-
-	if(_.contains(masterMappings[thisDst][thisIndex].keywordFields, keyword)){
-		// qq(keyword+".keyword")
-		return true
-	}else{
-		// qq(keyword+".____")
-		return false
-	}
-}
 
 
 
-function elasticAggToSankey(data){
-
-
-}
 
 
 

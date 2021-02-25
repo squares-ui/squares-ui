@@ -433,6 +433,8 @@ function elastic_graph_trend(id, data){
 			return colorScale(d.key)
 		})
 		.on("click", function(d){ 
+			
+			
 			var clickObject = {"compare":[]}
 			var key = retrieveSquareParam(id, 'Cs', true)['x_field']
 			var miniobj = {}
