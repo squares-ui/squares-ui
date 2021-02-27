@@ -46,17 +46,17 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 
 
 	// initate recursive loop with empty data
-	allPaths = elasticNestCalculator(retrieveSquareParam(id, "Ps", false), [], [])
+	var allPaths = elasticNestCalculator(retrieveSquareParam(id, "Ps", false), [], [])
 	// for id=15 : [[14, 13, 12, 1], [2, 1]]
 
 	// intersection to find the IDs that appears in every path (typically the first x, and the last x)
-	commonSquares = _.intersection.apply(_, allPaths)  // => [1]
+	var commonSquares = _.intersection.apply(_, allPaths)  // => [1]
 	commonSquares.push(id)
 	// qq(commonSquares)  // =>   [1,15]
 
 
 	// find squares unique to a path
-	orPaths = []
+	var orPaths = []
 	_.each(allPaths, function(path){
 		orPaths.push(_.difference(path, commonSquares))
 	})

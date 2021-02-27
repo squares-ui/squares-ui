@@ -217,10 +217,10 @@ function elastic_graph_piechart(id, data){
 			.classed("y_overflow", true)
 			.attr("width", "1000")
 		.on("mousedown", function() { d3.event.stopPropagation(); })
+
 	var height = document.getElementById("square_"+id).clientHeight;
 	var width  = document.getElementById("square_"+id).clientWidth;
-	var radius = (width/2)*0.9
-	var innerRadius = 0.1 * radius;
+	var radius = (width/2)*0.85
 
 	var partition = d3.partition();
 	

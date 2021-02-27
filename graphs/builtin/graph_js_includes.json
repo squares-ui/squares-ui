@@ -4,7 +4,9 @@
 		"./builtin/edit_square.js",
 		"./builtin/square_definition.js",
 		"./builtin/templates.js",
-		"./builtin/update_countdown.js"
+		"./builtin/update_countdown.js",
+		"./builtin/aboutme.js",
+		"./builtin/squareerror.js"
 		
 	]
 }
