@@ -151,9 +151,13 @@ async function elastic_populate_aster(id){
 		existOrFields,
 		existAndFields
 	)
+	
+	
 
 	var promises = [id]
-	promises.push(elastic_connector(thisDst, thisIndex, id, query, "all") )
+	if(query){
+		promises.push(elastic_connector(thisDst, thisIndex, id, query, "all") )
+	}
 	return Promise.all(promises)
 
 }
@@ -243,7 +247,7 @@ function elastic_graph_aster(id, data){
 			return (radius - innerRadius) * (d.data.depth / data.max) + innerRadius; 
 		});
 
-	slices = gChart.selectAll("path")
+	var slices = gChart.selectAll("path")
 		.data(pie(data.data))
 		.enter()
 

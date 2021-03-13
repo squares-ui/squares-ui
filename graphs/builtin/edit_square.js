@@ -111,7 +111,8 @@ async function graph_editsquare(id){
 				
 				var justDst = await getAllSavedConnectors()
 				_.each(justDst, function(dst){
-					if(dst['name'] != "Builtin"){
+					
+					if(! (dst['name'] == "Dummy" || dst['type'] == "builtin" || dst['type'] == "introduction") ){
 						$('#square_co_dropdown_'+id).append($('<option>', { 
 							value: dst['name'],
 							text : dst['name']
@@ -124,7 +125,7 @@ async function graph_editsquare(id){
 
 
 	}else{
-
+		
 		
 		clusterDiv.append("img")
 			.classed("square_cluster_image", true)
@@ -139,6 +140,9 @@ async function graph_editsquare(id){
 				.classed("fontsize", true)
 				.text("Graph Type:")
 			.append("div")
+			.classed("clr", true)
+			.append("div")
+			.classed("fleft", true)
 			.append("select")
 				.classed("fontsize", true)
 				.attr("id", function(d){ return "square_graph_dropdown_"+d.id })
@@ -152,7 +156,7 @@ async function graph_editsquare(id){
 					if(GLB.threejs.enabled = true || graphs_functions_json.retrieveGraphParam(thisType, selectValue , "requireThreeJS") == false){
 						// should the newly chosen graph type be "completeForm" processed
 						var isCompleteForm = graphs_functions_json.retrieveGraphParam(thisType, selectValue , "completeForm")
-						if(isCompleteForm){
+						if(isCompleteForm){							
 							window[isCompleteForm](d.id, "#square_editformcustom_"+d.id)
 						}
 					}else{
@@ -160,6 +164,9 @@ async function graph_editsquare(id){
 					}
 
 				})
+			.append("div")
+			.classed("fleft", true)
+			.text("asd2")
 
 		var mySelect = $('#square_graph_dropdown_'+id);
 		
@@ -187,6 +194,16 @@ async function graph_editsquare(id){
 			);
 		}
 
+
+		
+
+		clusterDiv.append("div")
+			.classed("clr", true)
+
+		clusterDiv.append('div')
+			.classed("editSquareJsonForm", true)
+			.attr("id", function(d){ return "square_editformcustom_"+d.id})
+
 		// Update dropdown, did this graph have Gt set?  Or is it blank?
 		if(retrieveSquareParam(id, "Gt", false) == null || retrieveSquareParam(id, "Gt", false) == 0 || retrieveSquareParam(id, "Gt", false) == undefined ){	
 			$("#square_graph_dropdown_"+id).prop("selectedIndex", 0);
@@ -196,19 +213,14 @@ async function graph_editsquare(id){
 
 			// if we had a graph type, shoudl we also auto draw the "custom fields" options?
 			selectValue = retrieveSquareParam(id, "Gt", true)
-			if(graphs_functions_json.retrieveGraphParam(thisType, selectValue , "completeForm")){
-				window[graphs_functions_json.retrieveGraphParam(thisType, selectValue , "completeForm")](id, "#square_editformcustom_"+id)
+
+			var isCompleteForm = graphs_functions_json.retrieveGraphParam(thisType, selectValue , "completeForm")
+			if(isCompleteForm){
+				
+				window[isCompleteForm](id, "#square_editformcustom_"+id)
 			}
 
 		}
-		
-
-		clusterDiv.append("div")
-			.classed("clr", true)
-
-		clusterDiv.append('div')
-			.classed("editSquareJsonForm", true)
-			.attr("id", function(d){ return "square_editformcustom_"+d.id})
 
 	}
 

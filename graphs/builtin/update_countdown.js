@@ -45,25 +45,29 @@ async function completeform_updatecountdown(id, targetDiv){
 		
 	}
 
-	// if(retrieveSquareParam(id,"Cs",false) !== undefined){
-	// 	if(retrieveSquareParam(id,"Cs",false)['x_size'] !== null){
-	// 		jsonform.value.x_size = retrieveSquareParam(id,"Cs",false)['x_size']			
-	// 	}else{
-	// 		jsonform.value.x_size = 300
-	// 	}
-	// }else{
-	// 	jsonform.value.x_size = 300
-	// }
-
+	jsonform.value.x_size = 300
+	if(retrieveSquareParam(id,"Cs",false) !== undefined){
+		if(retrieveSquareParam(id,"Cs",false)['x_size'] !== null){
+			jsonform.value.x_size = retrieveSquareParam(id,"Cs",false)['x_size']		
+		}
+	}
+	
 	$(targetDiv).jsonForm(jsonform)
 
+	// $(targetDiv).jsonForm(jsonform)
+
+	
 }
+
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+  }
 
 function populate_updatecountdown(id){
 
 	// no back end data to fetch, but tell the system we're ready
 	// process_updatecountdown(id)
-	promises = [id]
+	var promises = [id]
 	return Promise.all(promises)
 
 

@@ -34,9 +34,9 @@ async function graph_squareerror(id, data){
 			.attr("id", function(d){ return "square_"+d.id })
 			.classed("box_binding", true)
 			.classed("square_body", true)
-			.classed("square_xhtml", true)
 			.classed("square_dft_message", true)
-			// .classed("y_overflow", true)
+			.classed("square_error", true)
+			.classed("y_overflow", true)
 		.on("mousedown", function() { d3.event.stopPropagation(); });
 
 		square.append("img")

@@ -79,22 +79,26 @@ async function elastic_completeform_sankey(id, targetDiv){
 		],
 		"value":{}
 	}
-	
-	if(retrieveSquareParam(id,"Cs",false) !== undefined){
-		if(retrieveSquareParam(id,"Cs",false)['array'] !== null ){
-			jsonform.value = {}
-			jsonform.value['x_arr'] = []
-			_.each(retrieveSquareParam(id,"Cs",false)['array'], function(key,num){
+
+	var thisCs = retrieveSquareParam(id,"Cs",false)
+	if(thisCs !== undefined){
+		
+		jsonform.value = {}
+		jsonform.value['x_arr'] = []
+		if(thisCs['array'] !== undefined ){
+			_.each(thisCs['array'], function(key,num){
 				jsonform.value['x_arr'].push({"field": key})
 			})
+		}else{
+			jsonform.value['x_arr'].push({})
 		}
 
-		if(retrieveSquareParam(id,"Cs",false)['x_null']){
+		if(thisCs['x_null']){
 			jsonform.form[1]['value'] = 1
 		}
 
-		if(retrieveSquareParam(id,"Cs",false)['x_scale']){
-			jsonform.form[2]['value'] = retrieveSquareParam(id,"Cs",false)['x_scale']
+		if(thisCs['x_scale']){
+			jsonform.form[2]['value'] = thisCs['x_scale']
 		}
 
 	}else{
@@ -248,7 +252,7 @@ function elastic_graph_sankey(id, data){
 		.on("mousedown", function() { d3.event.stopPropagation(); })
 
 			
-	var height = document.getElementById("square_"+id).clientHeight - 10 ; // this graph is vulnerable to bottom line being clipped
+	var height = document.getElementById("square_"+id).clientHeight - 1 ; // this graph is vulnerable to bottom line being clipped
 	var width  = document.getElementById("square_"+id).clientWidth;
 	
 
@@ -298,7 +302,7 @@ function elastic_graph_sankey(id, data){
 
 	var sankey = d3.sankey()
 		.nodeWidth(36)
-		.nodePadding(2)
+		.nodePadding(0)
 		.size([width, height])
 		
 

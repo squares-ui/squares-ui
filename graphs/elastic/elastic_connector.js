@@ -5,9 +5,25 @@
 //////////////////////////////////////////
 
 
+async function elasticPreFlightCheck(id){
+	ee(" -> "+arguments.callee.name+"("+id+")");
+
+	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
+	var indexPattern = "*"	  
+	var thisMappings = await getMappingsData(thisDst, indexPattern, true)
+	// var thisType = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "type")			
+
+	if(thisMappings){
+		return true
+	}else{
+		return false
+	}
+
+
+}
 
 async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, incTime, filter, aggsTerm, aggsTermTime, aggsRanges, maxAccuracy, aggFields, stats, statField, outputFields, existOrFields, existAndFields){
-	ee(" -> "+arguments.callee.name+"("+id+")");
+	// ee(" -> "+arguments.callee.name+"("+id+")");
 	qqq = false
 
 
@@ -43,6 +59,10 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	var indexPattern = "*"	  
 	var thisMappings = await getMappingsData(thisDst, indexPattern, true)
 
+	if(thisMappings == null){
+		ww(0, "Mappings Fail id:"+id)		
+		return null
+	}
 
 
 	// initate recursive loop with empty data
@@ -164,7 +184,7 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	
 	// if 1 field, then don't enforce fields (it can be null).  If 2 fields, then 1 must be something (aka partial null)
 	if(existOrFields && existOrFields.length>1){
-		qq("adding or fields x:"+existOrFields.length)
+		// qq("adding or fields x:"+existOrFields.length)
 		var tmpBool =  {"bool": {"minimum_should_match": 1,"should": []}}
 		_.each(existOrFields, function(field){
 			tmpBool['bool']['should'].push({"exists": {"field": field }})
@@ -174,7 +194,7 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	
 	// all of these must exist
 	if(existAndFields  && existAndFields.length>0){
-		qq("adding and fields x:"+existAndFields.length)
+		// qq("adding and fields x:"+existAndFields.length)
 		_.each(existAndFields, function(field){
 			query['query']['bool']['must'].push({"exists": {"field": field }})
 		})		
@@ -188,15 +208,59 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	qqq && qq("elasticQueryBuildderToRuleThemAllandOr id:"+id+" agg by time frames")
 		
 	if(aggsTerm){
-	
-		query['aggs']['time_ranges'] = {
-			"terms": {
-				"size": GLB.dftAggregationSize,
-				"script": {
-					"source": "doc['@timestamp'].value."+aggsTermTime
-				}
-			}
-		}
+		
+		// start with deepest aggregate, then build around it
+		// aggsTermTime.reverse()
+
+		var master = {}
+		
+		var node = master
+
+		_.each(aggsTermTime, function(term){
+			qq("--")
+			node['aggs'] = {}
+			node['aggs']['time_ranges'] = {}
+			node = node['aggs']['time_ranges']
+
+			// qq("looping with term:"+term)
+			// node =  {
+			// 	"time_ranges":{
+			// 		"terms": {
+			// 			"size": 60,
+			// 			"script": {
+			// 				"source": "doc['@timestamp'].value."+term
+			// 			}
+			// 		}
+			// 	}
+			// }
+			
+			
+			node['terms'] = {}
+			node['terms']['size'] = 60
+			node['terms']['script'] = {}
+			node['terms']['script']['source'] = "doc['@timestamp'].value."+term
+			
+
+			// if(!_.isEmpty(master)){
+			// 	template.aggs = template
+			// }else{
+			// 	master.aggs = template
+			// }
+
+			qq(master)
+		})
+
+		query['aggs'] = master['aggs']
+
+
+
+		// query['aggs']['time_ranges'] = {
+		// 	"terms": {
+		// 		"script": {
+		// 			"source": "doc['@timestamp'].value."+aggsTermTime
+		// 		}
+		// 	}
+		// }
 
 	}else if(aggsRanges){
 
@@ -215,6 +279,7 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 	
 		})
 	}
+
 
 	
 	////////////////////////////////
@@ -363,6 +428,7 @@ async function elasticQueryBuildderToRuleThemAllandOr(id, timesArray, limit, inc
 		query.query.bool.must.push(theBigOr)
 	}
 
+	
 	return query
 }
 
@@ -449,7 +515,7 @@ function isFieldBoolean(keyword, mappings){
 
 
 async function elastic_connector(dst, indexPattern, id, query, name){
-	ee(" -> "+arguments.callee.name+"("+JSON.stringify(id)+", "+indexPattern+", "+id+", "+query+", "+name+")");
+	// ee(arguments.callee.caller.name+" -> "+arguments.callee.name+"("+JSON.stringify(id)+", "+indexPattern+", "+id+", "+query+", "+name+")");
 
 
 	var queryBodyJSON = JSON.stringify(query);
@@ -506,7 +572,7 @@ async function elastic_connector(dst, indexPattern, id, query, name){
 				// check if agg count looks max size
 				if(response.aggregations.time_ranges.buckets.length == GLB.dftAggregationSize){
 					responseData['status'] = ["Aggregation limit reached"]
-					alert("limit hit")
+					ww(0, "Agg limit hit for id:"+id)
 				}
 
 			}
@@ -531,8 +597,8 @@ async function elastic_connector(dst, indexPattern, id, query, name){
 
 	} catch (error) {
 		ww(0, arguments.callee.name+" id:"+id+" e:"+JSON.stringify(error));
-		graphGraphError(id, JSON.stringify(error))
-		// return({"id":id, "name":name, "data":null})
+		graphGraphError(id, "Connection Error, check connectivity.<br>RawError:<br>"+JSON.stringify(error,null,2))
+		
 	}
 	
     

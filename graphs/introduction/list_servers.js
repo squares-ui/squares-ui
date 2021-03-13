@@ -21,9 +21,11 @@ async function populate_listServers(id){
 	promises.push(id)
 
 	_.each(_.where(await getAllSavedConnectors(), {"type":"elastic"}), function(connector){
-		var dst = connector['dst']
-		var name = connector['name']
+		if(connector['name'] !== "Dummy"){
+			var dst = connector['dst']
+			var name = connector['name']
 			promises.push(elastic_test_connector(id, name, dst) )
+		}
 	})
 	// qq(promises)
 	return Promise.all(promises)

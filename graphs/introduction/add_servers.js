@@ -118,7 +118,7 @@ async function graph_addServers(id, data){
 	theBody.append("div").classed("clr", true).html("<br>")
 
 	theBody.append("div").html("<h1>About:</h1>")
-	theBody.append("div").html("<h3>These server details are saved in IndexedDB (local to your browser). API data requests originate from your browser, and not the server.  This allows you to explore data held in private servers (i.e. not publicly routable)</h3>")
+	theBody.append("div").html("<h3>These server details are saved in IndexedDB (local to your browser). Data requests originate from your browser, not the Web server.</h3>")
 
 
 

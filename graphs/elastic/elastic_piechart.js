@@ -79,11 +79,12 @@ async function elastic_completeform_piechart(id, targetDiv){
 		
 		jsonform.value = {}
 		jsonform.value['x_arr'] = []
-		if(thisCs['array'] !== null ){
+
+		if(thisCs['array'] !== undefined ){
 			_.each(thisCs['array'], function(key,num){
 				jsonform.value['x_arr'].push({"field": key})
 			})
-		}else{
+		}else{			
 			jsonform.value['x_arr'].push({})
 		}
 	

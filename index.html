@@ -41,6 +41,7 @@
 	<script src="./lib/d3.parsets.js"></script>
 	<script src="./lib/highlight.min.js"></script>
 	<script src="./lib/d3.layout.cloud.js"></script>
+	<script src="https://d3js.org/d3-contour.v1.min.js"></script>
 
 	<script src="./alertify.js-0.3.11/lib/alertify.min.js"></script>
 	<script src="./lib/sankey.js"></script>  <!-- from Mike Bostock -->
@@ -101,33 +102,12 @@
 
 	<!-- Menu on top as it's floating -->
 	<div id="menu" class="squares_segment">
-		<img src="./squares-ui-icons/159122-technology-icon-collection/svg/browser-17.svg" class='squarePageMenuIcon fleft' onclick='wipereset()' alt='Reset' title='Clean and refresh page'/>
+		<img src="./squares-ui-icons/159122-technology-icon-collection/svg/browser-17.svg" class='squarePageMenuIcon fleft' onclick='wipereset()' alt='Reset' title='Reset to Landing Page'/>
 		<img src="./squares-ui-icons/159122-technology-icon-collection/svg/browser-8.svg" class='squarePageMenuIcon fleft' onclick='addGraphConnector(null)' alt='showConnectors' title='Create new Connector' />
 		<img src="./squares-ui-icons/159122-technology-icon-collection/svg/browser-30.svg" class='squarePageMenuIcon fleft' onclick='panzoom(); ' alt='Pan Zoom' title='Pan Zoom' />
-		
-
 		<img src="./squares-ui-icons/159122-technology-icon-collection/svg/browser-15.svg" class='squarePageMenuIcon fleft' id='pageStatus' name='pageStatus' onclick='' alt='Page Status' title="Status" />
-
-		
-		<!-- Moved to "Dev Mode" -->
-		<!-- <img src="./squares-ui-icons/159122-technology-icon-collection/svg/browser-5.svg" class='squarePageMenuIcon fleft'   onclick='dumpURLToConsole(); alertify.log("URL Logged to Console")' alt='Log' title='Dump Squares config to Console' /> -->
-		<!-- <img src="./squares-ui-icons/159122-technology-icon-collection/svg/browser-23.svg" class='squarePageMenuIcon fleft' onclick='deleteAllStoredData()' alt='Flush Data' title="Delete cached data, but don't disrupt page" /> -->
-		
-		<!-- <img src="./squares-ui-icons/159122-technology-icon-collection/svg/browser-15.svg" class='squarePageMenuIcon fleft' onclick='qq(
-							"Squares: "+url.squares.length + " " +
-						"G: "+document.getElementsByTagName("g").length + " " +
-						"Text: "+document.getElementsByTagName("text").length + " " +
-						"Path: "+document.getElementsByTagName("path").length + " " +
-						"DIV: "+document.getElementsByTagName("div").length + " " +
-						"SVG: "+document.getElementsByTagName("svg").length + " "
-					)' alt='Count Elements' title='Performance test: count all elements to log Window' />	 -->
-	    
-
 	
 	</div>
-
-
-
 
 	<!-- Screenlog, likely hidden -->
 	<div id="screenLog" class="squares_segment square_menu_text"></div>

@@ -85,7 +85,7 @@ async function graph_instructions(id, data){
 	thisString = `
 		<h1>Quick Instructions</h1>
 		
-		<div class='fleft'><h2>Use the icons across the bottom to create a new Connector:</h2></div>
+		<div class='fleft'><h2>Use the page icons to create a new Connector:</h2></div>
 		<div class='fleft square_menu_icon'><img src='squares-ui-icons/159122-technology-icon-collection/svg/browser-8.svg' ></div>
 		<div class='clr'></div>
 	

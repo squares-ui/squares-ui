@@ -148,6 +148,9 @@ body{
 .line_half2{
 
 } */
+.line_colour_zero{
+	stroke: black;
+}
 .line_colour_one{
 	stroke:	#C4A000;
 }
@@ -201,6 +204,9 @@ body{
 	width:350px
 }
 
+.square_error{
+	overflow-wrap: break-word;
+}
 /*  Used for "loading" "no data" etc  */
 .square_dft_message{
 	font-size: 40px;

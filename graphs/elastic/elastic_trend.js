@@ -55,6 +55,10 @@ async function elastic_completeform_trend(id, targetDiv){
 	}
 	
 	
+	// defaults
+	jsonform.value['x_windowSlide'] = "Daily"
+	jsonform.value['x_windows'] = 4
+
 	if(retrieveSquareParam(id,"Cs",false) !== undefined){
 		Cs = retrieveSquareParam(id,"Cs",false) 
 
@@ -69,12 +73,6 @@ async function elastic_completeform_trend(id, targetDiv){
 		if(Cs['x_windows']){
 			jsonform.value['x_windows'] = Cs['x_windows']
 		}	
-
-	}else{
-		//create default layout
-		jsonform.value['x_windowSlide'] = "Daily"
-		jsonform.value['x_windows'] = 4
-
 		
 	}
 

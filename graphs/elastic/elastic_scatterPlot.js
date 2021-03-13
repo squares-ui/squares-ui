@@ -1,6 +1,6 @@
 graphs_functions_json.add_graphs_json({
 	"elastic":{
-		"scatterPlot":{
+		"ScatterPlot":{
 			"completeForm": "elastic_completeform_scatterPlot",
 			"populate": "elastic_populate_scatterPlot",
 			"rawtoprocessed":"elastic_rawtoprocessed_scatterPlot",
@@ -177,7 +177,7 @@ async function elastic_rawtoprocessed_scatterPlot(id, data){
 	// calculate which fields are scalar, and which are ordinal
 	var thisDst = await nameToConnectorAttribute(retrieveSquareParam(id, 'Co', true), "dst")
 	var thisIndex = "*"
-	var thisMappings = await getSavedMappings(thisDst, thisIndex)
+	var thisMappings = await getMappingsData(thisDst, thisIndex)
 	var allScalar = _.flatten([thisMappings['half_float'], thisMappings['float'], thisMappings['long'], thisMappings['integer']])
 
 

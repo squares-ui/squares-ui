@@ -11,9 +11,11 @@
 		"./elastic/elastic_piechart.js",
 		"./elastic/elastic_globe.js",
 		"./elastic/elastic_trend.js",
-		"./elastic/elastic_calheatmap.js",		
+		"./elastic/elastic_calheatmap2.js",		
 		"./elastic/elastic_aster.js",
-		"./elastic/elastic_scatterPlot.js"
+		"./elastic/elastic_scatterPlot.js",
+		"./elastic/elastic_heatmap.js",
+		"./elastic/elastic_contour.js"
 		
 	],
 	"wip":[

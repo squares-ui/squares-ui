@@ -9,7 +9,7 @@
 // odd balls
 var GLB = Object ();
 GLB.devMode = false;  // static, change this at will for a few extra buttons
-GLB.demoMode = false;  // is changed on page load
+GLB.demoMode = true;  // is changed on page load
 // GLB.screenLogMax = 10;
 GLB.drawLineBezier = false;
 GLB.zoomLevels=[0.75, 1, 1.2, 1.5, 2];
@@ -134,80 +134,6 @@ GLB.Days = [
 ]
 
 
-// GLB.favourites = [
-//   {	
-//     "uid": "elastic_a3dcb4d229de6fde0db5686dee47145c",
-//     "printable": "Source",
-//     "Gt": "PieChart",
-//     "Cs":{"array":["observer.name","event.category","event.module"],"x_scale":"linear","x_null":true}
-//   },{
-//     "uid":"b3f804d73f990a227894ef92d61dd58f",
-//     "printable":"File mime source and Name",
-//     "Gt":"Sankey",
-//     "Cs":{"array":["file.mime_type","file.source"],"x_scale":"linear", "x_null":1}
-//   },{	
-//     "uid": "elastic_a3dcb4d229de6fde0db5686dee47145m",
-//     "printable": "Trend of Event Types",
-//     "Gt": "Trend",
-//     "Cs":{"x_field":"event.dataset","x_windowSlide":"TheWindowSize","x_windows":"6"}
-//   },{				
-//     "uid": "elastic_a3dcb4d229de6fde0db5686dee47145l",
-//     "printable": "Bytes xFer/Port/Protocol",
-//     "Gt": "TreemapCandles",
-//     "Cs":{"array":["network.protocol","destination.port"],"x_candle":"network.bytes","x_scale":"linear","x_null":true}
-//   },{	
-//     "uid": "elastic_a3dcb4d229de6fde0db5686dee47145e",
-//     "printable": "Connection States",
-//     "Gt": "PieChart",
-//     "Cs":{"array":["connection.state_description","destination.port"],"x_scale":"log"}
-//   },{	
-//     "uid": "elastic_a3dcb4d229de6fde0db5686dee47145o",
-//     "printable": "Trend DNS",
-//     "Gt": "Trend",
-//     "Cs":{"x_field":"dns.subdomain","x_windowSlide":"TheWindowSize","x_windows":"6"}
-//   },{	
-//     "uid": "elastic_a3dcb4d229de6fde0db5686dee47145g",
-//     "printable": "PKI Certs",
-//     "Gt": "Sankey",
-//     "Cs":{"array":["ssl.version","ssl.validation_status","ssl.next_protocol"],"x_scale":"linear","x_null":true}
-//   },{	
-//     "uid": "elastic_a3dcb4d229de6fde0db5686dee47145i",
-//     "printable": "HTTP Response Codes",
-//     "Gt": "Sankey",
-//     "Cs":{"array":["http.method","http.status_code"],"x_scale":"linear","x_null":true}
-//   },{	
-//     "uid": "elastic_a3dcb4d229de6fde0db5686dee47145s",
-//     "printable": "Calendar Heatmap",
-//     "Gt": "Calendar HeatMap",
-//     "Cs":{"x_field":"@timestamp"}
-//   },
-//   {"printable":"Agent IP and Type","Gt":"PieChart","Cs":{"array":["agent.ip","data.type"],"x_scale":"log"},"uid":"b9f3749ace1c2161112c689451f5638e"},
-//   {"printable":"Destination Globe by Dst Port","Gt":"Globe","Cs":{"x_lat":"destination.geo.location.lat","x_lon":"destination.geo.location.lon","x_track":"destination.port","x_scale":"linear"},"uid":"499c12478e8f7898a71241437007435e"},
-//   {"printable":"IDS Rules","Gt":"AsterPlot","Cs":{"x_field":"rule.tsc","x_width":"rule.category","x_depth":"rule.firedtimes"},"uid":"6f0c3e0db3a4b5fe5bea5d5548b264d5"},
-//   {"printable":"DHCP","Gt":"Sankey","Cs":{"array":["host.hostname","host.mac","dhcp.message_types"],"x_scale":"log"},"uid":"ffbb18174b21cfe1ad27bdb6ae50ce32"}
-// ]
-
-// GLB.favourites = [
-//   {"printable":"Data Sources","Gt":"PieChart","Cs":{"array":["host.name","event.category","event.module","event.dataset"],"x_scale":"log","x_null":true},"uid":"5c119820260b5841bc3139babe18bddf"},
-//   {"printable":"Dataset","Gt":"Trend","Cs":{"x_field":"event.dataset","x_windowSlide":"Fracture","x_windows":"7"},"uid":"a3efbfa564020b8d16a1d6c76e92b341"},
-//   {"printable":"Calendar HeatMap","Gt":"Calendar HeatMap","Cs":{"x_field":"@timestamp"},"uid":"3913b0ac025f7877d6ae9756eaa25efe"},
-//   {"printable":"HTTP Requests","Gt":"Sankey","Cs":{"array":["http.status_code","http.method"],"x_scale":"log","x_null":true},"uid":"d22a3e1a44bb26bb9d3b27afabc38cbc"},
-//   {"printable":"DNS ","Gt":"Sankey","Cs":{"array":["dns.top_level_domain","dns.parent_domain"],"x_scale":"log","x_null":true},"uid":"bb7bea38e346718dc3c0e57c30a77fdb"},
-//   {"printable":"DHCP Requests","Gt":"PieChart","Cs":{"array":["dhcp.message_types"],"x_scale":"linear"},"uid":"816765105814e50214539e794ae61cb6"},
-//   {"printable":"SSL Version PKI Status","Gt":"Sankey","Cs":{"array":["ssl.version","ssl.validation_status","ssl.next_protocol"],"x_scale":"log"},"uid":"8d78da2b061e8a0705c011b63ac3ddbc"},
-//   {"printable":"PKI Issues","Gt":"Sankey","Cs":{"array":["x509.certificate.signing_algorithm","x509.certificate.issuer"],"x_scale":"log"},"uid":"c42e6cdb963ea02f21adfdfd1f6c3c4b"},
-//   {"printable":"SSL Version","Gt":"Trend","Cs":{"x_field":"ssl.version","x_windowSlide":"Fracture","x_windows":"7"},"uid":"941ea05e7441cf714a4730adc3ebda59"},
-//   {"printable":"Protocol connection States","Gt":"Sankey","Cs":{"array":["network.protocol","connection.state_description"],"x_scale":"linear"},"uid":"2baf6a3580b97396a08df800f03c50fc"},
-//   {"printable":"Protocol ports","Gt":"TreemapCandles","Cs":{"array":["network.protocol","destination.port"],"x_candle":"network.bytes","x_scale":"linear","x_null":true},"uid":"60f5b9a0ef9456a1cd1883faeca1900f"},
-//   {"printable":"Bytes per src/dst IP","Gt":"scatterPlot","Cs":{"x_x":"source.port","x_y":"network.bytes","x_z":"destination.port"},"uid":"9c5d3a6045730bce50f072dd9dfd38ba"},
-//   {"printable":"Transport protocols","Gt":"PieChart","Cs":{"array":["network.transport","network.protocol"],"x_scale":"log","x_null":true},"uid":"fac92e8086258683c13bc34f38eb4a0f"},
-//   {"printable":"Connection locations","Gt":"Sankey","Cs":{"array":["connection.local.originator","destination.geo.country_name","connection.local.responder"],"x_scale":"log","x_null":true},"uid":"29638a18047dc07cf1dfae775f2e6d4f"},
-//   {"printable":"Protocols","Gt":"Trend","Cs":{"x_field":"network.protocol","x_windowSlide":"Fracture","x_windows":"7"},"uid":"7c520c76ba2c29e82f0c3f973bb97795"},
-//   {"printable":"Destination","Gt":"Globe","Cs":{"x_lat":"destination.geo.location.lat","x_lon":"destination.geo.location.lon","x_track":"destination.port","x_scale":"linear"},"uid":"499c12478e8f7898a71241437007435e"},
-//   {"printable":"DHCP","Gt":"Sankey","Cs":{"array":["host.hostname","host.mac","dhcp.message_types"],"x_scale":"log"},"uid":"ffbb18174b21cfe1ad27bdb6ae50ce32"},
-//   {"printable":"IDS Alerts","Gt":"PieChart","Cs":{"array":["rule.ruleset","rule.action","rule.name"],"x_scale":"log"},"uid":"fe7a55bf67754a292707589a9abeff43"}
-// ]
-
 
 
 GLB.favourites = {
@@ -217,23 +143,40 @@ GLB.favourites = {
     {"printable":"Calendar HeatMap","Gt":"Calendar HeatMap","Cs":{"x_field":"@timestamp"},"uid":"3913b0ac025f7877d6ae9756eaa25efe"},
     {"printable":"IDS Alerts","Gt":"PieChart","Cs":{"array":["rule.ruleset","rule.action","rule.name"],"x_scale":"log"},"uid":"fe7a55bf67754a292707589a9abeff43"}
   ],
+  "Ossec/Wazuh":[
+    {"printable":"Agent name Dataset","Gt":"Heatmap","Cs":{"x_row":"event.dataset","x_col":"agent.name"},"uid":"c79e49ff10649b8458139b6fc0b43eb0"},
+    {"printable":"Agent HotFixes","Gt":"Sankey","Cs":{"array":["data.hotfix","agent.name"],"x_scale":"log"},"uid":"cda6c2996049f6a6c5196b046a993a88"},
+    {"printable":"Agent OS","Gt":"Sankey","Cs":{"array":["agent.name","data.os.name","data.os.version"],"x_scale":"log"},"uid":"d95b49eb62aecac52e01612cd3dd58dc"},
+    {"printable":"Agent Rule","Gt":"TreemapDimensions","Cs":{"array":["agent.name","rule.category"],"x_scale":"log"},"uid":"5a110d554d4efb30183f225430d0f646"}
+
+
+
+
+  ],
   "Application & Transport":[  
+    {"printable":"Application to country","Gt":"Heatmap","Cs":{"x_row":"network.protocol","x_col":"destination.geo.country_name","x_null":true},"uid":"85c9dbecae4ffa4c476b1c36ca42cc7a"},
     {"printable":"Appliction Trends","Gt":"Trend","Cs":{"x_field":"network.protocol","x_windowSlide":"Fracture","x_windows":"6"},"uid":"836416fdd4f1213d10e11f5c165f1080"},
     {"printable":"Protocol ports","Gt":"TreemapCandles","Cs":{"array":["network.protocol","destination.port"],"x_candle":"network.bytes","x_scale":"linear","x_null":true},"uid":"60f5b9a0ef9456a1cd1883faeca1900f"},
-    {"printable":"Connection States","Gt":"Sankey","Cs":{"array":["network.protocol","connection.state_description"],"x_scale":"linear"},"uid":"2baf6a3580b97396a08df800f03c50fc"},
-    {"printable":"DNS ","Gt":"Sankey","Cs":{"array":["dns.top_level_domain","dns.parent_domain"],"x_scale":"log","x_null":true},"uid":"bb7bea38e346718dc3c0e57c30a77fdb"},
+    {"printable":"Protocols","Gt":"Trend","Cs":{"x_field":"network.protocol","x_windowSlide":"Fracture","x_windows":"7"},"uid":"7c520c76ba2c29e82f0c3f973bb97795"},
+    {"printable":"Protocol Connection States","Gt":"Sankey","Cs":{"array":["network.protocol","connection.state_description"],"x_scale":"linear"},"uid":"2baf6a3580b97396a08df800f03c50fc"},
+    {"printable":"Domain vs TLD","Gt":"Sankey","Cs":{"array":["dns.parent_domain","dns.top_level_domain"],"x_scale":"log","x_null":true},"uid":"cef27c922ac21b2f843892a5d4bc02b2"},
     {"printable":"SSL Version PKI Status","Gt":"Sankey","Cs":{"array":["ssl.version","ssl.validation_status","ssl.next_protocol"],"x_scale":"log"},"uid":"8d78da2b061e8a0705c011b63ac3ddbc"},
-    {"printable":"PKI Issues","Gt":"Sankey","Cs":{"array":["x509.certificate.signing_algorithm","x509.certificate.issuer"],"x_scale":"log"},"uid":"c42e6cdb963ea02f21adfdfd1f6c3c4b"},
-    {"printable":"SSL Version","Gt":"Trend","Cs":{"x_field":"ssl.version","x_windowSlide":"Fracture","x_windows":"7"},"uid":"941ea05e7441cf714a4730adc3ebda59"},
+    {"printable":"PKI Signing by Isues","Gt":"Sankey","Cs":{"array":["x509.certificate.signing_algorithm","x509.certificate.issuer"],"x_scale":"log"},"uid":"c42e6cdb963ea02f21adfdfd1f6c3c4b"},
+    {"printable":"SSL Version Status","Gt":"Trend","Cs":{"x_field":"ssl.version","x_windowSlide":"Fracture","x_windows":"7"},"uid":"941ea05e7441cf714a4730adc3ebda59"},
     {"printable":"HTTP Requests","Gt":"Sankey","Cs":{"array":["http.status_code","http.method"],"x_scale":"log","x_null":true},"uid":"d22a3e1a44bb26bb9d3b27afabc38cbc"},
-    {"printable":"DHCP","Gt":"Sankey","Cs":{"array":["host.hostname","host.mac","dhcp.message_types"],"x_scale":"log"},"uid":"ffbb18174b21cfe1ad27bdb6ae50ce32"},
+    {"printable":"DHCP Requested IP vs Type","Gt":"Heatmap","Cs":{"x_row":"dhcp.message_types","x_col":"dhcp.requested_address"},"uid":"6d5cffce871d0cdd7ebe09edf5660c3c"}
+    
+
+
   ],
   "Network":[
-    {"printable":"Bytes per src/dst IP","Gt":"scatterPlot","Cs":{"x_x":"source.port","x_y":"network.bytes","x_z":"destination.port"},"uid":"9c5d3a6045730bce50f072dd9dfd38ba"},
+    {"printable":"Host -> host : port","Gt":"Sankey","Cs":{"array":["source.ip","destination.ip","destination.port"],"x_scale":"log","x_null":true},"uid":"50cd1883ce0f7455672be9faa33f761c"},
     {"printable":"Transport protocols","Gt":"PieChart","Cs":{"array":["network.transport","network.protocol"],"x_scale":"log","x_null":true},"uid":"fac92e8086258683c13bc34f38eb4a0f"},
-    {"printable":"Connection locations","Gt":"Sankey","Cs":{"array":["connection.local.originator","destination.geo.country_name","connection.local.responder"],"x_scale":"log","x_null":true},"uid":"29638a18047dc07cf1dfae775f2e6d4f"},
-    {"printable":"Protocols","Gt":"Trend","Cs":{"x_field":"network.protocol","x_windowSlide":"Fracture","x_windows":"7"},"uid":"7c520c76ba2c29e82f0c3f973bb97795"},
+    {"printable":"Bytes per src/dst IP","Gt":"scatterPlot","Cs":{"x_x":"source.port","x_y":"network.bytes","x_z":"destination.port"},"uid":"9c5d3a6045730bce50f072dd9dfd38ba"},
+    {"printable":"Local vs remote Connection","Gt":"Sankey","Cs":{"array":["connection.local.originator","destination.geo.country_name","connection.local.responder"],"x_scale":"log","x_null":true},"uid":"29638a18047dc07cf1dfae775f2e6d4f"},    
     {"printable":"Destination","Gt":"Globe","Cs":{"x_lat":"destination.geo.location.lat","x_lon":"destination.geo.location.lon","x_track":"destination.port","x_scale":"linear"},"uid":"499c12478e8f7898a71241437007435e"},
+    {"printable":"Packet Ratio","Gt":"ScatterContour","Cs":{"x_x":"client.packets","x_y":"server.packets","x_group":"destination.geo.country_name","x_scale":"log"},"uid":"e524a2098fa12f327423ff30139591ad"},
+    {"printable":"Bytes Ratio","Gt":"ScatterContour","Cs":{"x_x":"client.bytes","x_y":"server.bytes","x_group":"destination.geo.country_name","x_scale":"log"},"uid":"0c468d49d75a56946e0df533fe08c6fb"},
   ],
   
 }

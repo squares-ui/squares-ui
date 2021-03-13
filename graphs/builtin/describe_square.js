@@ -98,13 +98,19 @@ async function graph_describesquare(id, data){
 	// Connector
 
 
+	var clusterSection = square.append("div")
+	.classed("square_cluster_section", true)
+
+	var clusterDiv = clusterSection.append("div")
+		.classed("fleft", true)
+
 	if(aConnector == true){	
 
-		var clusterSection = square.append("div")
-		.classed("square_cluster_section", true)
+		// var clusterSection = square.append("div")
+		// .classed("square_cluster_section", true)
 
-		var clusterDiv = clusterSection.append("div")
-			.classed("fleft", true)
+		// var clusterDiv = clusterSection.append("div")
+		// 	.classed("fleft", true)
 			
 		clusterDiv.append("img")
 			.classed("square_cluster_image", true)
@@ -129,83 +135,47 @@ async function graph_describesquare(id, data){
 	}else{
 
 		
-		var clusterSection = square.append("div")
-		.classed("square_cluster_section", true)
+		// var clusterSection = square.append("div")
+		// .classed("square_cluster_section", true)
 
-		var clusterDiv = clusterSection.append("div")
-			.classed("fleft", true)
+		// var clusterDiv = clusterSection.append("div")
+		// 	.classed("fleft", true)
 			
 		
-		clusterDiv.append("img")
-			.classed("square_cluster_image", true)
-			.classed("fleft", true)
-			.attr("src", "./images/125_b.png")
+		// clusterDiv.append("img")
+		// 	.classed("square_cluster_image", true)
+		// 	.classed("fleft", true)
+		// 	.attr("src", "./images/125_b.png")
 
-		clusterDiv = clusterSection.append("div")
-			.classed("square_cluster_text", true)
-			.classed("fleft", true);
+		// clusterDiv = clusterSection.append("div")
+		// 	.classed("square_cluster_text", true)
+		// 	.classed("fleft", true);
 
-		clusterDiv
-			// .append("div")
-			// 	.classed("fleft", true)
-			// 	.classed("fontsize", true)
-			// 	.text("Connector Handle:")
-			.append("div")
-				.classed("fontsize", true)
-				.text(retrieveSquareParam(id, "CH"));
+		// clusterDiv
+		// 	// .append("div")
+		// 	// 	.classed("fleft", true)
+		// 	// 	.classed("fontsize", true)
+		// 	// 	.text("Connector Handle:")
+		// 	.append("div")
+		// 		.classed("fontsize", true)
+		// 		.text(retrieveSquareParam(id, "CH"));
 				
-		clusterDiv.append("div")
-			.classed("clr", true)
+		// clusterDiv.append("div")
+		// 	.classed("clr", true)
 			
-		clusterDiv
-			// .append("div")
-			// .classed("fleft", true)
-			// 	.classed("fontsize", true)
-			// 	.text("Graph Type:")
-			.append("div")
-				.classed("fontsize", true)
-				.text(retrieveSquareParam(id, "Gt"));
+		// clusterDiv
+		// 	// .append("div")
+		// 	// .classed("fleft", true)
+		// 	// 	.classed("fontsize", true)
+		// 	// 	.text("Graph Type:")
+		// 	.append("div")
+		// 		.classed("fontsize", true)
+		// 		.text(retrieveSquareParam(id, "Gt"));
 	
 
 	}
 	
-	clusterSection.append("div")
-                .classed("clr", true)
-	
 
-	// Hits : 
-	var clusterSection = square.append("div")
-	.classed("square_cluster_section", true)
-
-	var clusterDiv = clusterSection.append("div")
-		.classed("fleft", true)
-		
-	clusterDiv.append("img")
-		.classed("square_cluster_image", true)
-		.classed("fleft", true)
-		.attr("src", "./images/070_b.png")
-
-	clusterDiv = clusterSection.append("div")
-		.classed("fleft", true)
-		.classed("square_cluster_text", true)
-
-		clusterDiv.append("div")
-			.classed("square_cluster_text", true)
-			.append("div")
-				.classed("fontsize", true)
-				.text("Hits:")
-
-		if(data == 10000){
-			dataString = "> 10,000"
-		}else{
-			dataString = data
-		}
-
-			clusterDiv.append("div")
-		.classed("square_cluster_text", true)
-		.append("div")
-			.classed("fontsize", true)
-			.text(dataString);	
 
 	clusterSection.append("div")
 	.classed("clr", true)
@@ -288,7 +258,43 @@ async function graph_describesquare(id, data){
 				.classed("fontsize", true)
 				.text(thisDataSet);
 
+				clusterSection.append("div")
+                .classed("clr", true)
+	
 
+	// Hits : 
+	var clusterSection = square.append("div")
+	.classed("square_cluster_section", true)
+
+	var clusterDiv = clusterSection.append("div")
+		.classed("fleft", true)
+		
+	clusterDiv.append("img")
+		.classed("square_cluster_image", true)
+		.classed("fleft", true)
+		.attr("src", "./images/070_b.png")
+
+	clusterDiv = clusterSection.append("div")
+		.classed("fleft", true)
+		.classed("square_cluster_text", true)
+
+		clusterDiv.append("div")
+			.classed("square_cluster_text", true)
+			.append("div")
+				.classed("fontsize", true)
+				.text("Hits:")
+
+		if(data == 10000){
+			dataString = "> 10,000"
+		}else{
+			dataString = data
+		}
+
+			clusterDiv.append("div")
+		.classed("square_cluster_text", true)
+		.append("div")
+			.classed("fontsize", true)
+			.text(dataString);	
 
 }
 

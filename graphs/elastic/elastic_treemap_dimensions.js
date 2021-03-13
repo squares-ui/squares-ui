@@ -280,6 +280,10 @@ function elastic_graph_treemapdimensions(id, data){
 		.text(function(d){
 			return d.ancestors().reverse().map(d => d.data.name).join(" ")
 		})
+		.style('color', function(d){
+			while (d.depth > 1) d = d.parent; return invertColor(colorScale(d.data.name));
+			
+		})
 		.on("mouseover", function(d) {
 			theData = d.data.name+" & "+d.parent.data.name + ": count="+d.data.realSize
 			setHoverInfo(id, theData)

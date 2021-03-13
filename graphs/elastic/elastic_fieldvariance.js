@@ -22,6 +22,10 @@ async function elastic_completeform_fieldvariance(id, targetDiv){
 			"x_unknown": {
 				"title": "",
 				"type": "boolean"
+			},
+			"x_incbig": {
+				"title": "",
+				"type": "boolean"
 			}
 		},
 		"form": [
@@ -32,28 +36,40 @@ async function elastic_completeform_fieldvariance(id, targetDiv){
 				"key":"x_unknown",			
 				"inlinetitle": "Include unindexed fields types?",
 				"notitle": true
+			},
+			{
+				"key":"x_incbig",			
+				"inlinetitle": "Include very verbose fields?",
+				"notitle": true
 			}
 		],
 		"value":{
+			"x_size":200
 		}
 		
 	}
 
-	if(retrieveSquareParam(id,"Cs",false) !== undefined){
-		if(retrieveSquareParam(id,"Cs",false)['x_size'] !== undefined){
-			jsonform.value.x_size = retrieveSquareParam(id,"Cs",false)['x_size']
-		}else{
-			jsonform.value.x_size = 200
+	
+	
+	var thisCs = retrieveSquareParam(id,"Cs",false)
+	jsonform.value.x_size = 200
+	if(thisCs !== undefined){
+
+		if(thisCs['x_size'] !== undefined){
+			jsonform.value.x_size = thisCs['x_size']
 		}
 
 		if(retrieveSquareParam(id,"Cs",true)['x_unknown'] !== null){
-			jsonform.form[1]['value'] = retrieveSquareParam(id,"Cs",true)['x_unknown']
+			jsonform.form['value'] = retrieveSquareParam(id,"Cs",true)['x_unknown']		
 		}
-	}else{
-		jsonform.value.x_size = 200
-		jsonform.form[1]['value'] = 0
+
+		if(retrieveSquareParam(id,"Cs",true)['x_incbig'] !== null){
+			jsonform.form['value'] = retrieveSquareParam(id,"Cs",true)['x_incbig']
+		}
+
 	}
 
+	
 	$(targetDiv).jsonForm(jsonform)
 
 }
@@ -122,7 +138,7 @@ async function elastic_rawtoprocessed_fieldvariance(id, data){
 	var thisCo = await nameToConnectors(retrieveSquareParam(id, 'Co', true))
 	var thisDst = thisCo['dst']
 	var indexPattern = "*"
-	var thisMappings = await getSavedMappings(thisDst, indexPattern, true)
+	var thisMappings = await getMappingsData(thisDst, indexPattern, true)
 
 	if(retrieveSquareParam(id,"Cs",true) !== undefined){
 		
@@ -157,9 +173,11 @@ async function elastic_rawtoprocessed_fieldvariance(id, data){
 		// {"key": ["value"], "key2":[...]}
 
 		// message is noisy, and simply replicates the indexed data
-		delete aggregatedKeys['message']
-		delete aggregatedKeys['log.full']
-
+		if(!Cs.hasOwnProperty('x_incbig') ){
+			delete aggregatedKeys['message']
+			delete aggregatedKeys['log.full']
+			delete aggregatedKeys['network.data.decoded']
+		}
 		// loop through findings, push to master aggregate 'dataMid'
 		_.each(aggregatedKeys, function(arr, key){
 			
